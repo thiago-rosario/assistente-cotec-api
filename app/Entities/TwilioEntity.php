@@ -14,6 +14,8 @@ class TwilioEntity
 
     protected ?string $twilioWhatsappFrom;
 
+    public bool $validateSignature;
+
     public function __construct(
         ?string $accountSid = null,
         ?string $authToken = null,
@@ -28,11 +30,6 @@ class TwilioEntity
         $this->validateSignature = $validateSignature ?? (bool) config('twilio.validate_signature', false);
     }
 
-    public bool $validateSignature;
-
-    /**
-     * Retorna o Account SID usado para autenticar as chamadas na API da Twilio.
-     */
     public function getTwilioAccountSid(): ?string
     {
         return $this->twilioAccountSid;
