@@ -25,7 +25,7 @@ class TwilioEntity
     ) {
         $this->twilioAccountSid = $this->normalizeConfigValue($accountSid) ?? $this->normalizeConfigValue(config('twilio.account_sid'));
         $this->twilioAuthToken = $this->normalizeConfigValue($authToken) ?? $this->normalizeConfigValue(config('twilio.auth_token'));
-        $this->twilioWhatsappFrom = $this->normalizeConfigValue($whatsappFrom) ?? $this->normalizeConfigValue(config('twilio.whatsapp_from'));
+        $this->twilioWhatsappFrom = $this->normalizeAddress($whatsappFrom) ?? $this->normalizeAddress(config('twilio.whatsapp_from'));
         $this->statusCallback ??= $this->normalizeConfigValue(config('twilio.status_callback'));
         $this->validateSignature = $validateSignature ?? (bool) config('twilio.validate_signature', false);
     }
@@ -61,7 +61,7 @@ class TwilioEntity
 
     public function setTwilioWhatsappFrom(string $twilioWhatsappFrom): self
     {
-        $this->twilioWhatsappFrom = $this->normalizeConfigValue($twilioWhatsappFrom);
+        $this->twilioWhatsappFrom = $this->normalizeAddress($twilioWhatsappFrom);
 
         return $this;
     }
@@ -92,9 +92,6 @@ class TwilioEntity
         }
     }
 
-    /**
-     * Normaliza números para o formato exigido pelo canal WhatsApp da Twilio.
-     */
     public function formatWhatsAppAddress(string $address): string
     {
         $normalizedAddress = trim($address);
@@ -106,9 +103,6 @@ class TwilioEntity
         return 'whatsapp:'.$normalizedAddress;
     }
 
-    /**
-     * Converte valores de configuração vazios em `null` para simplificar validações.
-     */
     protected function normalizeConfigValue(mixed $value): ?string
     {
         if (! is_string($value)) {
@@ -124,28 +118,14 @@ class TwilioEntity
         return $normalizedValue;
     }
 
-    /**
-     * @param array{
-     *     AccountSid?: mixed,
-     *     account_sid?: mixed,
-     *     AuthToken?: mixed,
-     *     auth_token?: mixed,
-     *     From?: mixed,
-     *     from?: mixed,
-     *     whatsapp_from?: mixed,
-     *     StatusCallback?: mixed,
-     *     status_callback?: mixed,
-     *     validate_signature?: mixed
-     * } $payload
-     */
-    public static function fromWebhookPayload(array $payload): self
+    protected function normalizeAddress(mixed $value): ?string
     {
-        return new self(
-            is_string($payload['AccountSid'] ?? null) ? $payload['AccountSid'] : ($payload['account_sid'] ?? null),
-            is_string($payload['AuthToken'] ?? null) ? $payload['AuthToken'] : ($payload['auth_token'] ?? null),
-            is_string($payload['From'] ?? null) ? $payload['From'] : ($payload['from'] ?? ($payload['whatsapp_from'] ?? null)),
-            is_string($payload['StatusCallback'] ?? null) ? $payload['StatusCallback'] : ($payload['status_callback'] ?? null),
-            (bool) ($payload['validate_signature'] ?? false)
-        );
+        $normalized = $this->normalizeConfigValue($value);
+
+        if ($normalized === null) {
+            return null;
+        }
+
+        return $this->formatWhatsAppAddress($normalized);
     }
 }

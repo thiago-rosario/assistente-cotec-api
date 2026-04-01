@@ -45,21 +45,3 @@ it('formats whatsapp addresses with prefix only when needed', function () {
     expect($entity->formatWhatsAppAddress('+5511988887777'))->toBe('whatsapp:+5511988887777')
         ->and($entity->formatWhatsAppAddress('whatsapp:+5511977776666'))->toBe('whatsapp:+5511977776666');
 });
-
-it('creates entity from webhook payload with twilio key casing', function () {
-    config(['twilio.validate_signature' => false]);
-
-    $entity = TwilioEntity::fromWebhookPayload([
-        'AccountSid' => 'ACWEBHOOK',
-        'AuthToken' => 'token-webhook',
-        'From' => 'whatsapp:+5511912345678',
-        'StatusCallback' => 'https://example.com/callback',
-        'validate_signature' => true,
-    ]);
-
-    expect($entity->getTwilioAccountSid())->toBe('ACWEBHOOK')
-        ->and($entity->getTwilioAuthToken())->toBe('token-webhook')
-        ->and($entity->getTwilioWhatsappFrom())->toBe('whatsapp:+5511912345678')
-        ->and($entity->statusCallback)->toBe('https://example.com/callback')
-        ->and($entity->validateSignature)->toBeTrue();
-});
