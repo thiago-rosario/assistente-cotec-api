@@ -1,13 +1,33 @@
+import argparse
+
 from application.process_unread_message import ProcessUnreadMessageUseCase
 from application.whatsapp_bot import WhatsAppBot
 from browser import BrowserFactory
 from config.config import Config
 from services.editacodigo_service import EditaCodigoService
+from services.php_bridge_message_formatter import PhpBridgeMessageFormatter
 from services.selenium_error_formatter import SeleniumErrorFormatter
 from services.whatsapp_service import WhatsAppService
 
 
+def flushed_print(message: str) -> None:
+    print(message, flush=True)
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--bridge-output",
+        choices=("text", "json"),
+        default="text",
+        help="Formato de saída usado pela ponte com o PHP.",
+    )
+
+    return parser.parse_args()
+
+
 def main() -> None:
+    arguments = parse_arguments()
     editacodigo_service = EditaCodigoService()
     selectors = editacodigo_service.get_whatsapp_selectors()
 
@@ -19,7 +39,11 @@ def main() -> None:
     bot = WhatsAppBot(
         process_unread_message,
         Config.BOT_INTERVAL_SECONDS,
+        output=flushed_print,
         error_formatter=SeleniumErrorFormatter(),
+        message_formatter=PhpBridgeMessageFormatter()
+        if arguments.bridge_output == "json"
+        else None,
     )
 
     bot.run()
