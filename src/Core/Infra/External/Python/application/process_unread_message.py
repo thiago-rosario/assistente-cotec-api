@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 
 from application.ports import WhatsAppGateway
+from domain.whatsapp_message import WhatsAppMessage
 
 
 @dataclass(frozen=True)
 class ProcessUnreadMessageResult:
     messages: tuple[str, ...]
+    whatsapp_message: WhatsAppMessage | None = None
 
 
 class ProcessUnreadMessageUseCase:
@@ -20,7 +22,8 @@ class ProcessUnreadMessageUseCase:
                 messages=(
                     f"Mensagem recebida de: {whatsapp_message.customer_contact}",
                     f"Conteúdo da mensagem: {whatsapp_message.content}",
-                )
+                ),
+                whatsapp_message=whatsapp_message,
             )
 
         message = "Nenhuma mensagem nova encontrada."
