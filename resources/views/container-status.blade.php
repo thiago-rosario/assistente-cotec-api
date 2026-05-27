@@ -14,10 +14,7 @@
             </p>
             <h1 class="text-3xl font-semibold tracking-tight">OK, o container esta rodando.</h1>
             <p class="mt-4 text-base text-slate-300">
-                A aplicacao esta disponivel em
-                <a class="text-emerald-300 underline decoration-emerald-500/50 underline-offset-4" href="{{ config('app.url') }}">
-                    {{ config('app.url') }}
-                </a>.
+                A aplicacao esta disponivel em <a class="text-emerald-300 underline decoration-emerald-500/50 underline-offset-4" href="{{ config('app.url') }}">{{ config('app.url') }}</a>.
             </p>
         </section>
     </main>
