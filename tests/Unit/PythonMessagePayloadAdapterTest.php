@@ -3,6 +3,7 @@
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
 use App\Core\Domain\Resolver\PhoneNormalizerResolver;
+use App\Core\Exception\MessageNotContentException;
 use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Parser\PythonBridgeEventParser;
@@ -106,5 +107,5 @@ it('rejects payload without message content', function () {
     $adapter = pythonMessagePayloadAdapter();
 
     expect(fn () => $adapter->fromArray(['customer_contact' => '+5511912345678']))
-        ->toThrow(InvalidArgumentException::class, 'Payload de mensagem recebido sem conteúdo.');
+        ->toThrow(MessageNotContentException::class, 'Payload de mensagem recebido sem conteúdo.');
 });
