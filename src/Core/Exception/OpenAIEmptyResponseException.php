@@ -7,11 +7,11 @@ namespace App\Core\Exception;
 use App\Core\Enum\CodeExceptionEnum;
 use Throwable;
 
-class MessageNotContentException extends \RuntimeException
+class OpenAIEmptyResponseException extends \RuntimeException
 {
     public function __construct(
-        string $message = 'Payload de mensagem recebido sem conteúdo.',
-        int $code = CodeExceptionEnum::MessageNotContent->value,
+        string $message = 'A OpenAI não retornou conteúdo para o prompt informado.',
+        int $code = CodeExceptionEnum::OpenAIEmptyResponse->value,
         ?Throwable $previous = null
     ) {
         parent::__construct($message, $code, $previous);
