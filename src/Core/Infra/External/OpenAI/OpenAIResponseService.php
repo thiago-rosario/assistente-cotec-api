@@ -5,11 +5,19 @@ declare(strict_types=1);
 namespace App\Core\Infra\External\OpenAI;
 
 use App\Core\Application\Interfaces\OpenAIServiceInterface;
+use App\Core\Exception\OpenAIEmptyResponseException;
 use OpenAI\Laravel\Facades\OpenAI;
-use RuntimeException;
 
+/**
+ * Implementa a geração de respostas usando a Responses API da OpenAI.
+ */
 class OpenAIResponseService implements OpenAIServiceInterface
 {
+    /**
+     * Envia o prompt para a OpenAI e retorna o texto gerado.
+     *
+     * @throws OpenAIEmptyResponseException Quando a OpenAI responde sem conteúdo textual.
+     */
     public function generateResponse(string $prompt): string
     {
         $response = OpenAI::responses()->create([
@@ -20,7 +28,7 @@ class OpenAIResponseService implements OpenAIServiceInterface
         $content = trim((string) $response->outputText);
 
         if ($content === '') {
-            throw new RuntimeException('A OpenAI não retornou conteúdo para o prompt informado.');
+            throw new OpenAIEmptyResponseException;
         }
 
         return $content;
