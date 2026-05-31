@@ -11,8 +11,10 @@
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.0",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "openai-php/laravel": "^0.19.1",
+        "revolution/laravel-google-sheets": "^7.2",
         "twilio/sdk": "^8.11"
     },
     "require-dev": {

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "assistentecotecapi",
+  "private_key_id": "8ff0488a53c4818ae440d0eab06d29219cea0454",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC37oqG3KBD7nwP\nz154N8wyYBZV2SW+V3LbqT5AKsbvpdivdtXv3nijGLjaVUpZ1BIPft4sYUK8tCeF\nH4S17+DornqqdUuQKATLu0Z1GrZln76ptZPCEtDKGqJoj30TdHYXSma+zL3bIzVN\ngX54P8WRaib620g6ceokknYArw2DRs7VL0S+wFkrileeniFjYp4MIw1ufreelpOJ\nbUeGPP4IrQkWbKaqa+Fqeis5vBRjisUfPoffC734ObrR0F04D0w2TRSEpV5TnHWN\n+bJUfAvwS/ItcfQRDrrjiAA4vZRq2y4dW/tkxS0BOG5odrtVjsQfaoGK5d9H/Tfq\n/eWMYADvAgMBAAECggEANT6A7FxWqoORd1QswTlJy7VkEdLr6adP8QWTpyia8Qm9\n6cFJWgg5POFttYpmHQ3WcpTjxM4c7xpprFA87xvzK/hCOzD8QE1NYhqi4Uhrz4xI\nOcF99frTZQYDyKfs6aJXgxN/HbGQLi0Jg5e+YBn528fyY8DxrjWGtbKOJVGHZF4v\n4vGOifD4aot8gjIpEfUoNRmoScoci51WLf0XZxyQIBD9O+oq3Z77CC47GdenEUci\nyDT+0tMMv1JII8DQUAxYWa56uLbu9TBdLxUXJqiaZrR9OKThYU1tDUQD9a3E4c+e\nQjmR+rhB4El/EDTg+4JDgOu3dG8eoKSvWkpwgaB+IQKBgQDbYnkmR1pHlOUZtGF1\nZb7BR5TlS56qhSQdZ0OiwIAX92dNMp7iBrSqljeDB3MMstZHNb28eAbgEXZxvj9L\nn7TIlWL6MbponJCCIHzFDibSO8NOUaVzQorh7P6K2RZfW0ZQBYoHYt6upTTPCU/R\nQ5iEJXt7XxITpVxCcSGsyDoeIQKBgQDWoUsO9j+LpAvXmgGvsXow3zibV2GkbkPI\nMT7Gzt+tFLR+qZeiKlcDkESHZEbfSlZe89J8gYCnAMyJO5qRS/gViAHJNZR2INkk\nJ6xoqOqFeed0xQ2va0NZOF92XOJBgE2SSwS1Mi9oHu+ExANcrq1SYuLvaxzibEca\nV3y90L6dDwKBgB4GDwBvGWrcdLIc3o2bfAyliDoNLEy35eZkQHxgjec5w5hsChRy\nyHzkC/rRpSwiuXKLZ0kIwCAgI66TU8Q8uhgNYbtN3O3+J0S3v3uUYTm6VhM810C7\n5ZffwEIuTYKFUk0XRPmXzVPnZh/DbXn9Hz1Oh+StcSLhKYwqQWqNCG8hAoGAPOhM\nypQq+E+3ZJm5vMgaqt/NypeDiAwahCclb3mplA56Ii+ybjyhsMsyB1H3osoPtKZw\npxCBF+NsJ82YUX9DiaitCRKBbPxpYo83qAO3eeVcP5DkD1HbLOiIfqhhNMFaQhez\n4E+7kEqnIgAWDCkt2mFhkRvOeJrNmrYVGjCwxxUCgYBahA68JGkuWM3fxt0O2/XJ\nTYW0gMwh28BmMq7B52FtnZ0BuWyaZ2nAu0s9NQ373OyOuUvp1HUufbtNrMaFkpZa\n/4MFri/QimTavE6HhAkFQQzNiJL/31JUvnfIY1an8IpvrZOJQ+FNVhy67XjlDlF4\nKumIsagIl9QpO28vu4foGw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "google-sheet-api@assistentecotecapi.iam.gserviceaccount.com",
+  "client_id": "114964832152353534696",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/google-sheet-api%40assistentecotecapi.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
