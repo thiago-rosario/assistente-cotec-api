@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Core\Exception;
+
+use App\Core\Enum\CodeExceptionEnum;
+use RuntimeException;
+use Throwable;
+
+class GoogleSheetReadException extends RuntimeException
+{
+    public function __construct(
+        string $message = 'Falha ao ler os dados da planilha Google.',
+        int $code = CodeExceptionEnum::GoogleSheetRead->value,
+        ?Throwable $previous = null
+    ) {
+        parent::__construct($message, $code, $previous);
+    }
+}
