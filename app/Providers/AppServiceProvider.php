@@ -9,10 +9,14 @@ use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
 use App\Core\Application\Interfaces\PythonMessagePayloadMapperInterface;
 use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
 use App\Core\Application\Interfaces\ReadGoogleSpreadsheetUsecaseInterface;
+use App\Core\Application\Interfaces\SearchGoogleSheetAdapterInterface;
+use App\Core\Application\Interfaces\SearchGoogleSheetUsecaseInterface;
 use App\Core\Application\Usecase\ReadGoogleSpreadsheetUsecase;
+use App\Core\Application\Usecase\SearchGoogleSheetUsecase;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
+use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Parser\PythonBridgeEventParser;
@@ -29,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ReadGoogleSpreadsheetAdapterInterface::class, ReadGoogleSpreadsheetAdapter::class);
         $this->app->bind(ReadGoogleSpreadsheetUsecaseInterface::class, ReadGoogleSpreadsheetUsecase::class);
+        $this->app->bind(SearchGoogleSheetAdapterInterface::class, SearchGoogleSheetAdapter::class);
+        $this->app->bind(SearchGoogleSheetUsecaseInterface::class, SearchGoogleSheetUsecase::class);
         $this->app->bind(GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class);
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);
         $this->app->bind(PythonMessagePayloadAdapterInterface::class, PythonMessagePayloadAdapter::class);
