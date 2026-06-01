@@ -4,58 +4,37 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
+use App\Core\Application\Interfaces\ReadGoogleSpreadsheetUsecaseInterface;
 use App\Core\Exception\GoogleSheetReadException;
 use App\Http\Helper\ResponseJsend;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
-use Revolution\Google\Sheets\Facades\Sheets;
 use Throwable;
 
 class GoogleSheetController extends Controller
 {
-    private const SpreadsheetId = '1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw';
-
-    /**
-     * @var array<int, string>
-     */
-    private const Sheets = [
-        615480757 => 'DEMANDA DE CONSTRUÇÃO',
-        1355441995 => 'Caderno',
-        1142334527 => 'ROTAS',
-        1964615295 => 'Reformas',
-        941971074 => 'TAMANHOS',
-        1426277740 => 'PESQUISA',
-        1843958344 => 'CADERNO TÉCNICO',
-    ];
+    public function __construct(
+        private readonly ReadGoogleSpreadsheetUsecaseInterface $readGoogleSpreadsheet,
+        private readonly ReadGoogleSpreadsheetAdapterInterface $adapter,
+    ) {}
 
     public function __invoke(): JsonResponse
     {
-        $currentSheet = null;
+        $spreadsheetId = (string) config('google_sheets.cotec_spreadsheet.spreadsheet_id');
+        $configuredSheets = config('google_sheets.cotec_spreadsheet.sheets', []);
 
         try {
-            $sheets = collect(self::Sheets)->map(function (string $sheetName, int $gid) use (&$currentSheet): array {
-                $currentSheet = [
-                    'gid' => $gid,
-                    'name' => $sheetName,
-                ];
+            $input = $this->adapter->fromArray([
+                'spreadsheet_id' => $spreadsheetId,
+                'sheets' => $configuredSheets,
+            ]);
 
-                $rows = Sheets::spreadsheet(self::SpreadsheetId)
-                    ->sheet($this->formatSheetRange($sheetName))
-                    ->range('A:ZZ')
-                    ->get();
-
-                $header = $rows->shift() ?? [];
-                $values = $this->mapRowsToHeader($header, $rows);
-
-                return [
-                    'gid' => $gid,
-                    'sheet' => $sheetName,
-                    'total' => $values->count(),
-                    'data' => $values->values(),
-                ];
-            })->values();
+            $output = ($this->readGoogleSpreadsheet)($input);
         } catch (Throwable $throwable) {
-            $exception = new GoogleSheetReadException(previous: $throwable);
+            $exception = $throwable instanceof GoogleSheetReadException
+                ? $throwable
+                : new GoogleSheetReadException(previous: $throwable);
+            $reason = $exception->getPrevious() ?? $throwable;
 
             report($exception);
 
@@ -64,46 +43,18 @@ class GoogleSheetController extends Controller
                 code: $exception->getCode(),
                 data: [
                     'operation' => 'google_sheet_read',
-                    'spreadsheet_id' => self::SpreadsheetId,
-                    'sheet' => $currentSheet,
-                    'exception' => $throwable::class,
-                    'reason' => $throwable->getMessage(),
+                    'spreadsheet_id' => $exception->spreadsheetId ?? $spreadsheetId,
+                    'sheet' => $exception->sheet,
+                    'exception' => $reason::class,
+                    'reason' => $reason->getMessage(),
                     'location' => [
-                        'file' => $throwable->getFile(),
-                        'line' => $throwable->getLine(),
+                        'file' => $reason->getFile(),
+                        'line' => $reason->getLine(),
                     ],
                 ],
             )->toJsonResponse(500);
         }
 
-        return ResponseJsend::success([
-            'spreadsheet_id' => self::SpreadsheetId,
-            'total_sheets' => $sheets->count(),
-            'total_rows' => $sheets->sum('total'),
-            'sheets' => $sheets,
-        ])->toJsonResponse();
-    }
-
-    /**
-     * @param  array<int, string>  $header
-     * @param  Collection<int, array<int, mixed>>  $rows
-     * @return Collection<int, array<string, mixed>>
-     */
-    private function mapRowsToHeader(array $header, Collection $rows): Collection
-    {
-        if ($header === []) {
-            return collect();
-        }
-
-        return $rows->map(function (array $row) use ($header): array {
-            return collect($header)
-                ->combine(collect($row)->take(count($header))->pad(count($header), ''))
-                ->all();
-        });
-    }
-
-    private function formatSheetRange(string $sheetName): string
-    {
-        return "'".str_replace("'", "''", $sheetName)."'";
+        return ResponseJsend::success($this->adapter->toArray($output))->toJsonResponse();
     }
 }
