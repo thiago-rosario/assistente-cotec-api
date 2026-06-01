@@ -8,53 +8,45 @@ use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
 use App\Core\Application\Interfaces\ReadGoogleSpreadsheetUsecaseInterface;
 use App\Core\Exception\GoogleSheetReadException;
 use App\Http\Helper\ResponseJsend;
+use App\Http\Requests\GoogleSheetRequest;
 use Illuminate\Http\JsonResponse;
-use Throwable;
 
 class GoogleSheetController extends Controller
 {
     public function __construct(
-        private readonly ReadGoogleSpreadsheetUsecaseInterface $readGoogleSpreadsheet,
+        private readonly ReadGoogleSpreadsheetUsecaseInterface $usecase,
         private readonly ReadGoogleSpreadsheetAdapterInterface $adapter,
     ) {}
 
-    public function __invoke(): JsonResponse
+    public function __invoke(GoogleSheetRequest $request): JsonResponse
     {
-        $spreadsheetId = (string) config('google_sheets.cotec_spreadsheet.spreadsheet_id');
-        $configuredSheets = config('google_sheets.cotec_spreadsheet.sheets', []);
-
         try {
-            $input = $this->adapter->fromArray([
-                'spreadsheet_id' => $spreadsheetId,
-                'sheets' => $configuredSheets,
-            ]);
+            $input = $this->adapter->fromArray($request->validated());
 
-            $output = ($this->readGoogleSpreadsheet)($input);
-        } catch (Throwable $throwable) {
-            $exception = $throwable instanceof GoogleSheetReadException
-                ? $throwable
-                : new GoogleSheetReadException(previous: $throwable);
-            $reason = $exception->getPrevious() ?? $throwable;
+            $result = $this->usecase->__invoke($input);
 
-            report($exception);
+            $response = new ResponseJsend($this->adapter->toArray($result));
 
-            return ResponseJsend::error(
-                message: $exception->getMessage(),
-                code: $exception->getCode(),
-                data: [
-                    'operation' => 'google_sheet_read',
-                    'spreadsheet_id' => $exception->spreadsheetId ?? $spreadsheetId,
-                    'sheet' => $exception->sheet,
-                    'exception' => $reason::class,
-                    'reason' => $reason->getMessage(),
-                    'location' => [
-                        'file' => $reason->getFile(),
-                        'line' => $reason->getLine(),
-                    ],
-                ],
-            )->toJsonResponse(500);
+            return response()
+                ->json($response->toArray());
+        } catch (GoogleSheetReadException $e) {
+            $response = new ResponseJsend(
+                status: ResponseJsend::STATUS_ERROR,
+                message: $e->getMessage(),
+                code: $e->getCode(),
+            );
+
+            return response()
+                ->json($response->toArray(), 500);
+        } catch (\Throwable) {
+            $response = new ResponseJsend(
+                status: ResponseJsend::STATUS_ERROR,
+                message: 'An unexpected error occurred',
+                code: 500,
+            );
+
+            return response()
+                ->json($response->toArray(), 500);
         }
-
-        return ResponseJsend::success($this->adapter->toArray($output))->toJsonResponse();
     }
 }

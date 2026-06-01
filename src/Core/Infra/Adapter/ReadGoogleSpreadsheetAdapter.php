@@ -12,13 +12,13 @@ use Illuminate\Support\Collection;
 class ReadGoogleSpreadsheetAdapter implements ReadGoogleSpreadsheetAdapterInterface
 {
     /**
-     * @param  array{spreadsheet_id: string, sheets: array<int, string>}  $payload
+     * @param  array{spreadsheet_id: string, sheets: array<int, string|array{name: string}>}  $payload
      */
     public function fromArray(array $payload): ReadGoogleSpreadsheetInputDTO
     {
         return new ReadGoogleSpreadsheetInputDTO(
             spreadsheetId: (string) $payload['spreadsheet_id'],
-            sheets: $payload['sheets'],
+            sheets: $this->normalizeConfiguredSheets($payload['sheets']),
         );
     }
 
@@ -54,5 +54,16 @@ class ReadGoogleSpreadsheetAdapter implements ReadGoogleSpreadsheetAdapterInterf
             ...$sheet,
             'data' => $data,
         ];
+    }
+
+    /**
+     * @param  array<int, string|array{name: string}>  $sheets
+     * @return array<int, string>
+     */
+    private function normalizeConfiguredSheets(array $sheets): array
+    {
+        return collect($sheets)
+            ->map(fn (string|array $sheet): string => is_array($sheet) ? (string) $sheet['name'] : $sheet)
+            ->all();
     }
 }

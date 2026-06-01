@@ -10,7 +10,7 @@ use App\Core\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
 interface ReadGoogleSpreadsheetAdapterInterface
 {
     /**
-     * @param  array{spreadsheet_id: string, sheets: array<int, string>}  $payload
+     * @param  array{spreadsheet_id: string, sheets: array<int, string|array{name: string}>}  $payload
      */
     public function fromArray(array $payload): ReadGoogleSpreadsheetInputDTO;
 
