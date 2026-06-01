@@ -1,6 +1,7 @@
 <?php
 
 use App\Core\Enum\CodeExceptionEnum;
+use App\Core\Exception\GoogleSheetNotConfiguredException;
 use App\Core\Exception\MessageNotContentException;
 use App\Core\Exception\OpenAIEmptyResponseException;
 use App\Core\Infra\External\OpenAI\OpenAIResponseService;
@@ -22,6 +23,15 @@ it('defines openai empty response exception defaults', function () {
     expect($exception)->toBeInstanceOf(RuntimeException::class)
         ->and($exception->getMessage())->toBe('A OpenAI não retornou conteúdo para o prompt informado.')
         ->and($exception->getCode())->toBe(CodeExceptionEnum::OpenAIEmptyResponse->value);
+});
+
+it('defines google sheet not configured exception defaults', function () {
+    $exception = new GoogleSheetNotConfiguredException(sheetId: 999);
+
+    expect($exception)->toBeInstanceOf(RuntimeException::class)
+        ->and($exception->sheetId)->toBe(999)
+        ->and($exception->getMessage())->toBe('A aba informada não está configurada para consulta.')
+        ->and($exception->getCode())->toBe(CodeExceptionEnum::GoogleSheetNotConfigured->value);
 });
 
 it('throws the openai empty response exception when responses api returns no text', function () {
