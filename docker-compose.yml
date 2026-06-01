@@ -8,6 +8,10 @@ x-laravel-environment: &laravel-environment
   DB_USERNAME: ${DB_USERNAME:-root}
   DB_PASSWORD: ${DB_PASSWORD:-secret}
 
+x-laravel-volumes: &laravel-volumes
+  - .:/var/www/html
+  - public-storage:/var/www/html/storage/app/public
+
 services:
   app:
     build:
@@ -22,8 +26,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - public-storage:/var/www/html/storage/app/public
+    volumes: *laravel-volumes
 
   queue:
     build:
@@ -43,8 +46,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - public-storage:/var/www/html/storage/app/public
+    volumes: *laravel-volumes
 
   nginx:
     build:
@@ -62,6 +64,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
+      - ./public:/var/www/html/public:ro
       - public-storage:/var/www/html/storage/app/public:ro
 
   db:
