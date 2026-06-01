@@ -6,6 +6,7 @@ it('returns rows from the configured google sheets', function () {
     $sheetNames = [
         'DEMANDA DE CONSTRUÇÃO',
         'Caderno',
+        'BACKUP',
         'ROTAS',
         'Reformas',
         'TAMANHOS',
@@ -47,8 +48,8 @@ it('returns rows from the configured google sheets', function () {
             'status' => 'success',
             'data' => [
                 'spreadsheet_id' => '1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw',
-                'total_sheets' => 7,
-                'total_rows' => 7,
+                'total_sheets' => 8,
+                'total_rows' => 8,
                 'sheets' => [
                     [
                         'gid' => 615480757,
