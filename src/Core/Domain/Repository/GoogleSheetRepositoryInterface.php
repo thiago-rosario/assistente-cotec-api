@@ -15,6 +15,11 @@ interface GoogleSheetRepositoryInterface
     public function readSheet(GoogleSheetEntity $sheet): array;
 
     /**
+     * @return array{gid: int, sheet: string, total: int, data: Collection<int, array<string, mixed>>}
+     */
+    public function searchSheet(GoogleSheetEntity $sheet, string $search): array;
+
+    /**
      * @param  array<int, string>  $sheets
      * @return array<int, array{gid: int, sheet: string, total: int, data: Collection<int, array<string, mixed>>}>
      */

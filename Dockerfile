@@ -37,7 +37,7 @@ COPY --from=composer_deps /var/www/html/vendor ./vendor
 
 RUN npm run build
 
-FROM php:8.3-fpm-bookworm AS app
+FROM php:8.4-fpm-bookworm AS app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

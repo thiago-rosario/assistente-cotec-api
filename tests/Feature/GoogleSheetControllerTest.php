@@ -1,7 +1,5 @@
 <?php
 
-use App\Core\Exception\GoogleSheetReadException;
-use Illuminate\Support\Facades\Exceptions;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 it('returns rows from the configured google sheets', function () {
@@ -68,9 +66,7 @@ it('returns rows from the configured google sheets', function () {
         ]);
 });
 
-it('returns diagnostic data when google sheet reading fails', function () {
-    Exceptions::fake();
-
+it('returns a standardized error when google sheet reading fails', function () {
     Sheets::shouldReceive('spreadsheet')
         ->once()
         ->with('1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw')
@@ -96,18 +92,6 @@ it('returns diagnostic data when google sheet reading fails', function () {
             'status' => 'error',
             'message' => 'Falha ao ler os dados da planilha Google.',
             'code' => 1002,
-            'data' => [
-                'operation' => 'google_sheet_read',
-                'spreadsheet_id' => '1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw',
-                'sheet' => [
-                    'gid' => 615480757,
-                    'name' => 'DEMANDA DE CONSTRUÇÃO',
-                ],
-                'exception' => RuntimeException::class,
-                'reason' => 'Google API unavailable',
-            ],
-        ])
-        ->assertJsonPath('data.location.file', __FILE__);
-
-    Exceptions::assertReported(GoogleSheetReadException::class);
+            'data' => null,
+        ]);
 });

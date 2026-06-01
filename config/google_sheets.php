@@ -7,13 +7,34 @@ return [
         'spreadsheet_id' => env('GOOGLE_SHEETS_COTEC_SPREADSHEET_ID', '1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw'),
 
         'sheets' => [
-            615480757 => 'DEMANDA DE CONSTRUÇÃO',
-            1355441995 => 'Caderno',
-            1142334527 => 'ROTAS',
-            1964615295 => 'Reformas',
-            941971074 => 'TAMANHOS',
-            1426277740 => 'PESQUISA',
-            1843958344 => 'CADERNO TÉCNICO',
+            615480757 => [
+                'key' => 'demanda-de-construcao',
+                'name' => 'DEMANDA DE CONSTRUÇÃO',
+            ],
+            1355441995 => [
+                'key' => 'caderno',
+                'name' => 'Caderno',
+            ],
+            1142334527 => [
+                'key' => 'rotas',
+                'name' => 'ROTAS',
+            ],
+            1964615295 => [
+                'key' => 'reformas',
+                'name' => 'Reformas',
+            ],
+            941971074 => [
+                'key' => 'tamanhos',
+                'name' => 'TAMANHOS',
+            ],
+            1426277740 => [
+                'key' => 'pesquisa',
+                'name' => 'PESQUISA',
+            ],
+            1843958344 => [
+                'key' => 'caderno-tecnico',
+                'name' => 'CADERNO TÉCNICO',
+            ],
         ],
     ],
 ];
