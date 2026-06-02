@@ -2,9 +2,11 @@
 
 use App\Core\Domain\Entity\ConstructionDemandEntity;
 use App\Core\Domain\Entity\LandSurveyEntity;
+use App\Core\Domain\Entity\NotebookEntity;
 use App\Core\Domain\Entity\TravelItineraryEntity;
 use App\Core\Infra\Mapper\ConstructionDemandSheetMapper;
 use App\Core\Infra\Mapper\LandSurveySheetMapper;
+use App\Core\Infra\Mapper\NotebookSheetMapper;
 use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
 use App\Core\Infra\Mapper\TravelItinerarySheetMapper;
 
@@ -95,4 +97,21 @@ it('maps a technical notebook spreadsheet row and casts numeric values', functio
     expect($entity->item)->toBe(7)
         ->and($entity->estimatedValue)->toBe(1539740.33)
         ->and($entity->municipality)->toBe('Acajutiba');
+});
+
+it('maps a notebook spreadsheet row and casts estimated cost', function () {
+    $entity = (new NotebookSheetMapper)->fromRow([
+        'MUNICIPIO' => ' Acajutiba ',
+        'PROCESSO RELACIONADO' => '001.7313.2023.0006626-49',
+        'PLEITO' => 'Delegacia',
+        'TAMANHO DO OBJETO' => '1B',
+        'STATUS DO TERRENO' => 'Terreno doado',
+        'SOLICITANTE' => 'Prefeitura',
+        'CUSTO ESTIMADO' => 'R$ 1.539.740,33',
+    ]);
+
+    expect($entity)->toBeInstanceOf(NotebookEntity::class)
+        ->and($entity->municipality)->toBe('Acajutiba')
+        ->and($entity->relatedProcess)->toBe('001.7313.2023.0006626-49')
+        ->and($entity->estimatedCost)->toBe(1539740.33);
 });
