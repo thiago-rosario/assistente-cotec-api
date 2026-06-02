@@ -18,4 +18,6 @@ enum CodeExceptionEnum: int
 
     case SearchTechnicalNotebookError = 1008;
     case SearchConstructionDemandError = 1009;
+
+    case WhatsappMessageError = 1010;
 }
