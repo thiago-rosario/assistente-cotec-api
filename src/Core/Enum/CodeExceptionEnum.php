@@ -15,4 +15,6 @@ enum CodeExceptionEnum: int
     case GoogleSheetGidInvalid = 1005;
     case GoogleSheetNameRequired = 1006;
     case GoogleSheetNotConfigured = 1007;
+
+    case SearchTechnicalNotebookError = 1008;
 }
