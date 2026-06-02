@@ -27,6 +27,7 @@ use App\Core\Application\Usecase\SearchTechnicalNotebookUsecase;
 use App\Core\Application\Usecase\SearchTravelItineraryUsecase;
 use App\Core\Domain\Repository\ConstructionDemandRepositoryInterface;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
+use App\Core\Domain\Repository\LandSurveyRepositoryInterface;
 use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;
 use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
@@ -41,6 +42,7 @@ use App\Core\Infra\Parser\PythonBridgeEventParser;
 use App\Core\Infra\Parser\PythonMessageOutputParser;
 use App\Core\Infra\Repository\Gateway\ConstructionDemandGoogleSheetGatewayRepository;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\Core\Infra\Repository\Gateway\LandSurveyGoogleSheetGatewayRepository;
 use App\Core\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TravelItinerarySheetMapperInterface::class, TravelItinerarySheetMapper::class);
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);
         $this->app->bind(ConstructionDemandRepositoryInterface::class, ConstructionDemandGoogleSheetGatewayRepository::class);
+        $this->app->bind(LandSurveyRepositoryInterface::class, LandSurveyGoogleSheetGatewayRepository::class);
         $this->app->bind(TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class);
         $this->app->bind(PythonMessagePayloadAdapterInterface::class, PythonMessagePayloadAdapter::class);
         $this->app->bind(PythonBridgeEventParserInterface::class, PythonBridgeEventParser::class);
