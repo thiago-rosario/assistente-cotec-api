@@ -5,10 +5,36 @@ declare(strict_types=1);
 namespace App\Core\Infra\Trait;
 
 use DateTimeImmutable;
+use Illuminate\Support\Str;
 use Throwable;
 
 trait CastsSpreadsheetValues
 {
+    private function rowValue(array $row, string ...$keys): mixed
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $row)) {
+                return $row[$key];
+            }
+        }
+
+        $normalizedRow = [];
+
+        foreach ($row as $key => $value) {
+            $normalizedRow[$this->normalizeRowKey((string) $key)] = $value;
+        }
+
+        foreach ($keys as $key) {
+            $normalizedKey = $this->normalizeRowKey($key);
+
+            if (array_key_exists($normalizedKey, $normalizedRow)) {
+                return $normalizedRow[$normalizedKey];
+            }
+        }
+
+        return null;
+    }
+
     private function toString(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -57,5 +83,14 @@ trait CastsSpreadsheetValues
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private function normalizeRowKey(string $key): string
+    {
+        return Str::of($key)
+            ->trim()
+            ->lower()
+            ->ascii()
+            ->toString();
     }
 }

@@ -171,7 +171,7 @@ it('filters land surveys by normalized fields', function () {
     $landSurveys = [
         landSurveyGatewayEntity(
             municipality: 'Alcobaça',
-            process: '030.2709.2022.0197573-43',
+            process: '030.2709.2022.0197573-43 001.7313.2023.0004933-59',
             region: 'Extremo Sul',
             force: 'PM',
             landStatus: 'Aguardando visita técnica',
@@ -195,7 +195,7 @@ it('filters land surveys by normalized fields', function () {
         ->and((new FindLandSurveyByLandStatusGoogleSheetRepository)->findByLandStatus($landSurveys, 'aguardando visita tecnica'))->toHaveCount(1)
         ->and((new FindLandSurveyByProgressGoogleSheetRepository)->findByProgress($landSurveys, 'concluido'))->toHaveCount(1)
         ->and((new SearchLandSurveyGoogleSheetRepository)->search($landSurveys, 'levantamento'))->toHaveCount(1)
-        ->and((new FindLandSurveyByProcessGoogleSheetRepository)->findByProcess($landSurveys, '030.2709.2022.0197573-43'))->toBeInstanceOf(LandSurveyEntity::class);
+        ->and((new FindLandSurveyByProcessGoogleSheetRepository)->findByProcess($landSurveys, '001.7313.2023.0004933-59'))->toBeInstanceOf(LandSurveyEntity::class);
 });
 
 function landSurveyGatewayEntity(

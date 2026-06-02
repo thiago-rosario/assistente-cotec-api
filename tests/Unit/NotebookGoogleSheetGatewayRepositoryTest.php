@@ -131,7 +131,7 @@ it('returns all notebook row information when finding by related process', funct
     $notebooks = [
         notebookGatewayEntity(
             municipality: 'Acajutiba',
-            relatedProcess: '001.7313.2023.0006626-49',
+            relatedProcess: '001.7313.2023.0006626-49 020.2301.2022.0007756-88',
             unitClaim: 'Delegacia',
             landStatus: 'Terreno doado',
             requester: 'Prefeitura',
@@ -147,10 +147,10 @@ it('returns all notebook row information when finding by related process', funct
 
     $repository = new FindNotebookByRelatedProcessGoogleSheetRepository;
 
-    $notebook = $repository->findByRelatedProcess($notebooks, '001.7313.2023.0006626-49');
+    $notebook = $repository->findByRelatedProcess($notebooks, '020.2301.2022.0007756-88');
 
     expect($notebook)->toBeInstanceOf(NotebookEntity::class)
-        ->and($notebook->relatedProcess)->toBe('001.7313.2023.0006626-49')
+        ->and($notebook->relatedProcess)->toBe('001.7313.2023.0006626-49 020.2301.2022.0007756-88')
         ->and($notebook->municipality)->toBe('Acajutiba')
         ->and($notebook->unitClaim)->toBe('Delegacia')
         ->and($notebook->landStatus)->toBe('Terreno doado')

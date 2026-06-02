@@ -16,10 +16,8 @@ class FindTechnicalNotebookByProcessGoogleSheetRepository
      */
     public function findByProcess(array $technicalNotebooks, string $process): ?TechnicalNotebookEntity
     {
-        $normalizedProcess = $this->normalize($process);
-
         foreach ($technicalNotebooks as $technicalNotebook) {
-            if ($technicalNotebook->process !== null && $this->normalize($technicalNotebook->process) === $normalizedProcess) {
+            if ($this->processesMatch($technicalNotebook->process, $process)) {
                 return $technicalNotebook;
             }
         }

@@ -16,10 +16,8 @@ class FindConstructionDemandByProcessGoogleSheetRepository
      */
     public function findByProcess(array $constructionDemands, string $process): ?ConstructionDemandEntity
     {
-        $normalizedProcess = $this->normalize($process);
-
         foreach ($constructionDemands as $constructionDemand) {
-            if ($constructionDemand->process !== null && $this->normalize($constructionDemand->process) === $normalizedProcess) {
+            if ($this->processesMatch($constructionDemand->process, $process)) {
                 return $constructionDemand;
             }
         }

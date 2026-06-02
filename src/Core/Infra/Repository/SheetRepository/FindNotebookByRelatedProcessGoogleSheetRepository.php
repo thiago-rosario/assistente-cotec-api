@@ -16,10 +16,8 @@ class FindNotebookByRelatedProcessGoogleSheetRepository
      */
     public function findByRelatedProcess(array $notebooks, string $process): ?NotebookEntity
     {
-        $normalizedProcess = $this->normalize($process);
-
         foreach ($notebooks as $notebook) {
-            if ($notebook->relatedProcess !== null && $this->normalize($notebook->relatedProcess) === $normalizedProcess) {
+            if ($this->processesMatch($notebook->relatedProcess, $process)) {
                 return $notebook;
             }
         }

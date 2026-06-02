@@ -16,10 +16,8 @@ class FindLandSurveyByProcessGoogleSheetRepository
      */
     public function findByProcess(array $landSurveys, string $process): ?LandSurveyEntity
     {
-        $normalizedProcess = $this->normalize($process);
-
         foreach ($landSurveys as $landSurvey) {
-            if ($landSurvey->process !== null && $this->normalize($landSurvey->process) === $normalizedProcess) {
+            if ($this->processesMatch($landSurvey->process, $process)) {
                 return $landSurvey;
             }
         }
