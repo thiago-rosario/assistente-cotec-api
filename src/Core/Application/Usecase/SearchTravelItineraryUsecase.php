@@ -28,8 +28,8 @@ class SearchTravelItineraryUsecase implements SearchTravelItineraryUsecaseInterf
             filled($input->region) => $this->repository->findByRegion($input->region),
             filled($input->landStatus) => $this->repository->findByLandStatus($input->landStatus),
             filled($input->progress) => $this->repository->findByProgress($input->progress),
-            filled($input->term) => $this->repository->search($input->term),
             filled($input->requester) => $this->repository->findByRequester($input->requester),
+            filled($input->term) => $this->repository->search($input->term),
             default => $this->repository->all(),
         };
 

@@ -5,7 +5,10 @@ use App\Core\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
 use App\Core\Application\DTO\SearchGoogleSheetInputDTO;
 use App\Core\Application\DTO\SearchGoogleSheetOutputDTO;
 use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
+use App\Core\Application\Interfaces\SearchConstructionDemandUsecaseInterface;
 use App\Core\Application\Interfaces\SearchGoogleSheetAdapterInterface;
+use App\Core\Application\Interfaces\SearchLandSurveyUsecaseInterface;
+use App\Core\Application\Interfaces\SearchTravelItineraryUsecaseInterface;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
@@ -164,4 +167,10 @@ it('resolves the google sheet repository interface to the gateway', function () 
     $repository = app(GoogleSheetRepositoryInterface::class);
 
     expect($repository)->toBeInstanceOf(GoogleSheetGateway::class);
+});
+
+it('binds the spreadsheet domain search usecase interfaces', function () {
+    expect(app()->bound(SearchConstructionDemandUsecaseInterface::class))->toBeTrue()
+        ->and(app()->bound(SearchLandSurveyUsecaseInterface::class))->toBeTrue()
+        ->and(app()->bound(SearchTravelItineraryUsecaseInterface::class))->toBeTrue();
 });

@@ -371,6 +371,13 @@ it('searches travel itineraries by the first filled filter and maps results', fu
 
             return [];
         }
+
+        public function findByRequester(string $requester): array
+        {
+            $this->calledMethod = __FUNCTION__;
+
+            return [];
+        }
     };
 
     $output = (new SearchTravelItineraryUsecase($repository))(
@@ -445,6 +452,13 @@ it('returns all travel itineraries when no filter or term is filled', function (
         }
 
         public function findByProgress(string $progress): array
+        {
+            $this->calledMethod = __FUNCTION__;
+
+            return [];
+        }
+
+        public function findByRequester(string $requester): array
         {
             $this->calledMethod = __FUNCTION__;
 
