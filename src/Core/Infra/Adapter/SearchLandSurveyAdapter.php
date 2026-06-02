@@ -20,6 +20,7 @@ class SearchLandSurveyAdapter implements SearchLandSurveyAdapterInterface
             landStatus: $payload['land_status'] ?? $payload['landStatus'] ?? null,
             progress: $payload['progress'] ?? null,
             term: $payload['term'] ?? null,
+            requester: $payload['requester'] ?? null,
         );
     }
 
