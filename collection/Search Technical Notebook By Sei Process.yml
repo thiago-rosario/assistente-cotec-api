@@ -1,0 +1,18 @@
+info:
+  name: Search Technical Notebook By Sei Process
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: http://localhost:4200/api/technical-notebooks/search?process=001.7313.2023.0006626-49
+  headers:
+    - name: Accept
+      value: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
