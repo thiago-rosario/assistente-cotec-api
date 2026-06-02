@@ -15,18 +15,18 @@ class ConstructionDemandSheetMapper implements ConstructionDemandSheetMapperInte
     public function fromRow(array $row): ConstructionDemandEntity
     {
         return new ConstructionDemandEntity(
-            municipality: $this->toString($row['MUNICIPIO'] ?? $row['MUNICÍPIO'] ?? '') ?? '',
-            force: $this->toString($row['FORÇA'] ?? null),
-            process: $this->toString($row['PROCESSO'] ?? null),
-            unitClaim: $this->toString($row['PLEITO'] ?? $row['PLEITO UNIDADE'] ?? null),
-            requesterDescription: $this->toString($row['DESCRIÇÃO DO SOLICITANTE'] ?? $row['DESCRIÇÃO DO DEMANDANTE'] ?? null),
-            landStatus: $this->toString($row['STATUS DO TERRENO'] ?? $row['SITUAÇÃO DO TERRENO'] ?? null),
-            progress: $this->toString($row['ANDAMENTO'] ?? $row['PROGRESSO'] ?? null),
-            inspectionReport: $this->toString($row['RELATÓRIO DE VISTORIA'] ?? $row['RELATORIO DE VISTORIA'] ?? null),
-            unitSizeClaim: $this->toString($row['TIPOLOGIA'] ?? $row['PORTE'] ?? null),
-            region: $this->toString($row['REGIÃO'] ?? $row['REGIAO'] ?? null),
-            requester: $this->toString($row['SOLICITANTE'] ?? $row['DEMANDANTE'] ?? null),
-            soilSurveyAndTopography: $this->toString($row['SONDAGEM E TOPOGRAFIA'] ?? $row['LEVANTAMENTO TOPOGRÁFICO'] ?? null),
+            municipality: $this->toString($this->rowValue($row, 'MUNICIPIO', 'MUNICÍPIO')) ?? '',
+            force: $this->toString($this->rowValue($row, 'FORÇA')),
+            process: $this->toString($this->rowValue($row, 'PROCESSO', 'PROCESSO SEI')),
+            unitClaim: $this->toString($this->rowValue($row, 'PLEITO', 'PLEITO UNIDADE', 'PLEITO DA UNIDADADE')),
+            requesterDescription: $this->toString($this->rowValue($row, 'DESCRIÇÃO DO SOLICITANTE', 'DESCRIÇÃO DO DEMANDANTE')),
+            landStatus: $this->toString($this->rowValue($row, 'STATUS DO TERRENO', 'SITUAÇÃO DO TERRENO')),
+            progress: $this->toString($this->rowValue($row, 'ANDAMENTO', 'PROGRESSO')),
+            inspectionReport: $this->toString($this->rowValue($row, 'RELATÓRIO DE VISTORIA', 'RELATORIO DE VISTORIA', 'RELATÓRIO VISTORIA')),
+            unitSizeClaim: $this->toString($this->rowValue($row, 'TIPOLOGIA', 'PORTE', 'PLEITO UNIDADE TAMANHO')),
+            region: $this->toString($this->rowValue($row, 'REGIÃO', 'REGIAO', 'REGIÃO (RISP 2023)')),
+            requester: $this->toString($this->rowValue($row, 'SOLICITANTE', 'DEMANDANTE')),
+            soilSurveyAndTopography: $this->toString($this->rowValue($row, 'SONDAGEM E TOPOGRAFIA', 'LEVANTAMENTO TOPOGRÁFICO')),
         );
     }
 }

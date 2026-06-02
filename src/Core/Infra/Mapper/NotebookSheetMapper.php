@@ -15,13 +15,13 @@ class NotebookSheetMapper implements NotebookSheetMapperInterface
     public function fromRow(array $row): NotebookEntity
     {
         return new NotebookEntity(
-            municipality: $this->toString($row['MUNICIPIO'] ?? $row['MUNICÍPIO'] ?? '') ?? '',
-            relatedProcess: $this->toString($row['PROCESSO RELACIONADO'] ?? $row['PROCESSO'] ?? null),
-            unitClaim: $this->toString($row['PLEITO'] ?? $row['PLEITO UNIDADE'] ?? null),
-            objectSize: $this->toString($row['TAMANHO DO OBJETO'] ?? $row['TAMANHO'] ?? $row['OBJETO'] ?? null),
-            landStatus: $this->toString($row['STATUS DO TERRENO'] ?? $row['SITUAÇÃO DO TERRENO'] ?? null),
-            requester: $this->toString($row['SOLICITANTE'] ?? $row['DEMANDANTE'] ?? null),
-            estimatedCost: $this->toFloat($row['CUSTO ESTIMADO'] ?? $row['VALOR ESTIMADO'] ?? null),
+            municipality: $this->toString($this->rowValue($row, 'MUNICIPIO', 'MUNICÍPIO')) ?? '',
+            relatedProcess: $this->toString($this->rowValue($row, 'PROCESSO RELACIONADO', 'PROCESSO SEI RELACIONADO', 'PROCESSO SEI', 'PROCESSO')),
+            unitClaim: $this->toString($this->rowValue($row, 'PLEITO', 'PLEITO UNIDADE', 'PLEITO DA UNIDADE')),
+            objectSize: $this->toString($this->rowValue($row, 'TAMANHO DO OBJETO', 'TAMANHO', 'OBJETO')),
+            landStatus: $this->toString($this->rowValue($row, 'STATUS DO TERRENO', 'SITUAÇÃO DO TERRENO')),
+            requester: $this->toString($this->rowValue($row, 'SOLICITANTE', 'DEMANDANTE')),
+            estimatedCost: $this->toFloat($this->rowValue($row, 'CUSTO ESTIMADO', 'VALOR ESTIMADO')),
         );
     }
 }

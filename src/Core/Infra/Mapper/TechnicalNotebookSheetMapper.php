@@ -17,8 +17,8 @@ class TechnicalNotebookSheetMapper implements TechnicalNotebookSheetMapperInterf
         return new TechnicalNotebookEntity(
             item: $this->toInt($row['ITEM'] ?? null),
             stage: $this->toString($row['ETAPA'] ?? null),
-            municipality: $this->toString($row['MUNICIPIO'] ?? '') ?? '',
-            process: $this->toString($row['PROCESSO'] ?? null),
+            municipality: $this->toString($this->rowValue($row, 'MUNICIPIO', 'MUNICÍPIO')) ?? '',
+            process: $this->toString($this->rowValue($row, 'PROCESSO', 'PROCESSO SEI')),
             force: $this->toString($row['FORÇA'] ?? null),
             claim: $this->toString($row['PLEITO'] ?? null),
             typology: $this->toString($row['TIPOLOGIA'] ?? null),

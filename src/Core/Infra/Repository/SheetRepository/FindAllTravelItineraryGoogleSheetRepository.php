@@ -33,9 +33,20 @@ class FindAllTravelItineraryGoogleSheetRepository
             return [];
         }
 
-        $header = $this->toArray($rows->shift() ?? []);
+        $rows = $rows
+            ->map(fn (mixed $row): array => $this->toArray($row))
+            ->values();
+
+        $headerIndex = $rows->search(fn (array $row): bool => $this->isHeaderRow($row));
+
+        if ($headerIndex === false) {
+            return [];
+        }
+
+        $header = $rows->get($headerIndex);
 
         return $rows
+            ->slice($headerIndex + 1)
             ->map(fn (mixed $row): array => $this->combineHeader($header, $this->toArray($row)))
             ->filter(fn (array $row): bool => $this->hasUsefulData($row))
             ->map(fn (array $row): TravelItineraryEntity => $this->mapper->fromRow($row))
@@ -57,6 +68,20 @@ class FindAllTravelItineraryGoogleSheetRepository
         }
 
         return [];
+    }
+
+    /**
+     * @param  array<int, mixed>  $row
+     */
+    private function isHeaderRow(array $row): bool
+    {
+        $columns = array_map(fn (mixed $value): string => $this->normalize((string) $value), $row);
+
+        return in_array('municipio', $columns, true)
+            && (
+                in_array('processo', $columns, true)
+                || in_array('processo sei', $columns, true)
+            );
     }
 
     private function sheetName(): string

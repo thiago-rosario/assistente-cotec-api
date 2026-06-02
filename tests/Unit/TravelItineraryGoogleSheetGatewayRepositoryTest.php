@@ -191,7 +191,7 @@ it('filters travel itineraries by normalized fields', function () {
     $travelItineraries = [
         travelItineraryGatewayEntity(
             municipality: 'Alcobaça',
-            process: '030.2709.2022.0197573-43',
+            process: '030.2709.2022.0197573-43 001.7313.2023.0006626-49',
             region: 'Extremo Sul',
             force: 'PM',
             requester: 'COTEC',
@@ -218,7 +218,7 @@ it('filters travel itineraries by normalized fields', function () {
         ->and((new FindTravelItineraryByProgressGoogleSheetRepository)->findByProgress($travelItineraries, 'concluido'))->toHaveCount(1)
         ->and((new FindTravelItineraryByRequesterGoogleSheetRepository)->findByRequester($travelItineraries, 'ssp'))->toHaveCount(1)
         ->and((new SearchTravelItineraryGoogleSheetRepository)->search($travelItineraries, 'salvador'))->toHaveCount(2)
-        ->and((new FindTravelItineraryByProcessGoogleSheetRepository)->findByProcess($travelItineraries, '030.2709.2022.0197573-43'))->toBeInstanceOf(TravelItineraryEntity::class);
+        ->and((new FindTravelItineraryByProcessGoogleSheetRepository)->findByProcess($travelItineraries, '001.7313.2023.0006626-49'))->toBeInstanceOf(TravelItineraryEntity::class);
 });
 
 function travelItineraryGatewayEntity(

@@ -1,11 +1,11 @@
 info:
-  name: Untitled
+  name: Search Land Survey By Sei Process
   type: http
-  seq: 1
+  seq: 6
 
 http:
   method: GET
-  url: http://localhost:4200/api/google-sheet
+  url: http://localhost:4200/api/land-surveys/search?process=030.2709.2022.0197573-43
   headers:
     - name: Accept
       value: application/json
@@ -24,11 +24,10 @@ runtime:
           expect(res.body.data).to.be.an("object");
         });
 
-        test("should return spreadsheet summary", function() {
-          expect(res.body.data.spreadsheet_id).to.be.a("string");
-          expect(res.body.data.total_sheets).to.be.a("number");
-          expect(res.body.data.total_rows).to.be.a("number");
-          expect(res.body.data.sheets).to.be.an("array");
+        test("should return land survey process search data", function() {
+          expect(res.body.data.term).to.equal(null);
+          expect(res.body.data.total).to.be.a("number");
+          expect(res.body.data.data).to.be.an("array");
         });
 
 settings:

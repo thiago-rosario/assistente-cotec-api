@@ -16,10 +16,8 @@ class FindTravelItineraryByProcessGoogleSheetRepository
      */
     public function findByProcess(array $travelItineraries, string $process): ?TravelItineraryEntity
     {
-        $normalizedProcess = $this->normalize($process);
-
         foreach ($travelItineraries as $travelItinerary) {
-            if ($travelItinerary->process !== null && $this->normalize($travelItinerary->process) === $normalizedProcess) {
+            if ($this->processesMatch($travelItinerary->process, $process)) {
                 return $travelItinerary;
             }
         }

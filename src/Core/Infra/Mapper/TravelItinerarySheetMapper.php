@@ -15,17 +15,17 @@ class TravelItinerarySheetMapper implements TravelItinerarySheetMapperInterface
     public function fromRow(array $row): TravelItineraryEntity
     {
         return new TravelItineraryEntity(
-            municipality: $this->toString($row['MUNICIPIO'] ?? $row['MUNICÍPIO'] ?? '') ?? '',
-            process: $this->toString($row['PROCESSO'] ?? null),
-            region: $this->toString($row['REGIÃO'] ?? $row['REGIAO'] ?? null),
-            unitClaim: $this->toString($row['PLEITO'] ?? $row['PLEITO UNIDADE'] ?? null),
-            force: $this->toString($row['FORÇA'] ?? null),
-            requester: $this->toString($row['SOLICITANTE'] ?? $row['DEMANDANTE'] ?? null),
-            landStatus: $this->toString($row['STATUS DO TERRENO'] ?? $row['SITUAÇÃO DO TERRENO'] ?? null),
-            progress: $this->toString($row['ANDAMENTO'] ?? $row['PROGRESSO'] ?? null),
-            focalPointContact: $this->toString($row['CONTATO PONTO FOCAL'] ?? $row['PONTO FOCAL'] ?? null),
-            route: $this->toString($row['ROTA'] ?? null),
-            mapLink: $this->toString($row['LINK MAPA'] ?? $row['MAPA'] ?? null),
+            municipality: $this->toString($this->rowValue($row, 'MUNICIPIO', 'MUNICÍPIO')) ?? '',
+            process: $this->toString($this->rowValue($row, 'PROCESSO', 'PROCESSO SEI')),
+            region: $this->toString($this->rowValue($row, 'REGIÃO', 'REGIAO', 'REGIÃO (RISP 2023)')),
+            unitClaim: $this->toString($this->rowValue($row, 'PLEITO', 'PLEITO UNIDADE')),
+            force: $this->toString($this->rowValue($row, 'FORÇA')),
+            requester: $this->toString($this->rowValue($row, 'SOLICITANTE', 'DEMANDANTE', 'REQUISITANTE')),
+            landStatus: $this->toString($this->rowValue($row, 'STATUS DO TERRENO', 'SITUAÇÃO DO TERRENO')),
+            progress: $this->toString($this->rowValue($row, 'ANDAMENTO', 'PROGRESSO')),
+            focalPointContact: $this->toString($this->rowValue($row, 'CONTATO PONTO FOCAL', 'PONTO FOCAL', 'CONTATO - PONTO FOCAL')),
+            route: $this->toString($this->rowValue($row, 'ROTA')),
+            mapLink: $this->toString($this->rowValue($row, 'LINK MAPA', 'MAPA')),
         );
     }
 }
