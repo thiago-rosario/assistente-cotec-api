@@ -61,4 +61,6 @@ interface TravelItineraryRepositoryInterface
      * @return list<TravelItineraryEntity>
      */
     public function findByProgress(string $progress): array;
+
+    public function findByRequester(string $requester): array;
 }
