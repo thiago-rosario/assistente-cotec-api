@@ -6,10 +6,12 @@ namespace App\Core\Infra\Repository\SheetRepository;
 
 use App\Core\Domain\Entity\TechnicalNotebookEntity;
 use App\Core\Infra\Trait\HandlesGoogleSheetRows;
+use App\Core\Infra\Trait\SearchableEntityMatcherTrait;
 
 class SearchTechnicalNotebookGoogleSheetRepository
 {
     use HandlesGoogleSheetRows;
+    use SearchableEntityMatcherTrait;
 
     /**
      * @param  list<TechnicalNotebookEntity>  $technicalNotebooks
@@ -23,16 +25,5 @@ class SearchTechnicalNotebookGoogleSheetRepository
             $technicalNotebooks,
             fn (TechnicalNotebookEntity $technicalNotebook): bool => $this->matchesSearchTerm($technicalNotebook, $normalizedTerm),
         ));
-    }
-
-    private function matchesSearchTerm(TechnicalNotebookEntity $technicalNotebook, string $normalizedTerm): bool
-    {
-        foreach ($technicalNotebook->toSearchableArray() as $value) {
-            if ($value !== null && str_contains($this->normalize($value), $normalizedTerm)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
