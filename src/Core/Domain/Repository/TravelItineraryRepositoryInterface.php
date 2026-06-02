@@ -62,5 +62,10 @@ interface TravelItineraryRepositoryInterface
      */
     public function findByProgress(string $progress): array;
 
+    /**
+     * Retorna os roteiros de viagem de um solicitante.
+     *
+     * @return list<TravelItineraryEntity>
+     */
     public function findByRequester(string $requester): array;
 }
