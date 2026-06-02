@@ -17,4 +17,5 @@ enum CodeExceptionEnum: int
     case GoogleSheetNotConfigured = 1007;
 
     case SearchTechnicalNotebookError = 1008;
+    case SearchConstructionDemandError = 1009;
 }
