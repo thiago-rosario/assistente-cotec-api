@@ -11,6 +11,25 @@ http:
       value: application/json
   auth: inherit
 
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("should return 200", function() {
+          expect(res.status).to.equal(200);
+        });
+
+        test("should return a successful JSend response", function() {
+          expect(res.body.status).to.equal("success");
+          expect(res.body.data).to.be.an("object");
+        });
+
+        test("should return technical notebook search data", function() {
+          expect(res.body.data.term).to.equal(null);
+          expect(res.body.data.total).to.be.a("number");
+          expect(res.body.data.data).to.be.an("array");
+        });
+
 settings:
   encodeUrl: true
   timeout: 0
