@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Core\Application\Interfaces\ConstructionDemandSheetMapperInterface;
 use App\Core\Application\Interfaces\GoogleSheetRowMapperInterface;
+use App\Core\Application\Interfaces\LandSurveySheetMapperInterface;
 use App\Core\Application\Interfaces\PythonBridgeEventParserInterface;
 use App\Core\Application\Interfaces\PythonMessageOutputParserInterface;
 use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
@@ -14,6 +16,8 @@ use App\Core\Application\Interfaces\SearchGoogleSheetAdapterInterface;
 use App\Core\Application\Interfaces\SearchGoogleSheetUsecaseInterface;
 use App\Core\Application\Interfaces\SearchLandSurveyUsecaseInterface;
 use App\Core\Application\Interfaces\SearchTravelItineraryUsecaseInterface;
+use App\Core\Application\Interfaces\TechnicalNotebookSheetMapperInterface;
+use App\Core\Application\Interfaces\TravelItinerarySheetMapperInterface;
 use App\Core\Application\Usecase\ReadGoogleSpreadsheetUsecase;
 use App\Core\Application\Usecase\SearchConstructionDemandUsecase;
 use App\Core\Application\Usecase\SearchGoogleSheetUsecase;
@@ -23,8 +27,12 @@ use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
+use App\Core\Infra\Mapper\ConstructionDemandSheetMapper;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
+use App\Core\Infra\Mapper\LandSurveySheetMapper;
 use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
+use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
+use App\Core\Infra\Mapper\TravelItinerarySheetMapper;
 use App\Core\Infra\Parser\PythonBridgeEventParser;
 use App\Core\Infra\Parser\PythonMessageOutputParser;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
@@ -45,6 +53,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SearchLandSurveyUsecaseInterface::class, SearchLandSurveyUsecase::class);
         $this->app->bind(SearchTravelItineraryUsecaseInterface::class, SearchTravelItineraryUsecase::class);
         $this->app->bind(GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class);
+        $this->app->bind(ConstructionDemandSheetMapperInterface::class, ConstructionDemandSheetMapper::class);
+        $this->app->bind(LandSurveySheetMapperInterface::class, LandSurveySheetMapper::class);
+        $this->app->bind(TechnicalNotebookSheetMapperInterface::class, TechnicalNotebookSheetMapper::class);
+        $this->app->bind(TravelItinerarySheetMapperInterface::class, TravelItinerarySheetMapper::class);
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);
         $this->app->bind(PythonMessagePayloadAdapterInterface::class, PythonMessagePayloadAdapter::class);
         $this->app->bind(PythonBridgeEventParserInterface::class, PythonBridgeEventParser::class);

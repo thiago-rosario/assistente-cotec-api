@@ -47,4 +47,30 @@ class TechnicalNotebookEntity
     {
         return $this->estimatedValue !== null && $this->estimatedValue > 0;
     }
+
+    /**
+     * @return array<int, string|null>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            $this->municipality,
+            $this->process,
+            $this->force,
+            $this->claim,
+            $this->typology,
+            $this->inspection,
+            $this->seiReport,
+            $this->landStatus,
+            $this->landRegularization,
+            $this->soilStudy,
+            $this->environmental,
+            $this->inspectionComment,
+            $this->claimStage,
+            $this->biddingSei,
+            $this->contract,
+            $this->fiplanInstrument,
+            $this->buildStatus,
+        ];
+    }
 }

@@ -37,4 +37,24 @@ class TravelItineraryEntity
             'aguardando visita técnica'
         );
     }
+
+    /**
+     * @return array<int, string|null>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            $this->municipality,
+            $this->process,
+            $this->region,
+            $this->unitClaim,
+            $this->force,
+            $this->requester,
+            $this->landStatus,
+            $this->progress,
+            $this->focalPointContact,
+            $this->route,
+            $this->mapLink,
+        ];
+    }
 }

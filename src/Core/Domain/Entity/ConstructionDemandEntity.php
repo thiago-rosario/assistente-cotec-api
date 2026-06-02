@@ -35,4 +35,25 @@ class ConstructionDemandEntity
     {
         return mb_strtolower(trim((string) $this->soilSurveyAndTopography)) === 'solicitar';
     }
+
+    /**
+     * @return array<int, string|null>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            $this->municipality,
+            $this->force,
+            $this->process,
+            $this->unitClaim,
+            $this->requesterDescription,
+            $this->landStatus,
+            $this->progress,
+            $this->inspectionReport,
+            $this->unitSizeClaim,
+            $this->region,
+            $this->requester,
+            $this->soilSurveyAndTopography,
+        ];
+    }
 }
