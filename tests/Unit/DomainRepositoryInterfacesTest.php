@@ -76,6 +76,7 @@ it('defines repository contracts for spreadsheet domain entities', function (
             'findByRegion' => 'array',
             'findByLandStatus' => 'array',
             'findByProgress' => 'array',
+            'findByRequester' => 'array',
         ],
     ],
 ]);

@@ -43,4 +43,28 @@ class LandSurveyEntity
     {
         return filled($this->topography);
     }
+
+    /**
+     * @return array<int, string|null>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            $this->municipality,
+            $this->process,
+            $this->region,
+            $this->unitSizeClaim,
+            $this->force,
+            $this->requester,
+            $this->ownership,
+            $this->topography,
+            $this->landStatus,
+            $this->progress,
+            $this->municipalityFocalPointContact,
+            $this->militaryPoliceFocalPointContact,
+            $this->civilPoliceFocalPointContact,
+            $this->documentationLink,
+            $this->observations,
+        ];
+    }
 }

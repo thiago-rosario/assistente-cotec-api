@@ -19,7 +19,8 @@ it('represents a notebook row from the caderno sheet', function () {
 
     expect($notebook->hasRelatedProcess())->toBeTrue()
         ->and($notebook->hasEstimatedCost())->toBeTrue()
-        ->and($notebook->hasDefinedObjectSize())->toBeFalse();
+        ->and($notebook->hasDefinedObjectSize())->toBeFalse()
+        ->and($notebook->toSearchableArray())->toContain('ACAJUTIBA', '001.7313.2023.0006626-49', 'Delegacia');
 });
 
 it('represents a travel itinerary row from the rotas sheet', function () {
@@ -39,7 +40,8 @@ it('represents a travel itinerary row from the rotas sheet', function () {
 
     expect($itinerary->hasMapLink())->toBeTrue()
         ->and($itinerary->hasFocalPointContact())->toBeTrue()
-        ->and($itinerary->awaitsTechnicalVisit())->toBeTrue();
+        ->and($itinerary->awaitsTechnicalVisit())->toBeTrue()
+        ->and($itinerary->toSearchableArray())->toContain('Catu', '020.2301.2022.0007756-88', 'ROTA 01 - OK');
 });
 
 it('represents a construction demand row from the demanda de construcao sheet', function () {
@@ -60,7 +62,8 @@ it('represents a construction demand row from the demanda de construcao sheet', 
 
     expect($demand->hasProcess())->toBeTrue()
         ->and($demand->hasInspectionReport())->toBeTrue()
-        ->and($demand->shouldRequestSoilSurveyAndTopography())->toBeTrue();
+        ->and($demand->shouldRequestSoilSurveyAndTopography())->toBeTrue()
+        ->and($demand->toSearchableArray())->toContain('Acajutiba', '001.7313.2023.0006626-49', '89122036');
 });
 
 it('represents a land survey row from the backup sheet', function () {
@@ -86,7 +89,8 @@ it('represents a land survey row from the backup sheet', function () {
 
     expect($survey->hasDocumentationLink())->toBeTrue()
         ->and($survey->hasPoliceFocalPointContact())->toBeTrue()
-        ->and($survey->hasTopography())->toBeTrue();
+        ->and($survey->hasTopography())->toBeTrue()
+        ->and($survey->toSearchableArray())->toContain('Alcobaça', '030.2709.2022.0197573-43', 'Levantamento recebido');
 });
 
 it('resolves unit sizes from the tamanhos sheet values', function () {
