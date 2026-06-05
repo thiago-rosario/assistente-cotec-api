@@ -1,6 +1,7 @@
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -82,6 +83,20 @@ class WhatsAppService:
             By.XPATH,
             "//*[@data-icon='unread-count']"
             "/ancestor::*[@role='listitem' or @role='row'][1]",
+        ),
+    )
+    MESSAGE_BOX_FALLBACK_LOCATORS = (
+        (
+            By.XPATH,
+            "//footer//div[@contenteditable='true' and @role='textbox']",
+        ),
+        (
+            By.XPATH,
+            "//footer//div[@contenteditable='true']",
+        ),
+        (
+            By.XPATH,
+            "//div[@role='textbox' and @contenteditable='true']",
         ),
     )
 
@@ -259,3 +274,53 @@ class WhatsAppService:
             customer_contact=self.get_customer_phone(),
             content=self.get_last_customer_message(),
         )
+
+    def send_message(
+        self,
+        content: str,
+        customer_contact: str | None = None,
+    ) -> bool:
+        if not content.strip() or not self.has_open_chat():
+            return False
+
+        message_box = self._find_message_box()
+
+        if message_box is None:
+            return False
+
+        self._type_message(message_box, content)
+
+        return True
+
+    def _find_message_box(self) -> WebElement | None:
+        locator_groups = (
+            (self._build_locator("message_box"),),
+            self.MESSAGE_BOX_FALLBACK_LOCATORS,
+        )
+
+        for locators in locator_groups:
+            try:
+                elements = self._wait_for_elements(locators, timeout=5)
+            except WebDriverException:
+                continue
+
+            if elements:
+                return elements[-1]
+
+        return None
+
+    def _type_message(self, message_box: WebElement, content: str) -> None:
+        message_box.click()
+
+        lines = content.splitlines() or [content]
+
+        for index, line in enumerate(lines):
+            if index > 0:
+                ActionChains(self.driver).key_down(Keys.SHIFT).send_keys(
+                    Keys.ENTER
+                ).key_up(Keys.SHIFT).perform()
+
+            if line:
+                message_box.send_keys(line)
+
+        message_box.send_keys(Keys.ENTER)

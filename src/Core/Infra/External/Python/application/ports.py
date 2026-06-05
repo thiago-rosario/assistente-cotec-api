@@ -9,3 +9,10 @@ class WhatsAppGateway(Protocol):
 
     def has_whatsapp_loaded(self) -> bool:
         ...
+
+    def send_message(
+        self,
+        content: str,
+        customer_contact: str | None = None,
+    ) -> bool:
+        ...
