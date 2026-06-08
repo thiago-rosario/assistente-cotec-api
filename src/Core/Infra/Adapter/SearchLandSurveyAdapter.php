@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\SearchLandSurveyInputDTO;
 use App\Core\Application\DTO\SearchLandSurveyOutputDTO;
-use App\Core\Application\Interfaces\SearchLandSurveyAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchLandSurveyAdapterInterface;
 
 class SearchLandSurveyAdapter implements SearchLandSurveyAdapterInterface
 {

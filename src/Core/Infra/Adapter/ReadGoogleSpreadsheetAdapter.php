@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\ReadGoogleSpreadsheetInputDTO;
 use App\Core\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
-use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterface;
 use Illuminate\Support\Collection;
 
 class ReadGoogleSpreadsheetAdapter implements ReadGoogleSpreadsheetAdapterInterface

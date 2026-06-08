@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Core\Application\Rules;
 
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\MunicipalityExtractorServiceInterface;
-use App\Core\Application\Interfaces\WhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use App\Core\Enum\WhatsappMessageIntentEnum;
 
 class MunicipalityWhatsappMessageInterpretationRule implements WhatsappMessageInterpretationRuleInterface

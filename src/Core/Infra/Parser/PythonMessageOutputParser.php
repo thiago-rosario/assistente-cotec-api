@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Parser;
 
-use App\Core\Application\Interfaces\PythonBridgeEventParserInterface;
-use App\Core\Application\Interfaces\PythonMessageOutputParserInterface;
+use App\Core\Application\Interfaces\Parser\PythonBridgeEventParserInterface;
+use App\Core\Application\Interfaces\Parser\PythonMessageOutputParserInterface;
 use App\Core\Infra\Trait\PythonOutputLineClassifier;
 use Illuminate\Support\Str;
 

@@ -2,10 +2,10 @@
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\GreetingMessageMatcherServiceInterface;
-use App\Core\Application\Interfaces\ResolveWhatsappMessageInterpretationServiceInterface;
-use App\Core\Application\Interfaces\WhatsappMessageResponseFormatterInterface;
-use App\Core\Application\Interfaces\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
+use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
+use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;

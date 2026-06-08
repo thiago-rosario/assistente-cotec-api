@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\SearchTechnicalNotebookInputDTO;
 use App\Core\Application\DTO\SearchTechnicalNotebookOutputDTO;
-use App\Core\Application\Interfaces\SearchTechnicalNotebookAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
 
 class SearchTechnicalNotebookAdapter implements SearchTechnicalNotebookAdapterInterface
 {

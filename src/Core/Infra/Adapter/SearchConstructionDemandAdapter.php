@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\SearchConstructionDemandInputDTO;
 use App\Core\Application\DTO\SearchConstructionDemandOutputDTO;
-use App\Core\Application\Interfaces\SearchConstructionDemandAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchConstructionDemandAdapterInterface;
 
 class SearchConstructionDemandAdapter implements SearchConstructionDemandAdapterInterface
 {

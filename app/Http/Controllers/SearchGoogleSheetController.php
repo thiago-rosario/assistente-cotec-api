@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\SearchGoogleSheetAdapterInterface;
-use App\Core\Application\Interfaces\SearchGoogleSheetUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchGoogleSheetUsecaseInterface;
 use App\Core\Exception\GoogleSheetNotConfiguredException;
 use App\Core\Exception\GoogleSheetReadException;
 use App\Http\Helper\ResponseJsend;

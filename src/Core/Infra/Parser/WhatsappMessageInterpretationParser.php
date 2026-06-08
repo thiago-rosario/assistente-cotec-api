@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Infra\Parser;
 
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\WhatsappMessageInterpretationParserInterface;
+use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
 use JsonException;
 
 class WhatsappMessageInterpretationParser implements WhatsappMessageInterpretationParserInterface

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Mapper;
 
-use App\Core\Application\Interfaces\GoogleSheetRowMapperInterface;
+use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use Illuminate\Support\Collection;
 
 class GoogleSheetRowMapper implements GoogleSheetRowMapperInterface

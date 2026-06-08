@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Service;
 
-use App\Core\Application\Interfaces\WhatsappMessageResponseFormatterInterface;
+use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use Illuminate\Support\Str;
 
 class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatterInterface

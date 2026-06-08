@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\SearchGoogleSheetInputDTO;
 use App\Core\Application\DTO\SearchGoogleSheetOutputDTO;
-use App\Core\Application\Interfaces\SearchGoogleSheetUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchGoogleSheetUsecaseInterface;
 use App\Core\Domain\Entity\GoogleSheetEntity;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 use App\Core\Exception\GoogleSheetNotConfiguredException;

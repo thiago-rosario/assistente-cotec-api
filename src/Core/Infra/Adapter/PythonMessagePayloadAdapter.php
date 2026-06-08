@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\PythonMessageOutputParserInterface;
-use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
-use App\Core\Application\Interfaces\PythonMessagePayloadMapperInterface;
+use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Mapper\PythonMessagePayloadMapperInterface;
+use App\Core\Application\Interfaces\Parser\PythonMessageOutputParserInterface;
 use App\Core\Domain\Resolver\PhoneNormalizerResolver;
 
 class PythonMessagePayloadAdapter implements PythonMessagePayloadAdapterInterface

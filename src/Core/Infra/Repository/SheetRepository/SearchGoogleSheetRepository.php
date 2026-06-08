@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Repository\SheetRepository;
 
-use App\Core\Application\Interfaces\GoogleSheetRowMapperInterface;
+use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Domain\Entity\GoogleSheetEntity;
 use App\Core\Exception\GoogleSheetReadException;
 use Illuminate\Support\Collection;

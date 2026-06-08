@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Parser;
 
-use App\Core\Application\Interfaces\PythonBridgeEventParserInterface;
+use App\Core\Application\Interfaces\Parser\PythonBridgeEventParserInterface;
 use Illuminate\Support\Arr;
 use JsonException;
 

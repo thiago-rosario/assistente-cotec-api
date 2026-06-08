@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\SearchTravelItineraryAdapterInterface;
-use App\Core\Application\Interfaces\SearchTravelItineraryUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTravelItineraryAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTravelItineraryUsecaseInterface;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\SearchTravelItineraryRequest;
 use Illuminate\Http\JsonResponse;

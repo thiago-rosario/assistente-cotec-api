@@ -1,9 +1,9 @@
 <?php
 
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Interfaces\InterpretWhatsappMessageWithAiServiceInterface;
-use App\Core\Application\Interfaces\WhatsappMessageInterpretationParserInterface;
+use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
+use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
 use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
 use App\Core\Domain\Resolver\WhatsappMessageIntentResolver;
 

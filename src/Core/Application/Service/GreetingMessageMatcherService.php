@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Application\Service;
 
-use App\Core\Application\Interfaces\GreetingMessageMatcherServiceInterface;
+use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use Illuminate\Support\Str;
 
 final class GreetingMessageMatcherService implements GreetingMessageMatcherServiceInterface

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Application\Rules;
 
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\SeiProcessWhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Enum\WhatsappMessageIntentEnum;
 
 final class SeiProcessWhatsappMessageInterpretationRule implements SeiProcessWhatsappMessageInterpretationRuleInterface

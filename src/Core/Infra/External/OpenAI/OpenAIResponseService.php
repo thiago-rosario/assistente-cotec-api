@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\External\OpenAI;
 
-use App\Core\Application\Interfaces\OpenAIServiceInterface;
+use App\Core\Application\Interfaces\Service\OpenAIServiceInterface;
 use App\Core\Exception\OpenAIEmptyResponseException;
 use OpenAI\Laravel\Facades\OpenAI;
 
