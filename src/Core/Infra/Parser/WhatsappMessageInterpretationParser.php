@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Parser;
 
+use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
 use App\Core\Application\Interfaces\WhatsappMessageInterpretationParserInterface;
 use JsonException;
 
@@ -11,20 +12,19 @@ class WhatsappMessageInterpretationParser implements WhatsappMessageInterpretati
 {
     /**
      * @param  array<string, mixed>|string  $interpretation
-     * @return array{intent: string, filters: array<string, mixed>}
      *
      * @throws JsonException
      */
-    public function parse(array|string $interpretation): array
+    public function parse(array|string $interpretation): WhatsappMessageInterpretationDTO
     {
         $payload = is_array($interpretation)
             ? $interpretation
             : $this->decodeJson($interpretation);
 
-        return [
-            'intent' => $this->normalizeIntent((string) ($payload['intent'] ?? 'unknown')),
-            'filters' => $this->normalizeFilters($payload['filters'] ?? []),
-        ];
+        return new WhatsappMessageInterpretationDTO(
+            intent: $this->normalizeIntent((string) ($payload['intent'] ?? 'unknown')),
+            filters: $this->normalizeFilters($payload['filters'] ?? []),
+        );
     }
 
     /**

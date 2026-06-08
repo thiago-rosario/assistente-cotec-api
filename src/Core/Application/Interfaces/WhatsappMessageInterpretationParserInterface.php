@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Core\Application\Interfaces;
 
+use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
+
 interface WhatsappMessageInterpretationParserInterface
 {
     /**
      * @param  array<string, mixed>|string  $interpretation
-     * @return array{intent: string, filters: array<string, mixed>}
      */
-    public function parse(array|string $interpretation): array;
+    public function parse(array|string $interpretation): WhatsappMessageInterpretationDTO;
 }

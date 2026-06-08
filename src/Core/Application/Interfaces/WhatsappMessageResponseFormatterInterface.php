@@ -16,7 +16,27 @@ interface WhatsappMessageResponseFormatterInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function greeting(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function unknownIntent(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
+    public function unsupportedMessageContent(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
+    public function rateLimited(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
+    public function dataSourceUnavailable(): array;
 
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
