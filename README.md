@@ -40,10 +40,6 @@ O projeto separa a aplicação em camadas dentro de `src/Core`:
 
 O container de dependências é configurado em `app/Providers/AppServiceProvider.php`, ligando interfaces da camada de aplicação às implementações de infraestrutura.
 
-## Fluxo WhatsApp
-
-![Fluxograma do fluxo WhatsApp](public/images/whatsapp-flowchart.svg)
-
 Fonte do fluxograma em Mermaid:
 
 ```mermaid
