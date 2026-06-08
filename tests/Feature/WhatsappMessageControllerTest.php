@@ -1,8 +1,8 @@
 <?php
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
 use Mockery\MockInterface;
 
 it('processes a whatsapp message and returns a jsend response', function () {

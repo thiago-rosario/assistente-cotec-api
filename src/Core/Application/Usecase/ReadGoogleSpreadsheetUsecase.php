@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\ReadGoogleSpreadsheetInputDTO;
 use App\Core\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
-use App\Core\Application\Interfaces\ReadGoogleSpreadsheetUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\ReadGoogleSpreadsheetUsecaseInterface;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 
 class ReadGoogleSpreadsheetUsecase implements ReadGoogleSpreadsheetUsecaseInterface

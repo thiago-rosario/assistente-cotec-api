@@ -1,19 +1,19 @@
 <?php
 
-use App\Core\Application\Interfaces\ConstructionDemandSheetMapperInterface;
-use App\Core\Application\Interfaces\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Interfaces\GreetingMessageMatcherServiceInterface;
-use App\Core\Application\Interfaces\LandSurveySheetMapperInterface;
-use App\Core\Application\Interfaces\MunicipalityExtractorServiceInterface;
-use App\Core\Application\Interfaces\NotebookSheetMapperInterface;
-use App\Core\Application\Interfaces\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Application\Interfaces\ResolveWhatsappMessageInterpretationServiceInterface;
-use App\Core\Application\Interfaces\SeiProcessWhatsappMessageInterpretationRuleInterface;
-use App\Core\Application\Interfaces\TechnicalNotebookSheetMapperInterface;
-use App\Core\Application\Interfaces\TravelItinerarySheetMapperInterface;
-use App\Core\Application\Interfaces\WhatsappMessageInterpretationRuleInterface;
-use App\Core\Application\Interfaces\WhatsappMessageResponseFormatterInterface;
-use App\Core\Application\Interfaces\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Mapper\ConstructionDemandSheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\LandSurveySheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\NotebookSheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\TravelItinerarySheetMapperInterface;
+use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
+use App\Core\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
+use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
+use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
+use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
 use App\Core\Application\Rules\MunicipalityWhatsappMessageInterpretationRule;
 use App\Core\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
 use App\Core\Application\Service\DirectWhatsappMessageInterpreterService;

@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\SearchGoogleSheetInputDTO;
 use App\Core\Application\DTO\SearchGoogleSheetOutputDTO;
-use App\Core\Application\Interfaces\SearchGoogleSheetAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
 
 class SearchGoogleSheetAdapter implements SearchGoogleSheetAdapterInterface
 {

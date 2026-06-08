@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Service;
 
-use App\Core\Application\Interfaces\InterpretWhatsappMessageWithAiServiceInterface;
+use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
 use App\Core\Exception\OpenAIEmptyResponseException;
 use OpenAI\Laravel\Facades\OpenAI;
 

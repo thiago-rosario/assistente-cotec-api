@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
 use App\Core\Domain\Resolver\PhoneNormalizerResolver;
 use App\Core\Exception\MessageNotContentException;
 use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;

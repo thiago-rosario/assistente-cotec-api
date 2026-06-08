@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Mapper;
 
-use App\Core\Application\Interfaces\PythonMessagePayloadMapperInterface;
+use App\Core\Application\Interfaces\Mapper\PythonMessagePayloadMapperInterface;
 use App\Core\Exception\MessageNotContentException;
 use Illuminate\Support\Arr;
 

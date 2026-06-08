@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Application\Service;
 
-use App\Core\Application\Interfaces\MunicipalityExtractorServiceInterface;
+use App\Core\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use Illuminate\Support\Str;
 
 class MunicipalityExtractorService implements MunicipalityExtractorServiceInterface

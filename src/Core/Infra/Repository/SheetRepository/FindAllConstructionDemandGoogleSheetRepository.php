@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Repository\SheetRepository;
 
-use App\Core\Application\Interfaces\ConstructionDemandSheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\ConstructionDemandSheetMapperInterface;
 use App\Core\Domain\Entity\ConstructionDemandEntity;
 use App\Core\Infra\Trait\HandlesGoogleSheetRows;
 use Revolution\Google\Sheets\Facades\Sheets;
