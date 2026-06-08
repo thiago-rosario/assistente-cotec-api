@@ -17,7 +17,31 @@ class InterpretWhatsappMessageWithAiService implements InterpretWhatsappMessageW
             'input' => [
                 [
                     'role' => 'system',
-                    'content' => 'Interprete a mensagem do usuário e retorne apenas JSON com intent e filters.',
+                    'content' => <<<'PROMPT'
+Interprete a mensagem do usuário e retorne apenas JSON válido com os campos "intent" e "filters".
+
+Intents permitidas:
+- search_technical_notebook: consultas sobre caderno técnico, obras, processo, município, força ou situação.
+- unknown: quando não houver consulta identificável.
+
+Filtros aceitos:
+- process: número de processo SEI, exemplo 020.4487.2021.0009714-69.
+- municipality: município informado pelo usuário.
+- force: força policial ou órgão.
+- region: região.
+- landStatus: situação do terreno.
+- buildStatus: situação da obra.
+- requester: solicitante.
+- term: termo livre quando nenhum filtro específico for identificado.
+
+Exemplos:
+Mensagem: "Quero consultar o processo 020.4487.2021.0009714-69"
+Resposta: {"intent":"search_technical_notebook","filters":{"process":"020.4487.2021.0009714-69"}}
+Mensagem: "Município Antas"
+Resposta: {"intent":"search_technical_notebook","filters":{"municipality":"Antas"}}
+Mensagem: "Quais obras existem no município de Antas?"
+Resposta: {"intent":"search_technical_notebook","filters":{"municipality":"Antas"}}
+PROMPT,
                 ],
                 [
                     'role' => 'user',

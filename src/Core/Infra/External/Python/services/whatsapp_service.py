@@ -1,6 +1,7 @@
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -59,6 +60,14 @@ class WhatsAppService:
             "div.message-in div.copyable-text span",
         ),
         (
+            By.CSS_SELECTOR,
+            "div.message-in [data-pre-plain-text]",
+        ),
+        (
+            By.CSS_SELECTOR,
+            "[data-pre-plain-text] span.selectable-text",
+        ),
+        (
             By.XPATH,
             "//div[contains(@class, 'message-in')]"
             "//*[contains(@class, 'selectable-text') and normalize-space()]",
@@ -67,6 +76,11 @@ class WhatsAppService:
             By.XPATH,
             "//div[contains(@class, 'message-in')]"
             "//*[@data-pre-plain-text and normalize-space()]",
+        ),
+        (
+            By.XPATH,
+            "//*[@data-pre-plain-text]"
+            "//*[contains(@class, 'selectable-text') and normalize-space()]",
         ),
     )
     UNREAD_CHAT_FALLBACK_LOCATORS = (
@@ -82,6 +96,20 @@ class WhatsAppService:
             By.XPATH,
             "//*[@data-icon='unread-count']"
             "/ancestor::*[@role='listitem' or @role='row'][1]",
+        ),
+    )
+    MESSAGE_BOX_FALLBACK_LOCATORS = (
+        (
+            By.XPATH,
+            "//footer//div[@contenteditable='true' and @role='textbox']",
+        ),
+        (
+            By.XPATH,
+            "//footer//div[@contenteditable='true']",
+        ),
+        (
+            By.XPATH,
+            "//div[@role='textbox' and @contenteditable='true']",
         ),
     )
 
@@ -156,6 +184,95 @@ class WhatsAppService:
                     return text
 
         return ""
+
+    def _read_last_customer_message_from_dom(self) -> str:
+        try:
+            message = self.driver.execute_script(
+                """
+                const normalize = (value) => String(value || '')
+                    .replace(/\u200e|\u200f/g, '')
+                    .replace(/\\s+/g, ' ')
+                    .trim();
+
+                const visibleText = (element) => normalize(
+                    element?.innerText || element?.textContent || ''
+                );
+
+                const messageText = (container) => {
+                    const selectorGroups = [
+                        'span.selectable-text',
+                        'div.copyable-text span',
+                        '[data-pre-plain-text] span',
+                    ];
+
+                    for (const selector of selectorGroups) {
+                        const textNodes = [
+                            ...container.querySelectorAll(selector),
+                        ].filter((element, index, list) => {
+                            return list.findIndex((candidate) => {
+                                return candidate === element
+                                    || candidate.contains(element)
+                                    || element.contains(candidate);
+                            }) === index;
+                        });
+
+                        const lines = textNodes
+                            .map(visibleText)
+                            .flatMap((text) => text.split('\\n'))
+                            .map(normalize)
+                            .filter(Boolean)
+                            .filter((text) => ! /^\\d{1,2}:\\d{2}$/.test(text));
+
+                        const uniqueLines = [...new Set(lines)];
+
+                        if (uniqueLines.length) {
+                            return uniqueLines.join('\\n').trim();
+                        }
+                    }
+
+                    const fallbackLines = visibleText(container)
+                        .split('\\n')
+                        .map(normalize)
+                        .filter(Boolean)
+                        .filter((text) => ! /^\\d{1,2}:\\d{2}$/.test(text));
+
+                    return [...new Set(fallbackLines)].join('\\n').trim();
+                };
+
+                const incomingMessages = [
+                    ...document.querySelectorAll(
+                        'div.message-in, [class*="message-in"], [data-pre-plain-text]'
+                    ),
+                ]
+                    .map((element) => {
+                        const container = element.closest(
+                            'div.message-in, [class*="message-in"], [data-pre-plain-text]'
+                        ) || element;
+
+                        return container;
+                    })
+                    .filter((element, index, list) => list.indexOf(element) === index)
+                    .filter((element) => {
+                        const className = String(element.className || '');
+
+                        return ! className.includes('message-out');
+                    });
+
+                for (const message of incomingMessages.reverse()) {
+                    const text = messageText(message);
+
+                    if (text) {
+                        return text;
+                    }
+                }
+
+                return '';
+                """
+            )
+        except WebDriverException:
+            return ""
+
+        return str(message).strip() if message else ""
 
     def _find_chat_container(self, badge: WebElement) -> WebElement | None:
         return self.driver.execute_script(
@@ -242,12 +359,15 @@ class WhatsAppService:
         return customer_phone or "Contato não identificado"
 
     def get_last_customer_message(self) -> str:
-        customer_message = self._wait_for_text(
+        customer_message = self._read_last_customer_message_from_dom()
+
+        if customer_message:
+            return customer_message
+
+        return self._wait_for_text(
             "customer_message",
             self.CUSTOMER_MESSAGE_FALLBACK_LOCATORS,
         )
-
-        return customer_message or "Mensagem sem texto identificável"
 
     def read_last_unread_message(self) -> WhatsAppMessage | None:
         has_unread_chat = self.open_unread_chat()
@@ -259,3 +379,74 @@ class WhatsAppService:
             customer_contact=self.get_customer_phone(),
             content=self.get_last_customer_message(),
         )
+
+    def send_message(
+        self,
+        content: str,
+        customer_contact: str | None = None,
+    ) -> bool:
+        if not content.strip() or not self.has_open_chat():
+            return False
+
+        message_box = self._find_message_box()
+
+        if message_box is None:
+            return False
+
+        self._type_message(message_box, content)
+
+        return True
+
+    def _find_message_box(self) -> WebElement | None:
+        locator_groups = (
+            (self._build_locator("message_box"),),
+            self.MESSAGE_BOX_FALLBACK_LOCATORS,
+        )
+
+        for locators in locator_groups:
+            try:
+                elements = self._wait_for_elements(locators, timeout=5)
+            except WebDriverException:
+                continue
+
+            if elements:
+                return elements[-1]
+
+        return None
+
+    def _type_message(self, message_box: WebElement, content: str) -> None:
+        message_box.click()
+
+        lines = content.splitlines() or [content]
+
+        for index, line in enumerate(lines):
+            if index > 0:
+                ActionChains(self.driver).key_down(Keys.SHIFT).send_keys(
+                    Keys.ENTER
+                ).key_up(Keys.SHIFT).perform()
+
+            if line:
+                self._type_line(message_box, line)
+
+        message_box.send_keys(Keys.ENTER)
+
+    def _type_line(self, message_box: WebElement, line: str) -> None:
+        if self._has_non_bmp_character(line):
+            self.driver.execute_script(
+                """
+                const messageBox = arguments[0];
+                const text = arguments[1];
+
+                messageBox.focus();
+                document.execCommand('insertText', false, text);
+                """,
+                message_box,
+                line,
+            )
+
+            return
+
+        message_box.send_keys(line)
+
+    def _has_non_bmp_character(self, value: str) -> bool:
+        return any(ord(character) > 0xFFFF for character in value)

@@ -24,7 +24,7 @@ class PythonMessagePayloadMapper implements PythonMessagePayloadMapperInterface
      */
     public function map(array $payload): array
     {
-        $message = $this->firstString($payload, [
+        $message = $this->firstPresentString($payload, [
             'message',
             'body',
             'content',
@@ -96,6 +96,29 @@ class PythonMessagePayloadMapper implements PythonMessagePayloadMapperInterface
             if ($value !== '') {
                 return $value;
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @param  list<string>  $keys
+     */
+    private function firstPresentString(array $payload, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (! Arr::has($payload, $key)) {
+                continue;
+            }
+
+            $value = Arr::get($payload, $key);
+
+            if (! is_scalar($value)) {
+                continue;
+            }
+
+            return trim((string) $value);
         }
 
         return null;

@@ -5,6 +5,7 @@ from application.whatsapp_bot import WhatsAppBot
 from browser import BrowserFactory
 from config.config import Config
 from services.editacodigo_service import EditaCodigoService
+from services.php_bridge_command_listener import PhpBridgeCommandListener
 from services.php_bridge_message_formatter import PhpBridgeMessageFormatter
 from services.selenium_error_formatter import SeleniumErrorFormatter
 from services.whatsapp_service import WhatsAppService
@@ -12,6 +13,10 @@ from services.whatsapp_service import WhatsAppService
 
 def flushed_print(message: str) -> None:
     print(message, flush=True)
+
+
+def discard_output(message: str) -> None:
+    return None
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -35,6 +40,12 @@ def main() -> None:
     driver.get(Config.WHATSAPP_URL)
 
     whatsapp_service = WhatsAppService(driver, selectors)
+    if arguments.bridge_output == "json":
+        PhpBridgeCommandListener(
+            whatsapp_service.send_message,
+            output=discard_output,
+        ).start()
+
     process_unread_message = ProcessUnreadMessageUseCase(whatsapp_service)
     bot = WhatsAppBot(
         process_unread_message,

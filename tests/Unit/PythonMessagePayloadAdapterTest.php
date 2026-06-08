@@ -77,6 +77,19 @@ it('maps python bridge json events into application dtos', function () {
         ->and($messages[1]->message)->toBe('Oi');
 });
 
+it('maps python bridge events without text content into application dtos', function () {
+    $adapter = pythonMessagePayloadAdapter();
+
+    $messages = $adapter->fromPythonOutput(<<<'OUTPUT'
+        {"type": "received_message", "payload": {"customer_contact": "Thiago", "content": "", "content_detected": false, "source": "python-whatsapp"}}
+        OUTPUT);
+
+    expect($messages)->toHaveCount(1)
+        ->and($messages[0]->senderName)->toBe('Thiago')
+        ->and($messages[0]->message)->toBe('')
+        ->and($messages[0]->metadata['content_detected'])->toBeFalse();
+});
+
 it('maps structured python whatsapp payload into the application dto', function () {
     $adapter = pythonMessagePayloadAdapter();
 
