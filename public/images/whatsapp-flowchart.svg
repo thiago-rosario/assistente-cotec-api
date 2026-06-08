@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2170" viewBox="0 0 1200 2170" role="img" aria-labelledby="title desc">
+  <title id="title">Fluxograma do fluxo de atendimento pelo WhatsApp</title>
+  <desc id="desc">Fluxo desde o envio da mensagem pelo usuário no WhatsApp até a resposta enviada pelo robô Python após processamento pela API Laravel.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb" />
+    </marker>
+    <style>
+      .background { fill: #000000; }
+      .title { fill: #ffffff; font: 700 34px Arial, sans-serif; }
+      .subtitle { fill: #cbd5e1; font: 400 18px Arial, sans-serif; }
+      .node { fill: #ffffff; stroke: #2563eb; stroke-width: 2.5; rx: 10; }
+      .node-alt { fill: #eff6ff; stroke: #2563eb; stroke-width: 2.5; rx: 10; }
+      .node-warning { fill: #fff7ed; stroke: #f97316; stroke-width: 2.5; rx: 10; }
+      .diamond { fill: #fefce8; stroke: #ca8a04; stroke-width: 2.5; }
+      .text { fill: #0f172a; font: 600 18px Arial, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+      .small { fill: #334155; font: 600 14px Arial, sans-serif; text-anchor: middle; }
+      .arrow { fill: none; stroke: #2563eb; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect class="background" x="0" y="0" width="1200" height="2170" />
+  <text class="title" x="600" y="48" text-anchor="middle">Fluxo de atendimento do Assistente COTEC</text>
+  <text class="subtitle" x="600" y="78" text-anchor="middle">WhatsApp Web, ponte Python, API Laravel, OpenAI e Google Sheets</text>
+
+  <rect class="node-alt" x="360" y="120" width="480" height="58" />
+  <text class="text" x="600" y="149">Usuário envia mensagem no WhatsApp</text>
+
+  <rect class="node" x="360" y="215" width="480" height="58" />
+  <text class="text" x="600" y="244">Robô Python monitora WhatsApp Web</text>
+
+  <rect class="node" x="360" y="310" width="480" height="58" />
+  <text class="text" x="600" y="339">Python captura mensagem recebida</text>
+
+  <rect class="node" x="360" y="405" width="480" height="58" />
+  <text class="text" x="600" y="434">Python envia evento estruturado para o Laravel</text>
+
+  <rect class="node-alt" x="360" y="500" width="480" height="58" />
+  <text class="text" x="600" y="529">API Laravel recebe payload da mensagem</text>
+
+  <rect class="node" x="360" y="595" width="480" height="58" />
+  <text class="text" x="600" y="624">PythonMessageOutputParser</text>
+
+  <rect class="node" x="360" y="690" width="480" height="58" />
+  <text class="text" x="600" y="719">PythonBridgeEventParser</text>
+
+  <rect class="node" x="360" y="785" width="480" height="58" />
+  <text class="text" x="600" y="814">PythonMessagePayloadMapper</text>
+
+  <rect class="node-alt" x="360" y="880" width="480" height="58" />
+  <text class="text" x="600" y="909">ReceivedMessageInputDTO</text>
+
+  <rect class="node-alt" x="360" y="975" width="480" height="58" />
+  <text class="text" x="600" y="1004">ProcessWhatsappMessageUsecase</text>
+
+  <rect class="node" x="360" y="1070" width="480" height="58" />
+  <text class="text" x="600" y="1099">OpenAI interpreta a intenção da mensagem</text>
+
+  <polygon class="diamond" points="600,1180 850,1248 600,1316 350,1248" />
+  <text class="text" x="600" y="1239">Qual intenção foi</text>
+  <text class="text" x="600" y="1264">identificada?</text>
+
+  <rect class="node" x="30" y="1390" width="205" height="74" />
+  <text class="text" x="132.5" y="1418">Buscar Caderno</text>
+  <text class="text" x="132.5" y="1444">Técnico</text>
+
+  <rect class="node" x="265" y="1390" width="205" height="74" />
+  <text class="text" x="367.5" y="1418">Buscar Demanda</text>
+  <text class="text" x="367.5" y="1444">de Construção</text>
+
+  <rect class="node" x="500" y="1390" width="205" height="74" />
+  <text class="text" x="602.5" y="1427">Buscar Reformas</text>
+
+  <rect class="node" x="735" y="1390" width="205" height="74" />
+  <text class="text" x="837.5" y="1427">Buscar Rotas</text>
+
+  <rect class="node-warning" x="970" y="1390" width="205" height="74" />
+  <text class="text" x="1072.5" y="1418">Resposta padrão</text>
+  <text class="text" x="1072.5" y="1444">solicita detalhes</text>
+
+  <text class="small" x="132.5" y="1374">Buscar Caderno Técnico</text>
+  <text class="small" x="367.5" y="1374">Buscar Demanda</text>
+  <text class="small" x="602.5" y="1374">Buscar Reformas</text>
+  <text class="small" x="837.5" y="1374">Buscar Rotas</text>
+  <text class="small" x="1072.5" y="1374">Intenção desconhecida</text>
+
+  <rect class="node-alt" x="360" y="1530" width="480" height="58" />
+  <text class="text" x="600" y="1559">Repositório consulta Google Sheets</text>
+
+  <rect class="node" x="360" y="1625" width="480" height="58" />
+  <text class="text" x="600" y="1654">Entidade de domínio da planilha</text>
+
+  <rect class="node" x="360" y="1720" width="480" height="58" />
+  <text class="text" x="600" y="1749">Adapter normaliza os dados</text>
+
+  <rect class="node-alt" x="360" y="1815" width="480" height="58" />
+  <text class="text" x="600" y="1844">Formatter monta resposta amigável</text>
+
+  <rect class="node" x="360" y="1910" width="480" height="58" />
+  <text class="text" x="600" y="1939">API retorna resposta formatada</text>
+
+  <rect class="node" x="360" y="2005" width="480" height="58" />
+  <text class="text" x="600" y="2034">Robô Python envia resposta no WhatsApp</text>
+
+  <rect class="node-alt" x="360" y="2100" width="480" height="58" />
+  <text class="text" x="600" y="2129">Usuário recebe a resposta</text>
+
+  <path class="arrow" d="M600 178 L600 215" />
+  <path class="arrow" d="M600 273 L600 310" />
+  <path class="arrow" d="M600 368 L600 405" />
+  <path class="arrow" d="M600 463 L600 500" />
+  <path class="arrow" d="M600 558 L600 595" />
+  <path class="arrow" d="M600 653 L600 690" />
+  <path class="arrow" d="M600 748 L600 785" />
+  <path class="arrow" d="M600 843 L600 880" />
+  <path class="arrow" d="M600 938 L600 975" />
+  <path class="arrow" d="M600 1033 L600 1070" />
+  <path class="arrow" d="M600 1128 L600 1180" />
+
+  <path class="arrow" d="M516 1271 C360 1304 190 1328 132.5 1390" />
+  <path class="arrow" d="M558 1293 C480 1322 405 1345 367.5 1390" />
+  <path class="arrow" d="M600 1316 L602.5 1390" />
+  <path class="arrow" d="M642 1293 C725 1322 800 1345 837.5 1390" />
+  <path class="arrow" d="M684 1271 C840 1304 1015 1328 1072.5 1390" />
+
+  <path class="arrow" d="M132.5 1464 C132.5 1510 430 1490 600 1530" />
+  <path class="arrow" d="M367.5 1464 C367.5 1505 500 1498 600 1530" />
+  <path class="arrow" d="M602.5 1464 L600 1530" />
+  <path class="arrow" d="M837.5 1464 C837.5 1505 700 1498 600 1530" />
+  <path class="arrow" d="M1072.5 1464 C1072.5 1660 840 1788 600 1815" />
+
+  <path class="arrow" d="M600 1588 L600 1625" />
+  <path class="arrow" d="M600 1683 L600 1720" />
+  <path class="arrow" d="M600 1778 L600 1815" />
+  <path class="arrow" d="M600 1873 L600 1910" />
+  <path class="arrow" d="M600 1968 L600 2005" />
+  <path class="arrow" d="M600 2063 L600 2100" />
+</svg>

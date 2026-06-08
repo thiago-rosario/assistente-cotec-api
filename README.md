@@ -1,58 +1,206 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Assistente COTEC API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API Laravel para consulta de dados da COTEC a partir de mensagens recebidas pelo WhatsApp. O projeto combina uma ponte em Python que monitora o WhatsApp Web, uma API Laravel que interpreta e processa as mensagens, integrações com OpenAI para classificação de intenção e Google Sheets como fonte de dados operacional.
 
-## About Laravel
+## Visão geral
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+O assistente recebe mensagens de usuários, identifica a consulta solicitada, busca registros nas planilhas configuradas e devolve uma resposta amigável para o WhatsApp.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Principais capacidades:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Receber payloads de mensagens pela rota `POST /api/whatsapp/messages`.
+- Executar o bot de WhatsApp Web via comando Artisan `php artisan whatsapp:bridge`.
+- Interpretar mensagens com regras diretas e OpenAI.
+- Consultar Google Sheets por caderno técnico, demandas de construção, levantamento de terrenos e itinerários de viagem.
+- Expor endpoints REST para buscas específicas em planilhas.
+- Padronizar respostas no formato JSend.
 
-## Learning Laravel
+## Tecnologias
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.4 / Laravel 13
+- Laravel Sanctum
+- Pest 4 / PHPUnit 12
+- Laravel Pint
+- OpenAI PHP Laravel
+- Revolution Laravel Google Sheets
+- Python 3 com Selenium para automação do WhatsApp Web
+- PostgreSQL
+- Docker, Nginx e PHP-FPM
+- Vite e Tailwind CSS 4
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Arquitetura
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+O projeto separa a aplicação em camadas dentro de `src/Core`:
 
-## Agentic Development
+- `Domain`: entidades, contratos de repositório, enums e resolvedores de domínio.
+- `Application`: DTOs, interfaces, casos de uso, regras e serviços de aplicação.
+- `Infra`: adapters, parsers, mappers, gateways para Google Sheets, integração OpenAI e ponte Python.
+- `app/Http`: controllers, requests e helpers HTTP da aplicação Laravel.
+- `src/Core/Infra/External/Python`: bot Python responsável por abrir o WhatsApp Web, capturar mensagens e enviar respostas.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+O container de dependências é configurado em `app/Providers/AppServiceProvider.php`, ligando interfaces da camada de aplicação às implementações de infraestrutura.
 
-```bash
-composer require laravel/boost --dev
+## Fluxo WhatsApp
 
-php artisan boost:install
+![Fluxograma do fluxo WhatsApp](public/images/whatsapp-flowchart.svg)
+
+Fonte do fluxograma em Mermaid:
+
+```mermaid
+flowchart TD
+    A[Usuário envia mensagem no WhatsApp] --> B[Robô Python monitora WhatsApp Web]
+
+    B --> C[Python captura mensagem recebida]
+    C --> D[Python envia evento estruturado para o Laravel]
+
+    D --> E[API Laravel recebe payload da mensagem]
+
+    E --> F[PythonMessageOutputParser]
+    F --> G[PythonBridgeEventParser]
+    G --> H[PythonMessagePayloadMapper]
+
+    H --> I[ReceivedMessageInputDTO]
+
+    I --> J[ProcessWhatsappMessageUsecase]
+
+    J --> K[OpenAI interpreta a intenção da mensagem]
+
+    K --> L{Qual intenção foi identificada?}
+
+    L -->|Buscar Caderno Técnico| M[SearchTechnicalNotebookUsecase]
+    L -->|Buscar Demanda de Construção| N[SearchConstructionDemandUsecase]
+    L -->|Buscar Reformas| O[SearchReformUsecase]
+    L -->|Buscar Rotas| P[SearchRouteUsecase]
+    L -->|Intenção desconhecida| Q[Resposta padrão solicitando mais detalhes]
+
+    M --> R[Repositório consulta Google Sheets]
+    N --> R
+    O --> R
+    P --> R
+
+    R --> S[Entidade de domínio da planilha]
+    S --> T[Adapter normaliza os dados]
+    T --> U[Formatter monta resposta amigável]
+
+    Q --> U
+
+    U --> V[API retorna resposta formatada]
+    V --> W[Robô Python envia resposta no WhatsApp]
+    W --> X[Usuário recebe a resposta]
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Endpoints
 
-## Contributing
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| `GET` | `/api/google-sheet` | Lê dados de uma planilha configurada. |
+| `GET` | `/api/google-sheets/{sheetId}/search` | Busca genérica por planilha. |
+| `GET` | `/api/construction-demands/search` | Busca demandas de construção. |
+| `GET` | `/api/land-surveys/search` | Busca levantamentos de terreno. |
+| `GET` | `/api/technical-notebooks/search` | Busca cadernos técnicos. |
+| `GET` | `/api/travel-itineraries/search` | Busca itinerários de viagem. |
+| `POST` | `/api/whatsapp/messages` | Processa uma mensagem recebida pelo WhatsApp. |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Configuração
 
-## Code of Conduct
+Copie o arquivo de ambiente e ajuste as variáveis necessárias:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+Variáveis importantes:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `APP_PORT`: porta local usada pela aplicação, padrão `4200`.
+- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: conexão PostgreSQL.
+- `OPENAI_API_KEY`: chave usada para interpretar intenções de mensagens.
+- `OPENAI_ORGANIZATION` e `OPENAI_PROJECT`: opcionais, conforme configuração da conta OpenAI.
+- `GOOGLE_SHEETS_COTEC_SPREADSHEET_ID`: ID da planilha principal da COTEC.
+- `EDITACODIGO_API_KEY`: chave para obter seletores usados pelo bot Python.
+- `WHATSAPP_URL`: URL do WhatsApp Web.
+- `WHATSAPP_SESSION_FOLDER`: pasta de sessão do navegador para preservar login.
 
-## License
+As abas conhecidas da planilha COTEC estão configuradas em `config/google_sheets.php`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Execução local
+
+Instale as dependências e prepare a aplicação:
+
+```bash
+composer install
+npm install
+php artisan key:generate
+php artisan migrate
+```
+
+Suba o ambiente de desenvolvimento:
+
+```bash
+composer run dev
+```
+
+Esse comando inicia, em paralelo, o servidor Laravel, a fila, o log com Pail e o Vite.
+
+Para executar apenas a API:
+
+```bash
+php artisan serve --port=4200
+```
+
+## Execução com Docker
+
+Suba os containers:
+
+```bash
+docker compose up --build
+```
+
+Serviços principais:
+
+- `nginx`: expõe a aplicação em `http://localhost:${APP_PORT:-4200}`.
+- `app`: PHP-FPM com a aplicação Laravel.
+- `queue`: worker de filas Laravel.
+- `db`: PostgreSQL 16.
+
+## Bot do WhatsApp
+
+Para iniciar a ponte entre Python e Laravel:
+
+```bash
+php artisan whatsapp:bridge
+```
+
+O comando executa `src/Core/Infra/External/Python/main.py` com saída em JSON, captura eventos do WhatsApp Web e envia comandos de resposta de volta ao processo Python.
+
+Antes de usar, garanta que:
+
+- O ambiente Python tenha as dependências necessárias para Selenium.
+- O Chrome/driver esteja disponível no ambiente.
+- A variável `EDITACODIGO_API_KEY` esteja configurada.
+- A sessão do WhatsApp Web esteja autenticada ou possa ser autenticada no navegador.
+
+## Testes e qualidade
+
+Execute os testes:
+
+```bash
+php artisan test --compact
+```
+
+Execute um teste específico:
+
+```bash
+php artisan test --compact --filter=WhatsappMessageControllerTest
+```
+
+Formate arquivos PHP modificados:
+
+```bash
+vendor/bin/pint --dirty --format agent
+```
+
+## Estrutura de dados
+
+A fonte principal de dados é o Google Sheets. Os gateways em `src/Core/Infra/Repository/Gateway` acessam os dados e os repositórios em `src/Core/Infra/Repository/SheetRepository` aplicam buscas específicas por campos como processo, município, força, região, situação do terreno, andamento e solicitante.
+
+Os mappers em `src/Core/Infra/Mapper` normalizam linhas de planilha para entidades e DTOs usados pelos casos de uso. As respostas são montadas por `WhatsappMessageResponseFormatter`, limitando os primeiros resultados e orientando o usuário a refinar a busca quando houver muitos registros.
