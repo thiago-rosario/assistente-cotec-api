@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\SearchConstructionDemandInputDTO;
 use App\Core\Application\DTO\SearchConstructionDemandOutputDTO;
-use App\Core\Application\Interfaces\SearchConstructionDemandUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchConstructionDemandUsecaseInterface;
 use App\Core\Application\Trait\NullableResultTrait;
 use App\Core\Domain\Entity\ConstructionDemandEntity;
 use App\Core\Domain\Repository\ConstructionDemandRepositoryInterface;

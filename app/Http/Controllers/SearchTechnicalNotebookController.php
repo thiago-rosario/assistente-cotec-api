@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\SearchTechnicalNotebookAdapterInterface;
-use App\Core\Application\Interfaces\SearchTechnicalNotebookUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
 use App\Core\Exception\SearchTechnicalNotebookException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\SearchTechnicalNotebookRequest;

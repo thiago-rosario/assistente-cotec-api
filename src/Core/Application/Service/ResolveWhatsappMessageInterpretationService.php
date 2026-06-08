@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Core\Application\Service;
 
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Interfaces\InterpretWhatsappMessageWithAiServiceInterface;
-use App\Core\Application\Interfaces\ResolveWhatsappMessageInterpretationServiceInterface;
-use App\Core\Application\Interfaces\WhatsappMessageInterpretationParserInterface;
+use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
+use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
+use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Domain\Resolver\WhatsappMessageIntentResolver;
 
 class ResolveWhatsappMessageInterpretationService implements ResolveWhatsappMessageInterpretationServiceInterface

@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\SearchLandSurveyInputDTO;
 use App\Core\Application\DTO\SearchLandSurveyOutputDTO;
-use App\Core\Application\Interfaces\SearchLandSurveyUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchLandSurveyUsecaseInterface;
 use App\Core\Application\Trait\NullableResultTrait;
 use App\Core\Domain\Entity\LandSurveyEntity;
 use App\Core\Domain\Repository\LandSurveyRepositoryInterface;

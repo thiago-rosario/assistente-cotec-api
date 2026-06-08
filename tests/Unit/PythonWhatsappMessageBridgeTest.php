@@ -1,7 +1,7 @@
 <?php
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
 use App\Core\Infra\External\PythonWhatsappMessageBridge;
 
 it('builds a python send message command for a processed whatsapp reply', function () {

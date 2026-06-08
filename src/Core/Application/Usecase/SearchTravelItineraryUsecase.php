@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\SearchTravelItineraryInputDTO;
 use App\Core\Application\DTO\SearchTravelItineraryOutputDTO;
-use App\Core\Application\Interfaces\SearchTravelItineraryUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTravelItineraryUsecaseInterface;
 use App\Core\Application\Trait\NullableResultTrait;
 use App\Core\Domain\Entity\TravelItineraryEntity;
 use App\Core\Domain\Repository\TravelItineraryRepositoryInterface;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\SearchLandSurveyAdapterInterface;
-use App\Core\Application\Interfaces\SearchLandSurveyUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\SearchLandSurveyAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchLandSurveyUsecaseInterface;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\SearchLandSurveyRequest;
 use Illuminate\Http\JsonResponse;

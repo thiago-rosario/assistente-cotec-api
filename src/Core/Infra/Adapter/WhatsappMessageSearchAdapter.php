@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Adapter;
 
-use App\Core\Application\Interfaces\SearchConstructionDemandAdapterInterface;
-use App\Core\Application\Interfaces\SearchConstructionDemandUsecaseInterface;
-use App\Core\Application\Interfaces\SearchLandSurveyAdapterInterface;
-use App\Core\Application\Interfaces\SearchLandSurveyUsecaseInterface;
-use App\Core\Application\Interfaces\SearchTechnicalNotebookAdapterInterface;
-use App\Core\Application\Interfaces\SearchTechnicalNotebookUsecaseInterface;
-use App\Core\Application\Interfaces\SearchTravelItineraryAdapterInterface;
-use App\Core\Application\Interfaces\SearchTravelItineraryUsecaseInterface;
-use App\Core\Application\Interfaces\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchConstructionDemandAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchLandSurveyAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTravelItineraryAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchConstructionDemandUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchLandSurveyUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTravelItineraryUsecaseInterface;
 
 class WhatsappMessageSearchAdapter implements WhatsappMessageSearchAdapterInterface
 {

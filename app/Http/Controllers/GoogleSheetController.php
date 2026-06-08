@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\ReadGoogleSpreadsheetAdapterInterface;
-use App\Core\Application\Interfaces\ReadGoogleSpreadsheetUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\ReadGoogleSpreadsheetUsecaseInterface;
 use App\Core\Exception\GoogleSheetReadException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\GoogleSheetRequest;

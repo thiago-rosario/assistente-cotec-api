@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Mapper;
 
-use App\Core\Application\Interfaces\TravelItinerarySheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\TravelItinerarySheetMapperInterface;
 use App\Core\Domain\Entity\TravelItineraryEntity;
 use App\Core\Infra\Trait\CastsSpreadsheetValues;
 

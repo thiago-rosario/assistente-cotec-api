@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\SearchConstructionDemandAdapterInterface;
-use App\Core\Application\Interfaces\SearchConstructionDemandUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\SearchConstructionDemandAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\SearchConstructionDemandUsecaseInterface;
 use App\Core\Exception\SearchConstructionDemandException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\SearchConstructionDemandRequest;

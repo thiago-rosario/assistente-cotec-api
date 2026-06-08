@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Repository\SheetRepository;
 
-use App\Core\Application\Interfaces\TechnicalNotebookSheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
 use App\Core\Domain\Entity\TechnicalNotebookEntity;
 use App\Core\Infra\Trait\HandlesGoogleSheetRows;
 use Revolution\Google\Sheets\Facades\Sheets;

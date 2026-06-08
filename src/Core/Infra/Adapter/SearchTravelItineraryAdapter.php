@@ -6,7 +6,7 @@ namespace App\Core\Infra\Adapter;
 
 use App\Core\Application\DTO\SearchTravelItineraryInputDTO;
 use App\Core\Application\DTO\SearchTravelItineraryOutputDTO;
-use App\Core\Application\Interfaces\SearchTravelItineraryAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\SearchTravelItineraryAdapterInterface;
 
 class SearchTravelItineraryAdapter implements SearchTravelItineraryAdapterInterface
 {

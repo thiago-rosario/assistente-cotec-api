@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Infra\External;
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\PythonMessagePayloadAdapterInterface;
+use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
 use JsonException;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;

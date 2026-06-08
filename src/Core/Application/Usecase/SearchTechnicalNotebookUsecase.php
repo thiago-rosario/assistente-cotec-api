@@ -6,7 +6,7 @@ namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\SearchTechnicalNotebookInputDTO;
 use App\Core\Application\DTO\SearchTechnicalNotebookOutputDTO;
-use App\Core\Application\Interfaces\SearchTechnicalNotebookUsecaseInterface;
+use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
 use App\Core\Application\Trait\NullableResultTrait;
 use App\Core\Domain\Entity\TechnicalNotebookEntity;
 use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Mapper;
 
-use App\Core\Application\Interfaces\LandSurveySheetMapperInterface;
+use App\Core\Application\Interfaces\Mapper\LandSurveySheetMapperInterface;
 use App\Core\Domain\Entity\LandSurveyEntity;
 use App\Core\Infra\Trait\CastsSpreadsheetValues;
 
