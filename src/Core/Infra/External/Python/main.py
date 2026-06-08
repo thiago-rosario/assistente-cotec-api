@@ -15,6 +15,10 @@ def flushed_print(message: str) -> None:
     print(message, flush=True)
 
 
+def discard_output(message: str) -> None:
+    return None
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -39,7 +43,7 @@ def main() -> None:
     if arguments.bridge_output == "json":
         PhpBridgeCommandListener(
             whatsapp_service.send_message,
-            output=flushed_print,
+            output=discard_output,
         ).start()
 
     process_unread_message = ProcessUnreadMessageUseCase(whatsapp_service)
