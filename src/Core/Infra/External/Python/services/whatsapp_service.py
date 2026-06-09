@@ -116,6 +116,7 @@ class WhatsAppService:
     def __init__(self, driver: WebDriver, selectors: WhatsAppSelectors) -> None:
         self.driver = driver
         self.selectors = selectors
+        self._last_opened_unread_count = 1
 
     def _build_locator(self, selector_key: str) -> Locator:
         selector = self.selectors.get(selector_key)
@@ -186,8 +187,16 @@ class WhatsAppService:
         return ""
 
     def _read_last_customer_message_from_dom(self) -> str:
+        messages = self._read_recent_customer_messages_from_dom(limit=1)
+
+        return messages[-1] if messages else ""
+
+    def _read_recent_customer_messages_from_dom(
+        self,
+        limit: int | None = None,
+    ) -> list[str]:
         try:
-            message = self.driver.execute_script(
+            messages = self.driver.execute_script(
                 """
                 const normalize = (value) => String(value || '')
                     .replace(/\u200e|\u200f/g, '')
@@ -239,40 +248,121 @@ class WhatsAppService:
                     return [...new Set(fallbackLines)].join('\\n').trim();
                 };
 
-                const incomingMessages = [
+                const messageContainers = [
                     ...document.querySelectorAll(
-                        'div.message-in, [class*="message-in"], [data-pre-plain-text]'
+                        'div.message-in, div.message-out, '
+                        + '[class*="message-in"], [class*="message-out"], '
+                        + '[data-pre-plain-text]'
                     ),
                 ]
                     .map((element) => {
                         const container = element.closest(
-                            'div.message-in, [class*="message-in"], [data-pre-plain-text]'
+                            'div.message-in, div.message-out, '
+                            + '[class*="message-in"], [class*="message-out"], '
+                            + '[data-pre-plain-text]'
                         ) || element;
 
                         return container;
                     })
-                    .filter((element, index, list) => list.indexOf(element) === index)
-                    .filter((element) => {
+                    .filter((element, index, list) => list.indexOf(element) === index);
+
+                const rows = messageContainers
+                    .map((element) => {
                         const className = String(element.className || '');
+                        const outgoing = className.includes('message-out')
+                            || element.closest('[class*="message-out"]') !== null;
+                        const incoming = ! outgoing
+                            && (
+                                className.includes('message-in')
+                                || element.closest('[class*="message-in"]') !== null
+                                || element.hasAttribute('data-pre-plain-text')
+                            );
 
-                        return ! className.includes('message-out');
-                    });
+                        return {
+                            incoming,
+                            outgoing,
+                            text: messageText(element),
+                        };
+                    })
+                    .filter((row) => row.incoming || row.outgoing);
 
-                for (const message of incomingMessages.reverse()) {
-                    const text = messageText(message);
+                let lastOutgoingIndex = -1;
 
-                    if (text) {
-                        return text;
+                rows.forEach((row, index) => {
+                    if (row.outgoing) {
+                        lastOutgoingIndex = index;
                     }
+                });
+
+                const unreadIncomingTexts = rows
+                    .filter((row, index) => row.incoming
+                        && row.text
+                        && index > lastOutgoingIndex)
+                    .map((row) => row.text);
+
+                if (unreadIncomingTexts.length) {
+                    return unreadIncomingTexts;
                 }
 
-                return '';
+                return rows
+                    .filter((row) => row.incoming && row.text)
+                    .map((row) => row.text);
                 """
             )
         except WebDriverException:
-            return ""
+            return []
 
-        return str(message).strip() if message else ""
+        if isinstance(messages, list):
+            text_messages = [
+                str(message).strip()
+                for message in messages
+                if str(message).strip()
+            ]
+        elif messages:
+            text_messages = [str(messages).strip()]
+        else:
+            text_messages = []
+
+        if limit is not None and limit > 0:
+            return text_messages[-limit:]
+
+        return text_messages
+
+    def _unread_count_from_chat(self, chat: WebElement) -> int:
+        try:
+            unread_count = self.driver.execute_script(
+                """
+                const chat = arguments[0];
+                const unreadLabelPattern = /mensagens? n[aã]o lidas?|unread messages?/i;
+                const elements = [chat, ...chat.querySelectorAll('[aria-label]')];
+
+                for (const element of elements) {
+                    const label = element.getAttribute?.('aria-label') || '';
+
+                    if (! unreadLabelPattern.test(label)) {
+                        continue;
+                    }
+
+                    const countMatch = label.match(/\\d+/);
+
+                    return countMatch ? Number(countMatch[0]) : 1;
+                }
+
+                const badge = chat.querySelector('[data-icon="unread-count"]');
+                const text = badge?.closest('span, div')?.textContent || badge?.textContent || '';
+                const countMatch = text.match(/\\d+/);
+
+                return countMatch ? Number(countMatch[0]) : 1;
+                """,
+                chat,
+            )
+        except WebDriverException:
+            return 1
+
+        if not isinstance(unread_count, int) or unread_count < 1:
+            return 1
+
+        return unread_count
 
     def _find_chat_container(self, badge: WebElement) -> WebElement | None:
         return self.driver.execute_script(
@@ -321,7 +411,9 @@ class WhatsAppService:
         if not unread_chats:
             return False
 
-        self._click_chat(unread_chats[-1])
+        unread_chat = unread_chats[-1]
+        self._last_opened_unread_count = self._unread_count_from_chat(unread_chat)
+        self._click_chat(unread_chat)
 
         try:
             WebDriverWait(self.driver, 5).until(lambda _: self.has_open_chat())
@@ -369,16 +461,45 @@ class WhatsAppService:
             self.CUSTOMER_MESSAGE_FALLBACK_LOCATORS,
         )
 
-    def read_last_unread_message(self) -> WhatsAppMessage | None:
+    def get_recent_customer_messages(
+        self,
+        limit: int | None = None,
+    ) -> tuple[str, ...]:
+        customer_messages = self._read_recent_customer_messages_from_dom(limit)
+
+        if customer_messages:
+            return tuple(customer_messages)
+
+        fallback_message = self._wait_for_text(
+            "customer_message",
+            self.CUSTOMER_MESSAGE_FALLBACK_LOCATORS,
+        )
+
+        return (fallback_message,) if fallback_message else ()
+
+    def read_unread_messages(self) -> tuple[WhatsAppMessage, ...]:
         has_unread_chat = self.open_unread_chat()
 
         if not has_unread_chat:
-            return None
+            return ()
 
-        return WhatsAppMessage(
-            customer_contact=self.get_customer_phone(),
-            content=self.get_last_customer_message(),
+        customer_contact = self.get_customer_phone()
+        messages = self.get_recent_customer_messages(
+            limit=self._last_opened_unread_count,
+        ) or ("",)
+
+        return tuple(
+            WhatsAppMessage(
+                customer_contact=customer_contact,
+                content=message,
+            )
+            for message in messages
         )
+
+    def read_last_unread_message(self) -> WhatsAppMessage | None:
+        messages = self.read_unread_messages()
+
+        return messages[-1] if messages else None
 
     def send_message(
         self,
