@@ -7,7 +7,11 @@ from domain.whatsapp_message import WhatsAppMessage
 @dataclass(frozen=True)
 class ProcessUnreadMessageResult:
     messages: tuple[str, ...]
-    whatsapp_message: WhatsAppMessage | None = None
+    whatsapp_messages: tuple[WhatsAppMessage, ...] = ()
+
+    @property
+    def whatsapp_message(self) -> WhatsAppMessage | None:
+        return self.whatsapp_messages[-1] if self.whatsapp_messages else None
 
 
 class ProcessUnreadMessageUseCase:
@@ -15,15 +19,19 @@ class ProcessUnreadMessageUseCase:
         self.whatsapp_gateway = whatsapp_gateway
 
     def execute(self) -> ProcessUnreadMessageResult:
-        whatsapp_message = self.whatsapp_gateway.read_last_unread_message()
+        whatsapp_messages = self.whatsapp_gateway.read_unread_messages()
 
-        if whatsapp_message:
+        if whatsapp_messages:
             return ProcessUnreadMessageResult(
-                messages=(
-                    f"Mensagem recebida de: {whatsapp_message.customer_contact}",
-                    f"Conteúdo da mensagem: {whatsapp_message.content}",
+                messages=tuple(
+                    line
+                    for whatsapp_message in whatsapp_messages
+                    for line in (
+                        f"Mensagem recebida de: {whatsapp_message.customer_contact}",
+                        f"Conteúdo da mensagem: {whatsapp_message.content}",
+                    )
                 ),
-                whatsapp_message=whatsapp_message,
+                whatsapp_messages=whatsapp_messages,
             )
 
         message = "Nenhuma mensagem nova encontrada."

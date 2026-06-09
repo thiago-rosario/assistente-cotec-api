@@ -4,6 +4,9 @@ from domain.whatsapp_message import WhatsAppMessage
 
 
 class WhatsAppGateway(Protocol):
+    def read_unread_messages(self) -> tuple[WhatsAppMessage, ...]:
+        ...
+
     def read_last_unread_message(self) -> WhatsAppMessage | None:
         ...
 

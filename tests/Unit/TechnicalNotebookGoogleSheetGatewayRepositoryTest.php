@@ -158,6 +158,26 @@ it('returns all technical notebook row information when finding by sei process',
         ->and($technicalNotebook->estimatedValue)->toBe(1539740.33);
 });
 
+it('matches technical notebook municipalities with accent case and small typo variations', function (string $municipality) {
+    $technicalNotebooks = [
+        technicalNotebookGatewayEntity(municipality: 'Andaraí'),
+        technicalNotebookGatewayEntity(municipality: 'Catu'),
+    ];
+
+    $results = (new FindTechnicalNotebookByMunicipalityGoogleSheetRepository)->findByMunicipality($technicalNotebooks, $municipality);
+
+    expect($results)
+        ->toHaveCount(1)
+        ->and($results[0]->municipality)->toBe('Andaraí');
+})->with([
+    'uppercase without accent' => 'ANDARAI',
+    'uppercase with accent' => 'ANDARAÍ',
+    'title case with accent' => 'Andaraí',
+    'lowercase without accent' => 'andarai',
+    'minor typo with accent' => 'andarí',
+    'title case without accent' => 'Andarai',
+]);
+
 function technicalNotebookGatewayEntity(
     string $municipality = 'Acajutiba',
     ?string $process = null,

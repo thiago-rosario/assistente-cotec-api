@@ -17,11 +17,9 @@ class FindTechnicalNotebookByMunicipalityGoogleSheetRepository
      */
     public function findByMunicipality(array $technicalNotebooks, string $municipality): array
     {
-        $normalizedMunicipality = $this->normalize($municipality);
-
         return array_values(array_filter(
             $technicalNotebooks,
-            fn (TechnicalNotebookEntity $technicalNotebook): bool => $this->normalize($technicalNotebook->municipality) === $normalizedMunicipality,
+            fn (TechnicalNotebookEntity $technicalNotebook): bool => $this->municipalitiesMatch($technicalNotebook->municipality, $municipality),
         ));
     }
 }

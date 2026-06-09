@@ -8,6 +8,7 @@ use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface
 use App\Core\Application\Interfaces\Mapper\TravelItinerarySheetMapperInterface;
 use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
@@ -16,6 +17,7 @@ use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInte
 use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
 use App\Core\Application\Rules\MunicipalityWhatsappMessageInterpretationRule;
 use App\Core\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
+use App\Core\Application\Service\AcceptedWhatsappMessageInterpretationService;
 use App\Core\Application\Service\DirectWhatsappMessageInterpreterService;
 use App\Core\Application\Service\GreetingMessageMatcherService;
 use App\Core\Application\Service\MunicipalityExtractorService;
@@ -61,6 +63,7 @@ it('resolves spreadsheet mapper interfaces from the container', function (
     [WhatsappMessageInterpretationRuleInterface::class, MunicipalityWhatsappMessageInterpretationRule::class],
     [DirectWhatsappMessageInterpreterServiceInterface::class, DirectWhatsappMessageInterpreterService::class],
     [ResolveWhatsappMessageInterpretationServiceInterface::class, ResolveWhatsappMessageInterpretationService::class],
+    [AcceptedWhatsappMessageInterpretationServiceInterface::class, AcceptedWhatsappMessageInterpretationService::class],
     [ProcessWhatsappMessageUsecaseInterface::class, ProcessWhatsappMessageUsecase::class],
     [WhatsappMessageSearchAdapterInterface::class, WhatsappMessageSearchAdapter::class],
     [WhatsappMessageResponseFormatterInterface::class, WhatsappMessageResponseFormatter::class],
@@ -75,5 +78,13 @@ it('resolves direct whatsapp interpreter with bound interpretation rules', funct
         ->not->toBeNull()
         ->and($interpretation->filters)->toBe([
             'process' => '020.4487.2021.0009714-69',
+        ]);
+
+    $municipalityInterpretation = app(DirectWhatsappMessageInterpreterServiceInterface::class)->interpret('Bom dia, ANDARAÍ');
+
+    expect($municipalityInterpretation)
+        ->not->toBeNull()
+        ->and($municipalityInterpretation->filters)->toBe([
+            'municipality' => 'ANDARAÍ',
         ]);
 });

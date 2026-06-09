@@ -22,6 +22,7 @@ use App\Core\Application\Interfaces\Parser\PythonMessageOutputParserInterface;
 use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
 use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
+use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
@@ -37,6 +38,7 @@ use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterf
 use App\Core\Application\Interfaces\Usecase\SearchTravelItineraryUsecaseInterface;
 use App\Core\Application\Rules\MunicipalityWhatsappMessageInterpretationRule;
 use App\Core\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
+use App\Core\Application\Service\AcceptedWhatsappMessageInterpretationService;
 use App\Core\Application\Service\DirectWhatsappMessageInterpreterService;
 use App\Core\Application\Service\GreetingMessageMatcherService;
 use App\Core\Application\Service\MunicipalityExtractorService;
@@ -112,6 +114,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ResolveWhatsappMessageInterpretationServiceInterface::class, ResolveWhatsappMessageInterpretationService::class);
         $this->app->bind(WhatsappMessageSearchAdapterInterface::class, WhatsappMessageSearchAdapter::class);
         $this->app->bind(WhatsappMessageResponseFormatterInterface::class, WhatsappMessageResponseFormatter::class);
+        $this->app->bind(AcceptedWhatsappMessageInterpretationServiceInterface::class, AcceptedWhatsappMessageInterpretationService::class);
         $this->app->bind(GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class);
         $this->app->bind(ConstructionDemandSheetMapperInterface::class, ConstructionDemandSheetMapper::class);
         $this->app->bind(LandSurveySheetMapperInterface::class, LandSurveySheetMapper::class);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Infra\Service;
 
 use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
+use DateTimeInterface;
 use Illuminate\Support\Str;
 
 class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatterInterface
@@ -140,32 +141,25 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
      */
     private function buildTechnicalNotebookReply(array $filters, array $result): string
     {
-        if (filled($filters['process'] ?? null) && $result['total'] === 1) {
-            return $this->buildTechnicalNotebookDetailReply($result['data'][0]);
-        }
-
         $municipality = filled($filters['municipality'] ?? null)
             ? (string) $filters['municipality']
             : $this->recordValue($result['data'][0] ?? [], 'municipality');
-        $lines = [
-            sprintf(
-                'Encontrei %d %s%s.',
-                $result['total'],
-                $result['total'] === 1 ? 'registro' : 'registros',
-                $municipality !== null ? ' para o município '.Str::upper($municipality) : ' em cadernos técnicos',
-            ),
-        ];
 
-        $records = $this->limitedRecords($result['data']);
+        $lines = [sprintf(
+            'Encontrei %d %s%s.',
+            $result['total'],
+            $result['total'] === 1 ? 'registro' : 'registros',
+            $municipality !== null ? ' para o município '.Str::upper($municipality) : ' em cadernos técnicos',
+        )];
 
-        foreach ($records as $index => $record) {
+        foreach ($result['data'] as $index => $record) {
             $lines[] = '';
-            $lines[] = sprintf('%d. Processo: %s', $index + 1, $this->recordValue($record, 'process') ?? 'Não informado');
-            $lines[] = sprintf('   Pleito: %s', $this->recordValue($record, 'claim') ?? 'Não informado');
-            $lines[] = sprintf('   Situação: %s', $this->technicalNotebookStatus($record) ?? 'Não informado');
-        }
+            $lines[] = sprintf('%d. Registro do Caderno Técnico', $index + 1);
 
-        $this->appendRefinementHint($lines, $result['total'], count($records));
+            foreach ($this->technicalNotebookFields() as $key => $label) {
+                $lines[] = sprintf('   %s: %s', $label, $this->formatTechnicalNotebookValue($record, $key));
+            }
+        }
 
         return implode(PHP_EOL, $lines);
     }
@@ -195,35 +189,6 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
     /**
      * @param  array<string, mixed>  $record
      */
-    private function buildTechnicalNotebookDetailReply(array $record): string
-    {
-        return implode(PHP_EOL, [
-            '📋 Consulta encontrada no Caderno Técnico',
-            '',
-            '📄 Processo: '.($this->recordValue($record, 'process') ?? 'Não informado'),
-            '🏙️ Município: '.Str::upper($this->recordValue($record, 'municipality') ?? 'Não informado'),
-            '👮 Força: '.($this->recordValue($record, 'force') ?? 'Não informado'),
-            '🏗️ Pleito: '.($this->recordValue($record, 'claim') ?? 'Não informado'),
-            '🏢 Tipologia: '.($this->recordValue($record, 'typology') ?? 'Não informado'),
-            '💰 Valor estimado: '.$this->estimatedValue($record),
-            '📌 Situação do terreno: '.($this->recordValue($record, 'landStatus') ?? 'Não informado'),
-            '📑 Contrato: '.($this->recordValue($record, 'contract') ?? 'Não informado'),
-        ]);
-    }
-
-    /**
-     * @param  array<string, mixed>  $record
-     */
-    private function technicalNotebookStatus(array $record): ?string
-    {
-        return $this->recordValue($record, 'buildStatus')
-            ?? $this->recordValue($record, 'landStatus')
-            ?? $this->recordValue($record, 'claimStage');
-    }
-
-    /**
-     * @param  array<string, mixed>  $record
-     */
     private function estimatedValue(array $record): string
     {
         $value = $record['estimatedValue'] ?? null;
@@ -233,6 +198,57 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
         }
 
         return 'R$ '.number_format((float) $value, 2, ',', '.');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function technicalNotebookFields(): array
+    {
+        return [
+            'item' => 'Item',
+            'stage' => 'Etapa',
+            'municipality' => 'Município',
+            'process' => 'Processo',
+            'force' => 'Força',
+            'claim' => 'Pleito',
+            'typology' => 'Tipologia',
+            'typologyObservation' => 'Obs. tipologia',
+            'estimatedValue' => 'Valor estimado',
+            'inspection' => 'Vistoria',
+            'seiReport' => 'Relatório SEI',
+            'landStatus' => 'Status do terreno',
+            'landRegularization' => 'Regularização fundiária',
+            'soilStudy' => 'Estudo de solo',
+            'environmental' => 'Ambiental',
+            'inspectionComment' => 'Comentário da fiscalização',
+            'claimStage' => 'Etapa pleito',
+            'biddingSei' => 'SEI licitação',
+            'contract' => 'Contrato',
+            'fiplanInstrument' => 'Instrumento FIPLAN',
+            'buildStatus' => 'Status de obra',
+            'inaugurationDate' => 'Data de inauguração',
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     */
+    private function formatTechnicalNotebookValue(array $record, string $key): string
+    {
+        if ($key === 'estimatedValue') {
+            return $this->estimatedValue($record);
+        }
+
+        $value = $record[$key] ?? null;
+
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('d/m/Y');
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? 'Não informado' : $value;
     }
 
     private function intentLabel(string $intent): string

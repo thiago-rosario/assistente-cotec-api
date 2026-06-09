@@ -17,11 +17,9 @@ class FindLandSurveyByMunicipalityGoogleSheetRepository
      */
     public function findByMunicipality(array $landSurveys, string $municipality): array
     {
-        $normalizedMunicipality = $this->normalize($municipality);
-
         return array_values(array_filter(
             $landSurveys,
-            fn (LandSurveyEntity $landSurvey): bool => $this->normalize($landSurvey->municipality) === $normalizedMunicipality,
+            fn (LandSurveyEntity $landSurvey): bool => $this->municipalitiesMatch($landSurvey->municipality, $municipality),
         ));
     }
 }

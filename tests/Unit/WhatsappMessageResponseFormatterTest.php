@@ -2,7 +2,7 @@
 
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
 
-it('limits technical notebook list replies and suggests refining the search', function () {
+it('returns every technical notebook field for all municipality records', function () {
     $result = (new WhatsappMessageResponseFormatter)->format(
         intent: 'search_technical_notebook',
         filters: ['municipality' => 'Antas'],
@@ -10,11 +10,7 @@ it('limits technical notebook list replies and suggests refining the search', fu
             'term' => null,
             'total' => 4,
             'data' => [
-                [
-                    'process' => '020.4487.2021.0009714-69',
-                    'claim' => 'CONSTRUCAO',
-                    'buildStatus' => 'LICITADO',
-                ],
+                technicalNotebookFormatterRecord(),
                 [
                     'process' => '020.4487.2021.0009715-40',
                     'claim' => 'AMPLIACAO',
@@ -36,11 +32,72 @@ it('limits technical notebook list replies and suggests refining the search', fu
 
     expect($result['reply'])
         ->toContain('Encontrei 4 registros para o município ANTAS.')
-        ->toContain('1. Processo: 020.4487.2021.0009714-69')
-        ->toContain('2. Processo: 020.4487.2021.0009715-40')
-        ->toContain('3. Processo: 020.4487.2021.0009716-20')
-        ->not->toContain('4. Processo: 020.4487.2021.0009717-10')
-        ->toContain('Mostrei os primeiros resultados. Refine a busca para localizar um registro específico.');
+        ->toContain('1. Registro do Caderno Técnico')
+        ->toContain('   Item: 1')
+        ->toContain('   Etapa: Planejamento')
+        ->toContain('   Município: Antas')
+        ->toContain('   Processo: 020.4487.2021.0009714-69')
+        ->toContain('   Força: PC')
+        ->toContain('   Pleito: CONSTRUCAO')
+        ->toContain('   Tipologia: 1B')
+        ->toContain('   Obs. tipologia: Observação')
+        ->toContain('   Valor estimado: R$ 1.539.740,33')
+        ->toContain('   Vistoria: Realizada')
+        ->toContain('   Relatório SEI: SEI-123')
+        ->toContain('   Status do terreno: APROVADO')
+        ->toContain('   Regularização fundiária: Regularizado')
+        ->toContain('   Estudo de solo: Concluído')
+        ->toContain('   Ambiental: Licenciado')
+        ->toContain('   Comentário da fiscalização: Sem pendências')
+        ->toContain('   Etapa pleito: ANALISE')
+        ->toContain('   SEI licitação: SEI-LIC-123')
+        ->toContain('   Contrato: Contrato 123')
+        ->toContain('   Instrumento FIPLAN: Fiplan 123')
+        ->toContain('   Status de obra: LICITADO')
+        ->toContain('   Data de inauguração: Não informado')
+        ->toContain('4. Registro do Caderno Técnico')
+        ->toContain('   Processo: 020.4487.2021.0009717-10')
+        ->not->toContain('Mostrei os primeiros resultados.');
+});
+
+it('returns every technical notebook field when searching by sei process', function () {
+    $result = (new WhatsappMessageResponseFormatter)->format(
+        intent: 'search_technical_notebook',
+        filters: ['process' => '020.4487.2021.0009714-69'],
+        result: [
+            'term' => null,
+            'total' => 1,
+            'data' => [
+                technicalNotebookFormatterRecord(),
+            ],
+        ],
+    );
+
+    expect($result['reply'])
+        ->toContain('Encontrei 1 registro para o município ANTAS.')
+        ->toContain('1. Registro do Caderno Técnico')
+        ->toContain('   Item: 1')
+        ->toContain('   Etapa: Planejamento')
+        ->toContain('   Município: Antas')
+        ->toContain('   Processo: 020.4487.2021.0009714-69')
+        ->toContain('   Força: PC')
+        ->toContain('   Pleito: CONSTRUCAO')
+        ->toContain('   Tipologia: 1B')
+        ->toContain('   Obs. tipologia: Observação')
+        ->toContain('   Valor estimado: R$ 1.539.740,33')
+        ->toContain('   Vistoria: Realizada')
+        ->toContain('   Relatório SEI: SEI-123')
+        ->toContain('   Status do terreno: APROVADO')
+        ->toContain('   Regularização fundiária: Regularizado')
+        ->toContain('   Estudo de solo: Concluído')
+        ->toContain('   Ambiental: Licenciado')
+        ->toContain('   Comentário da fiscalização: Sem pendências')
+        ->toContain('   Etapa pleito: ANALISE')
+        ->toContain('   SEI licitação: SEI-LIC-123')
+        ->toContain('   Contrato: Contrato 123')
+        ->toContain('   Instrumento FIPLAN: Fiplan 123')
+        ->toContain('   Status de obra: LICITADO')
+        ->toContain('   Data de inauguração: Não informado');
 });
 
 it('keeps empty response payload shape consistent', function () {
@@ -54,3 +111,34 @@ it('keeps empty response payload shape consistent', function () {
         'filters' => [],
     ]);
 });
+
+/**
+ * @return array<string, mixed>
+ */
+function technicalNotebookFormatterRecord(): array
+{
+    return [
+        'item' => 1,
+        'stage' => 'Planejamento',
+        'municipality' => 'Antas',
+        'process' => '020.4487.2021.0009714-69',
+        'force' => 'PC',
+        'claim' => 'CONSTRUCAO',
+        'typology' => '1B',
+        'typologyObservation' => 'Observação',
+        'estimatedValue' => 1539740.33,
+        'inspection' => 'Realizada',
+        'seiReport' => 'SEI-123',
+        'landStatus' => 'APROVADO',
+        'landRegularization' => 'Regularizado',
+        'soilStudy' => 'Concluído',
+        'environmental' => 'Licenciado',
+        'inspectionComment' => 'Sem pendências',
+        'claimStage' => 'ANALISE',
+        'biddingSei' => 'SEI-LIC-123',
+        'contract' => 'Contrato 123',
+        'fiplanInstrument' => 'Fiplan 123',
+        'buildStatus' => 'LICITADO',
+        'inaugurationDate' => null,
+    ];
+}
