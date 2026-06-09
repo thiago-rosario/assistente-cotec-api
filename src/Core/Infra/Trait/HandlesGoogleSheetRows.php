@@ -37,7 +37,47 @@ trait HandlesGoogleSheetRows
             ->trim()
             ->lower()
             ->ascii()
+            ->replaceMatches('/\s+/', ' ')
             ->toString();
+    }
+
+    private function municipalitiesMatch(string $candidate, string $municipality): bool
+    {
+        $normalizedCandidate = $this->normalizeMunicipality($candidate);
+        $normalizedMunicipality = $this->normalizeMunicipality($municipality);
+
+        if ($normalizedCandidate === '' || $normalizedMunicipality === '') {
+            return false;
+        }
+
+        if ($normalizedCandidate === $normalizedMunicipality) {
+            return true;
+        }
+
+        $allowedDistance = $this->allowedMunicipalityDistance($normalizedMunicipality);
+
+        return $allowedDistance > 0
+            && levenshtein($normalizedCandidate, $normalizedMunicipality) <= $allowedDistance;
+    }
+
+    private function normalizeMunicipality(string $value): string
+    {
+        return Str::of($this->normalize($value))
+            ->replaceMatches('/\b(d[aeo]s?)\b/', ' ')
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->toString();
+    }
+
+    private function allowedMunicipalityDistance(string $normalizedMunicipality): int
+    {
+        $length = mb_strlen($normalizedMunicipality);
+
+        return match (true) {
+            $length >= 12 => 2,
+            $length >= 5 => 1,
+            default => 0,
+        };
     }
 
     private function processesMatch(?string $candidate, string $process): bool
