@@ -6,6 +6,10 @@ from pathlib import Path
 PYTHON_APP_PATH = Path(__file__).resolve().parents[2] / "src/Core/Infra/External/Python"
 sys.path.insert(0, str(PYTHON_APP_PATH))
 
+from application.process_unread_message import ProcessUnreadMessageUseCase  # noqa: E402
+from application.whatsapp_bot import WhatsAppBot  # noqa: E402
+from domain.whatsapp_message import WhatsAppMessage  # noqa: E402
+from services.php_bridge_message_formatter import PhpBridgeMessageFormatter  # noqa: E402
 from services.whatsapp_service import WhatsAppService  # noqa: E402
 
 
@@ -15,7 +19,7 @@ class FakeSelectors:
 
 
 class FakeDriver:
-    def __init__(self, message: str = "") -> None:
+    def __init__(self, message: str | list[str] = "") -> None:
         self.message = message
         self.script_calls = []
 
@@ -26,6 +30,27 @@ class FakeDriver:
             return None
 
         return self.message
+
+
+class FakeGateway:
+    def __init__(self, messages: tuple[WhatsAppMessage, ...]) -> None:
+        self.messages = messages
+
+    def read_unread_messages(self) -> tuple[WhatsAppMessage, ...]:
+        return self.messages
+
+    def read_last_unread_message(self) -> WhatsAppMessage | None:
+        return self.messages[-1] if self.messages else None
+
+    def has_whatsapp_loaded(self) -> bool:
+        return True
+
+    def send_message(
+        self,
+        content: str,
+        customer_contact: str | None = None,
+    ) -> bool:
+        return True
 
 
 class FakeMessageBox:
@@ -40,6 +65,20 @@ class FakeMessageBox:
         self.sent_keys.append(value)
 
 
+class NoTextWhatsAppService(WhatsAppService):
+    def open_unread_chat(self) -> bool:
+        return True
+
+    def get_customer_phone(self) -> str:
+        return "Thiago"
+
+    def get_recent_customer_messages(
+        self,
+        limit: int | None = None,
+    ) -> tuple[str, ...]:
+        return ()
+
+
 class WhatsAppServiceTest(unittest.TestCase):
     def test_reads_last_customer_message_from_dom_before_fallback(self) -> None:
         service = WhatsAppService(
@@ -51,6 +90,74 @@ class WhatsAppServiceTest(unittest.TestCase):
             service.get_last_customer_message(),
             "030.2647.2023.0170476-39",
         )
+
+    def test_reads_recent_customer_messages_from_dom_before_fallback(self) -> None:
+        service = WhatsAppService(
+            driver=FakeDriver(["020.4487.2021.0009714-69", "ANDARAÍ"]),
+            selectors=FakeSelectors(),
+        )
+
+        self.assertEqual(
+            service.get_recent_customer_messages(limit=2),
+            ("020.4487.2021.0009714-69", "ANDARAÍ"),
+        )
+
+    def test_keeps_unread_message_event_when_text_content_is_empty(self) -> None:
+        service = NoTextWhatsAppService(
+            driver=FakeDriver(),
+            selectors=FakeSelectors(),
+        )
+
+        messages = service.read_unread_messages()
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].customer_contact, "Thiago")
+        self.assertEqual(messages[0].content, "")
+
+    def test_processes_every_unread_message_from_the_same_chat(self) -> None:
+        use_case = ProcessUnreadMessageUseCase(
+            FakeGateway(
+                (
+                    WhatsAppMessage("Thiago", "020.4487.2021.0009714-69"),
+                    WhatsAppMessage("Thiago", "ANDARAÍ"),
+                )
+            )
+        )
+
+        result = use_case.execute()
+
+        self.assertEqual(len(result.whatsapp_messages), 2)
+        self.assertEqual(
+            result.messages,
+            (
+                "Mensagem recebida de: Thiago",
+                "Conteúdo da mensagem: 020.4487.2021.0009714-69",
+                "Mensagem recebida de: Thiago",
+                "Conteúdo da mensagem: ANDARAÍ",
+            ),
+        )
+
+    def test_bot_outputs_one_bridge_event_per_unread_message(self) -> None:
+        output: list[str] = []
+        bot = WhatsAppBot(
+            ProcessUnreadMessageUseCase(
+                FakeGateway(
+                    (
+                        WhatsAppMessage("Thiago", "020.4487.2021.0009714-69"),
+                        WhatsAppMessage("Thiago", "ANDARAÍ"),
+                    )
+                )
+            ),
+            interval_seconds=0,
+            output=output.append,
+            message_formatter=PhpBridgeMessageFormatter(),
+        )
+
+        bot._process_next_message()
+
+        self.assertEqual(len(output), 2)
+        self.assertIn('"content": "020.4487.2021.0009714-69"', output[0])
+        self.assertIn('"content": "ANDARAÍ"', output[1])
 
     def test_types_non_bmp_characters_with_javascript_insert_text(self) -> None:
         driver = FakeDriver()

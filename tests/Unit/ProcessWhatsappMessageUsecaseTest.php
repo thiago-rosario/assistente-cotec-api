@@ -3,10 +3,12 @@
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
 use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
+use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -42,6 +44,7 @@ it('answers greeting messages without resolving interpretation or searching reco
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
     ))(new ReceivedMessageInputDTO(message: 'Olá!'));
 
     expect($result['intent'])->toBe('greeting');
@@ -99,6 +102,11 @@ it('searches and formats resolved whatsapp message interpretations', function ()
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(
+            accepts: true,
+            intent: 'search_technical_notebook',
+            filters: ['municipality' => 'Antas'],
+        ),
     ))(new ReceivedMessageInputDTO(message: 'Quero consultar Antas'));
 
     expect($result)
@@ -138,7 +146,53 @@ it('returns unknown response when interpretation stays unknown', function () {
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
     ))(new ReceivedMessageInputDTO(message: 'Qual é a previsão do tempo?'));
+
+    expect($result['intent'])->toBe('unknown');
+});
+
+it('does not search technical notebooks without municipality or sei process filters', function () {
+    $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
+    $greetingMatcher->shouldReceive('matches')
+        ->once()
+        ->with('Quero consultar por força PC')
+        ->andReturnFalse();
+
+    $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
+    $resolveInterpretation->shouldReceive('__invoke')
+        ->once()
+        ->with('Quero consultar por força PC')
+        ->andReturn(new WhatsappMessageInterpretationDTO(
+            intent: 'search_technical_notebook',
+            filters: ['force' => 'PC'],
+        ));
+
+    $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
+    $searchAdapter->shouldReceive('search')->never();
+
+    $responseFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+    $responseFormatter->shouldReceive('unknownIntent')
+        ->once()
+        ->andReturn([
+            'reply' => 'Não consegui identificar exatamente qual consulta você deseja fazer.',
+            'intent' => 'unknown',
+            'total' => 0,
+            'data' => [],
+            'filters' => [],
+        ]);
+
+    $result = (new ProcessWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(
+            accepts: false,
+            intent: 'search_technical_notebook',
+            filters: ['force' => 'PC'],
+        ),
+    ))(new ReceivedMessageInputDTO(message: 'Quero consultar por força PC'));
 
     expect($result['intent'])->toBe('unknown');
 });
@@ -169,6 +223,7 @@ it('handles messages without text content in php without resolving interpretatio
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
     ))(new ReceivedMessageInputDTO(message: ''));
 
     expect($result['intent'])->toBe('unsupported_message_content');
@@ -210,6 +265,7 @@ it('returns rate limited response without reporting when openai limit is exceede
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
     ))(new ReceivedMessageInputDTO(message: 'Quero consultar Antas'));
 
     expect($result['intent'])->toBe('rate_limited');
@@ -257,7 +313,71 @@ it('returns data source unavailable response when external search cannot connect
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(
+            accepts: true,
+            intent: 'search_technical_notebook',
+            filters: ['process' => '030.2647.2023.0170476-39'],
+        ),
     ))(new ReceivedMessageInputDTO(message: '030.2647.2023.0170476-39'));
+
+    expect($result['intent'])->toBe('data_source_unavailable');
+});
+
+it('returns data source unavailable response and reports when google sheets rejects credentials', function () {
+    $exceptionHandler = Mockery::mock(ExceptionHandler::class);
+    $exceptionHandler->shouldReceive('report')
+        ->once()
+        ->with(Mockery::type(GoogleServiceException::class));
+    app()->instance(ExceptionHandler::class, $exceptionHandler);
+
+    $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
+    $greetingMatcher->shouldReceive('matches')
+        ->once()
+        ->with('ANDARAÍ')
+        ->andReturnFalse();
+
+    $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
+    $resolveInterpretation->shouldReceive('__invoke')
+        ->once()
+        ->with('ANDARAÍ')
+        ->andReturn(new WhatsappMessageInterpretationDTO(
+            intent: 'search_technical_notebook',
+            filters: ['municipality' => 'ANDARAÍ'],
+        ));
+
+    $googleException = new GoogleServiceException(
+        '{"error":"invalid_grant","error_description":"Invalid JWT Signature."}',
+        400,
+    );
+
+    $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
+    $searchAdapter->shouldReceive('search')
+        ->once()
+        ->with('search_technical_notebook', ['municipality' => 'ANDARAÍ'])
+        ->andThrow($googleException);
+
+    $responseFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+    $responseFormatter->shouldReceive('dataSourceUnavailable')
+        ->once()
+        ->andReturn([
+            'reply' => 'Entendi sua consulta, mas não consegui acessar a fonte de dados agora.',
+            'intent' => 'data_source_unavailable',
+            'total' => 0,
+            'data' => [],
+            'filters' => [],
+        ]);
+
+    $result = (new ProcessWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(
+            accepts: true,
+            intent: 'search_technical_notebook',
+            filters: ['municipality' => 'ANDARAÍ'],
+        ),
+    ))(new ReceivedMessageInputDTO(message: 'ANDARAÍ'));
 
     expect($result['intent'])->toBe('data_source_unavailable');
 });
@@ -296,7 +416,35 @@ it('returns error response when processing fails', function () {
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
     ))(new ReceivedMessageInputDTO(message: 'Olá!'));
 
     expect($result['intent'])->toBe('error');
 });
+
+/**
+ * @param  array<string, mixed>|null  $filters
+ */
+function acceptedWhatsappMessageInterpretationServiceMock(
+    ?bool $accepts = null,
+    ?string $intent = null,
+    ?array $filters = null,
+): AcceptedWhatsappMessageInterpretationServiceInterface {
+    $service = Mockery::mock(AcceptedWhatsappMessageInterpretationServiceInterface::class);
+
+    if ($accepts === null) {
+        $service->shouldReceive('accepts')->never();
+
+        return $service;
+    }
+
+    $expectation = $service->shouldReceive('accepts')->once();
+
+    if ($intent !== null && $filters !== null) {
+        $expectation->with($intent, $filters);
+    }
+
+    $expectation->andReturn($accepts);
+
+    return $service;
+}
