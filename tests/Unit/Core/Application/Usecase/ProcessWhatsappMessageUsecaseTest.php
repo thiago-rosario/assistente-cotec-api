@@ -14,6 +14,9 @@ use GuzzleHttp\Psr7\Request;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use OpenAI\Exceptions\RateLimitException;
 use Psr\Http\Message\ResponseInterface;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 it('answers greeting messages without resolving interpretation or searching records', function () {
     $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
