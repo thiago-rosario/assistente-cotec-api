@@ -17,11 +17,9 @@ class FindConstructionDemandByMunicipalityGoogleSheetRepository
      */
     public function findByMunicipality(array $constructionDemands, string $municipality): array
     {
-        $normalizedMunicipality = $this->normalize($municipality);
-
         return array_values(array_filter(
             $constructionDemands,
-            fn (ConstructionDemandEntity $constructionDemand): bool => $this->normalize($constructionDemand->municipality) === $normalizedMunicipality,
+            fn (ConstructionDemandEntity $constructionDemand): bool => $this->municipalitiesMatch($constructionDemand->municipality, $municipality),
         ));
     }
 }

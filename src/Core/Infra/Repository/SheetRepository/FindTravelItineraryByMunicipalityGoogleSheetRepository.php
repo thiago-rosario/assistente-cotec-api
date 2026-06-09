@@ -17,11 +17,9 @@ class FindTravelItineraryByMunicipalityGoogleSheetRepository
      */
     public function findByMunicipality(array $travelItineraries, string $municipality): array
     {
-        $normalizedMunicipality = $this->normalize($municipality);
-
         return array_values(array_filter(
             $travelItineraries,
-            fn (TravelItineraryEntity $travelItinerary): bool => $this->normalize($travelItinerary->municipality) === $normalizedMunicipality,
+            fn (TravelItineraryEntity $travelItinerary): bool => $this->municipalitiesMatch($travelItinerary->municipality, $municipality),
         ));
     }
 }
