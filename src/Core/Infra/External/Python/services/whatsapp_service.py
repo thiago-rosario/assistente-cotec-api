@@ -117,6 +117,7 @@ class WhatsAppService:
         self.driver = driver
         self.selectors = selectors
         self._last_opened_unread_count = 1
+        self._visible_customer_messages_by_contact: dict[str, tuple[str, ...]] = {}
 
     def _build_locator(self, selector_key: str) -> Locator:
         selector = self.selectors.get(selector_key)
@@ -191,12 +192,27 @@ class WhatsAppService:
 
         return messages[-1] if messages else ""
 
-    def _read_recent_customer_messages_from_dom(
+    def _normalize_message_text(self, message: object) -> str:
+        return " ".join(str(message).split()).strip()
+
+    def _message_texts_from_value(self, messages: object) -> tuple[str, ...]:
+        if isinstance(messages, (list, tuple)):
+            return tuple(
+                text
+                for message in messages
+                if (text := self._normalize_message_text(message))
+            )
+
+        if messages and (message := self._normalize_message_text(messages)):
+            return (message,)
+
+        return ()
+
+    def _read_customer_message_snapshot_from_dom(
         self,
-        limit: int | None = None,
-    ) -> list[str]:
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
         try:
-            messages = self.driver.execute_script(
+            message_snapshot = self.driver.execute_script(
                 """
                 const normalize = (value) => String(value || '')
                     .replace(/\u200e|\u200f/g, '')
@@ -294,39 +310,131 @@ class WhatsAppService:
                     }
                 });
 
-                const unreadIncomingTexts = rows
-                    .filter((row, index) => row.incoming
-                        && row.text
-                        && index > lastOutgoingIndex)
-                    .map((row) => row.text);
-
-                if (unreadIncomingTexts.length) {
-                    return unreadIncomingTexts;
-                }
-
-                return rows
+                const allIncomingTexts = rows
                     .filter((row) => row.incoming && row.text)
                     .map((row) => row.text);
+
+                const allConversationTexts = rows
+                    .filter((row) => row.text)
+                    .map((row) => row.text);
+
+                const incomingAfterLastOutgoingTexts = lastOutgoingIndex === -1
+                    ? []
+                    : rows
+                        .filter((row, index) => row.incoming
+                            && row.text
+                            && index > lastOutgoingIndex)
+                        .map((row) => row.text);
+
+                return {
+                    allIncomingTexts,
+                    allConversationTexts,
+                    incomingAfterLastOutgoingTexts,
+                };
                 """
             )
         except WebDriverException:
-            return []
+            return (), ()
 
-        if isinstance(messages, list):
-            text_messages = [
-                str(message).strip()
-                for message in messages
-                if str(message).strip()
-            ]
-        elif messages:
-            text_messages = [str(messages).strip()]
-        else:
-            text_messages = []
+        if isinstance(message_snapshot, dict):
+            return (
+                self._message_texts_from_value(
+                    message_snapshot.get("allConversationTexts")
+                    or message_snapshot.get("allIncomingTexts"),
+                ),
+                self._message_texts_from_value(
+                    message_snapshot.get("incomingAfterLastOutgoingTexts"),
+                ),
+            )
+
+        text_messages = self._message_texts_from_value(message_snapshot)
+
+        return text_messages, text_messages
+
+    def _read_recent_customer_messages_from_dom(
+        self,
+        limit: int | None = None,
+    ) -> list[str]:
+        all_messages, incoming_after_last_outgoing = (
+            self._read_customer_message_snapshot_from_dom()
+        )
+        text_messages = incoming_after_last_outgoing or all_messages
 
         if limit is not None and limit > 0:
-            return text_messages[-limit:]
+            return list(text_messages[-limit:])
 
-        return text_messages
+        return list(text_messages)
+
+    def _remember_visible_customer_messages(self, customer_contact: str) -> None:
+        all_messages, _ = self._read_customer_message_snapshot_from_dom()
+
+        self._visible_customer_messages_by_contact[customer_contact] = all_messages
+
+    def _remember_open_chat_messages(
+        self,
+        customer_contact: str | None = None,
+        fallback_messages: tuple[str, ...] = (),
+    ) -> None:
+        visible_customer_contact = self.get_customer_phone()
+        all_messages, _ = self._read_customer_message_snapshot_from_dom()
+
+        if len(all_messages) < len(fallback_messages):
+            all_messages = fallback_messages
+
+        self._visible_customer_messages_by_contact[visible_customer_contact] = (
+            all_messages
+        )
+
+        if customer_contact and customer_contact != visible_customer_contact:
+            self._visible_customer_messages_by_contact[customer_contact] = (
+                all_messages
+            )
+
+    def _new_customer_message_texts(
+        self,
+        previous_messages: tuple[str, ...],
+        current_messages: tuple[str, ...],
+    ) -> tuple[str, ...]:
+        if not current_messages:
+            return ()
+
+        if not previous_messages:
+            return current_messages
+
+        max_overlap = min(len(previous_messages), len(current_messages))
+
+        for overlap in range(max_overlap, 0, -1):
+            if previous_messages[-overlap:] == current_messages[:overlap]:
+                return current_messages[overlap:]
+
+        return current_messages
+
+    def _read_open_chat_messages(self) -> tuple[WhatsAppMessage, ...]:
+        customer_contact = self.get_customer_phone()
+        all_messages, incoming_after_last_outgoing = (
+            self._read_customer_message_snapshot_from_dom()
+        )
+        previous_messages = self._visible_customer_messages_by_contact.get(
+            customer_contact,
+        )
+
+        self._visible_customer_messages_by_contact[customer_contact] = all_messages
+
+        if previous_messages is None:
+            new_messages = incoming_after_last_outgoing or all_messages[-1:]
+        else:
+            new_messages = self._new_customer_message_texts(
+                previous_messages,
+                all_messages,
+            )
+
+        return tuple(
+            WhatsAppMessage(
+                customer_contact=customer_contact,
+                content=message,
+            )
+            for message in new_messages
+        )
 
     def _unread_count_from_chat(self, chat: WebElement) -> int:
         try:
@@ -481,12 +589,16 @@ class WhatsAppService:
         has_unread_chat = self.open_unread_chat()
 
         if not has_unread_chat:
+            if self.has_open_chat():
+                return self._read_open_chat_messages()
+
             return ()
 
         customer_contact = self.get_customer_phone()
         messages = self.get_recent_customer_messages(
             limit=self._last_opened_unread_count,
         ) or ("",)
+        self._remember_visible_customer_messages(customer_contact)
 
         return tuple(
             WhatsAppMessage(
@@ -514,7 +626,15 @@ class WhatsAppService:
         if message_box is None:
             return False
 
+        previous_messages = self._read_customer_message_snapshot_from_dom()[0]
+        previous_message_count = len(previous_messages)
         self._type_message(message_box, content)
+        self._wait_until_message_count_changes(previous_message_count)
+        self._remember_open_chat_messages(
+            customer_contact,
+            fallback_messages=previous_messages
+            + (self._normalize_message_text(content),),
+        )
 
         return True
 
@@ -571,3 +691,12 @@ class WhatsAppService:
 
     def _has_non_bmp_character(self, value: str) -> bool:
         return any(ord(character) > 0xFFFF for character in value)
+
+    def _wait_until_message_count_changes(self, previous_message_count: int) -> None:
+        try:
+            WebDriverWait(self.driver, 5).until(
+                lambda _: len(self._read_customer_message_snapshot_from_dom()[0])
+                > previous_message_count
+            )
+        except WebDriverException:
+            return
