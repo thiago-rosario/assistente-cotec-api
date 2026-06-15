@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Helper;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\JsonResponse;
 use InvalidArgumentException;
@@ -93,7 +94,15 @@ final readonly class ResponseJsend implements JsonSerializable
     private function normalizeData(mixed $data): mixed
     {
         if ($data instanceof Arrayable) {
-            return $data->toArray();
+            return $this->normalizeData($data->toArray());
+        }
+
+        if ($data instanceof DateTimeInterface) {
+            return $data->format('Y-m-d');
+        }
+
+        if (is_array($data)) {
+            return array_map(fn (mixed $value): mixed => $this->normalizeData($value), $data);
         }
 
         return $data;

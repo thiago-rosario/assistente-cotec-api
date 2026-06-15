@@ -35,7 +35,7 @@ return [
                 'key' => 'pesquisa',
                 'name' => 'PESQUISA',
             ],
-            1843958344 => [
+            2106669123 => [
                 'key' => 'caderno-tecnico',
                 'name' => 'CADERNO TÉCNICO',
             ],

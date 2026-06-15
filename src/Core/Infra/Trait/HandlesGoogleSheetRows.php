@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 
 trait HandlesGoogleSheetRows
 {
+    private const string TechnicalNotebookSheetKey = 'caderno-tecnico';
+
     private function combineHeader(array $header, array $row): array
     {
         $header = array_map(fn (mixed $value): string => trim((string) $value), $header);
@@ -120,6 +122,12 @@ trait HandlesGoogleSheetRows
 
     private function sheetName(): string
     {
-        return (string) config('google_sheets.cotec_spreadsheet.sheets.1843958344.name');
+        foreach (config('google_sheets.cotec_spreadsheet.sheets', []) as $sheet) {
+            if (is_array($sheet) && ($sheet['key'] ?? null) === self::TechnicalNotebookSheetKey) {
+                return (string) ($sheet['name'] ?? '');
+            }
+        }
+
+        return '';
     }
 }
