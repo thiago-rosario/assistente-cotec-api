@@ -1,9 +1,16 @@
 <?php
 
+use App\Core\Infra\Message\FoundRecordsReplyBuilder;
+use App\Core\Infra\Message\GenericRecordsReplyBuilder;
+use App\Core\Infra\Message\TechnicalNotebookReplyBuilder;
+use App\Core\Infra\Message\WhatsappDefaultReplies;
+use App\Core\Infra\Message\WhatsappIntentLabel;
+use App\Core\Infra\Message\WhatsappRecordValueFormatter;
+use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
 
 it('returns every technical notebook field for all municipality records', function () {
-    $result = (new WhatsappMessageResponseFormatter)->format(
+    $result = whatsappMessageResponseFormatter()->format(
         intent: 'search_technical_notebook',
         filters: ['municipality' => 'Antas'],
         result: [
@@ -61,7 +68,7 @@ it('returns every technical notebook field for all municipality records', functi
 });
 
 it('returns every technical notebook field when searching by sei process', function () {
-    $result = (new WhatsappMessageResponseFormatter)->format(
+    $result = whatsappMessageResponseFormatter()->format(
         intent: 'search_technical_notebook',
         filters: ['process' => '020.4487.2021.0009714-69'],
         result: [
@@ -100,8 +107,70 @@ it('returns every technical notebook field when searching by sei process', funct
         ->toContain('   Data de inauguração: Não informado');
 });
 
+it('summarizes generic records and suggests refinement when results are limited', function () {
+    $result = whatsappMessageResponseFormatter()->format(
+        intent: 'search_construction_demand',
+        filters: ['municipality' => 'Feira de Santana'],
+        result: [
+            'term' => null,
+            'total' => 4,
+            'data' => [
+                [
+                    'process' => 'PROC-1',
+                    'municipality' => 'Feira de Santana',
+                    'force' => 'PM',
+                    'region' => 'Norte',
+                    'landStatus' => 'Regular',
+                    'progress' => 'Em análise',
+                    'buildStatus' => 'Licitado',
+                    'requester' => 'COTEC',
+                ],
+                [
+                    'process' => 'PROC-2',
+                    'municipality' => 'Feira de Santana',
+                ],
+                [
+                    'unknown' => 'Sem campos conhecidos',
+                ],
+                [
+                    'process' => 'PROC-4',
+                    'municipality' => 'Feira de Santana',
+                ],
+            ],
+        ],
+    );
+
+    expect($result['reply'])
+        ->toContain('Encontrei 4 registro(s) em demandas de construção.')
+        ->toContain('1. Processo: PROC-1 | Município: Feira de Santana | Força: PM | Região: Norte | Terreno: Regular | Andamento: Em análise | Construção: Licitado | Solicitante: COTEC')
+        ->toContain('2. Processo: PROC-2 | Município: Feira de Santana')
+        ->toContain('3. Registro sem resumo disponível.')
+        ->toContain('Mostrei os primeiros resultados. Refine a busca para localizar um registro específico.')
+        ->not->toContain('4. Processo: PROC-4');
+});
+
+it('returns no records message while preserving payload filters', function () {
+    $result = whatsappMessageResponseFormatter()->format(
+        intent: 'search_land_survey',
+        filters: ['municipality' => 'Antas'],
+        result: [
+            'term' => null,
+            'total' => 0,
+            'data' => [],
+        ],
+    );
+
+    expect($result)->toBe([
+        'reply' => 'Não encontrei registros para essa consulta. Tente informar o número do processo, município, força, região ou situação.',
+        'intent' => 'search_land_survey',
+        'total' => 0,
+        'data' => [],
+        'filters' => ['municipality' => 'Antas'],
+    ]);
+});
+
 it('keeps empty response payload shape consistent', function () {
-    $result = (new WhatsappMessageResponseFormatter)->rateLimited();
+    $result = whatsappMessageResponseFormatter()->rateLimited();
 
     expect($result)->toBe([
         'reply' => 'Recebi sua mensagem, mas o serviço de interpretação está temporariamente no limite. Tente novamente em alguns instantes.',
@@ -111,6 +180,38 @@ it('keeps empty response payload shape consistent', function () {
         'filters' => [],
     ]);
 });
+
+it('returns the COTEC welcome message for greetings', function () {
+    $result = whatsappMessageResponseFormatter()->greeting();
+
+    expect($result)->toBe([
+        'reply' => "Olá! Eu sou o assistente da COTEC.\n\n"
+            ."Posso te ajudar a consultar informações do *Painel de Obras da CEIRF/SSP*.\n\n"
+            ."Para iniciar a consulta, envie uma das opções abaixo:\n\n"
+            ."• Nome do município\n"
+            ."• Número do processo de solicitação do pleito\n"
+            ."• Número do processo da licitação ou do contrato\n\n"
+            .'Quanto mais direto for o envio, melhor será o atendimento.',
+        'intent' => 'greeting',
+        'total' => 0,
+        'data' => [],
+        'filters' => [],
+    ]);
+});
+
+function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
+{
+    $valueFormatter = new WhatsappRecordValueFormatter;
+
+    return new WhatsappMessageResponseFormatter(
+        new WhatsappDefaultReplies,
+        new WhatsappResponsePayloadFactory,
+        new FoundRecordsReplyBuilder(
+            new TechnicalNotebookReplyBuilder($valueFormatter),
+            new GenericRecordsReplyBuilder(new WhatsappIntentLabel, $valueFormatter),
+        ),
+    );
+}
 
 /**
  * @return array<string, mixed>
