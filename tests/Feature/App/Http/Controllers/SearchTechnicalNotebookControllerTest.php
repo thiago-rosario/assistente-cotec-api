@@ -48,6 +48,7 @@ it('searches technical notebooks by municipality and returns complete row inform
                 'CONTRATO',
                 'INSTRUMENTO FIPLAN',
                 'STATUS DE OBRA',
+                'DATA DE INAUGURAÇÃO',
             ],
             [
                 '1',
@@ -71,6 +72,7 @@ it('searches technical notebooks by municipality and returns complete row inform
                 'Contrato 123',
                 'Fiplan 123',
                 'Em andamento',
+                '4/30/2023',
             ],
             [
                 '2',
@@ -94,6 +96,7 @@ it('searches technical notebooks by municipality and returns complete row inform
                 '',
                 '',
                 'Concluída',
+                '',
             ],
         ]));
 
@@ -127,7 +130,7 @@ it('searches technical notebooks by municipality and returns complete row inform
                         'contract' => 'Contrato 123',
                         'fiplanInstrument' => 'Fiplan 123',
                         'buildStatus' => 'Em andamento',
-                        'inaugurationDate' => null,
+                        'inaugurationDate' => '2023-04-30',
                     ],
                 ],
             ],

@@ -32,13 +32,13 @@ it('searches only the configured google sheet requested by gid', function () {
             ['Lauro de Freitas', 'Unidade Salvador Norte', 'Pendente'],
         ]));
 
-    $this->getJson('/api/google-sheets/1843958344/search?q=salvador')
+    $this->getJson('/api/google-sheets/2106669123/search?q=salvador')
         ->assertSuccessful()
         ->assertJson([
             'status' => 'success',
             'data' => [
                 'spreadsheet_id' => '1pcjdC19nNJAPKIYCirgwIBZIJsBrcFuCTpDEOUbpPOw',
-                'sheet_id' => 1843958344,
+                'sheet_id' => 2106669123,
                 'sheet' => 'CADERNO TÉCNICO',
                 'search' => 'salvador',
                 'total' => 2,
@@ -74,7 +74,7 @@ it('returns a standardized error when the requested sheet is not configured', fu
 it('requires the q query parameter for google sheet searches', function () {
     Sheets::shouldReceive('spreadsheet')->never();
 
-    $this->getJson('/api/google-sheets/1843958344/search')
+    $this->getJson('/api/google-sheets/2106669123/search')
         ->assertUnprocessable()
         ->assertJson([
             'status' => 'fail',

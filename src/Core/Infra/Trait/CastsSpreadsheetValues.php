@@ -70,10 +70,10 @@ trait CastsSpreadsheetValues
             return null;
         }
 
-        foreach (['d/m/Y', 'd-m-Y', 'Y-m-d'] as $format) {
+        foreach (['!j/n/Y', '!j-n-Y', '!Y-m-d', '!n/j/Y'] as $format) {
             $date = DateTimeImmutable::createFromFormat($format, $value);
 
-            if ($date instanceof DateTimeImmutable) {
+            if ($date instanceof DateTimeImmutable && $this->dateWasParsedWithoutErrors()) {
                 return $date;
             }
         }
@@ -83,6 +83,14 @@ trait CastsSpreadsheetValues
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private function dateWasParsedWithoutErrors(): bool
+    {
+        $errors = DateTimeImmutable::getLastErrors();
+
+        return $errors === false
+            || ((int) $errors['warning_count'] === 0 && (int) $errors['error_count'] === 0);
     }
 
     private function normalizeRowKey(string $key): string

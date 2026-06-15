@@ -36,7 +36,7 @@ class TechnicalNotebookSheetMapper implements TechnicalNotebookSheetMapperInterf
             contract: $this->toString($row['CONTRATO'] ?? null),
             fiplanInstrument: $this->toString($row['INSTRUMENTO FIPLAN'] ?? null),
             buildStatus: $this->toString($row['STATUS DE OBRA'] ?? null),
-            inaugurationDate: null,
+            inaugurationDate: $this->toDateTimeImmutable($this->rowValue($row, 'DATA DE INAUGURAÇÃO', 'DATA INAUGURAÇÃO')),
         );
     }
 }
