@@ -117,7 +117,7 @@ class WhatsAppService:
         self.driver = driver
         self.selectors = selectors
         self._last_opened_unread_count = 1
-        self._visible_customer_messages_by_contact: dict[str, tuple[str, ...]] = {}
+        self._last_processed_open_chat_signature: str | None = None
 
     def _build_locator(self, selector_key: str) -> Locator:
         selector = self.selectors.get(selector_key)
@@ -192,28 +192,16 @@ class WhatsAppService:
 
         return messages[-1] if messages else ""
 
-    def _normalize_message_text(self, message: object) -> str:
-        return " ".join(str(message).split()).strip()
-
-    def _message_texts_from_value(self, messages: object) -> tuple[str, ...]:
-        if isinstance(messages, (list, tuple)):
-            return tuple(
-                text
-                for message in messages
-                if (text := self._normalize_message_text(message))
-            )
-
-        if messages and (message := self._normalize_message_text(messages)):
-            return (message,)
-
-        return ()
-
-    def _read_customer_message_snapshot_from_dom(
+    def _read_recent_customer_messages_from_dom(
         self,
-    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        limit: int | None = None,
+        only_after_last_outgoing: bool = False,
+    ) -> list[str]:
         try:
-            message_snapshot = self.driver.execute_script(
+            messages = self.driver.execute_script(
                 """
+                const onlyAfterLastOutgoing = arguments[0];
+
                 const normalize = (value) => String(value || '')
                     .replace(/\u200e|\u200f/g, '')
                     .replace(/\\s+/g, ' ')
@@ -222,6 +210,79 @@ class WhatsAppService:
                 const visibleText = (element) => normalize(
                     element?.innerText || element?.textContent || ''
                 );
+
+                const chatTitle = normalize(
+                    document.querySelector('header span[title]')?.getAttribute('title')
+                    || document.querySelector('header span[dir="auto"]')?.textContent
+                    || ''
+                );
+
+                const messageDataId = (element) => {
+                    const dataElement = element.matches('[data-id]')
+                        ? element
+                        : element.closest('[data-id]')
+                            || element.querySelector('[data-id]');
+
+                    return dataElement?.getAttribute('data-id') || '';
+                };
+
+                const messageSender = (element) => {
+                    const plainTextElement = element.matches('[data-pre-plain-text]')
+                        ? element
+                        : element.querySelector('[data-pre-plain-text]');
+                    const plainText = plainTextElement
+                        ?.getAttribute('data-pre-plain-text') || '';
+                    const senderMatch = plainText.match(/\\]\\s*(.*?):\\s*$/);
+
+                    return normalize(senderMatch?.[1] || '');
+                };
+
+                const senderMatchesChatTitle = (sender) => {
+                    return sender && chatTitle && sender === chatTitle;
+                };
+
+                const messageDirection = (element) => {
+                    const dataId = messageDataId(element);
+
+                    if (dataId.startsWith('true_')) {
+                        return 'outgoing';
+                    }
+
+                    if (dataId.startsWith('false_')) {
+                        return 'incoming';
+                    }
+
+                    const sender = messageSender(element);
+
+                    if (senderMatchesChatTitle(sender)) {
+                        return 'incoming';
+                    }
+
+                    if (sender && chatTitle) {
+                        return 'outgoing';
+                    }
+
+                    const className = String(element.className || '');
+
+                    if (
+                        className.includes('message-out')
+                        || element.matches('[class*="message-out"]')
+                        || element.closest('[class*="message-out"]') !== null
+                    ) {
+                        return 'outgoing';
+                    }
+
+                    if (
+                        className.includes('message-in')
+                        || element.matches('[class*="message-in"]')
+                        || element.closest('[class*="message-in"]') !== null
+                        || element.hasAttribute('data-pre-plain-text')
+                    ) {
+                        return 'incoming';
+                    }
+
+                    return '';
+                };
 
                 const messageText = (container) => {
                     const selectorGroups = [
@@ -232,8 +293,9 @@ class WhatsAppService:
 
                     for (const selector of selectorGroups) {
                         const textNodes = [
-                            ...container.querySelectorAll(selector),
-                        ].filter((element, index, list) => {
+                        ...(container.matches(selector) ? [container] : []),
+                        ...container.querySelectorAll(selector),
+                    ].filter((element, index, list) => {
                             return list.findIndex((candidate) => {
                                 return candidate === element
                                     || candidate.contains(element)
@@ -268,39 +330,29 @@ class WhatsAppService:
                     ...document.querySelectorAll(
                         'div.message-in, div.message-out, '
                         + '[class*="message-in"], [class*="message-out"], '
-                        + '[data-pre-plain-text]'
+                        + '[data-id], [data-pre-plain-text]'
                     ),
                 ]
                     .map((element) => {
-                        const container = element.closest(
+                        return element.closest(
                             'div.message-in, div.message-out, '
                             + '[class*="message-in"], [class*="message-out"], '
-                            + '[data-pre-plain-text]'
-                        ) || element;
-
-                        return container;
+                            + '[data-id]'
+                        ) || element.closest('[data-pre-plain-text]') || element;
                     })
                     .filter((element, index, list) => list.indexOf(element) === index);
 
                 const rows = messageContainers
-                    .map((element) => {
-                        const className = String(element.className || '');
-                        const outgoing = className.includes('message-out')
-                            || element.closest('[class*="message-out"]') !== null;
-                        const incoming = ! outgoing
-                            && (
-                                className.includes('message-in')
-                                || element.closest('[class*="message-in"]') !== null
-                                || element.hasAttribute('data-pre-plain-text')
-                            );
+                .map((element) => {
+                    const direction = messageDirection(element);
 
-                        return {
-                            incoming,
-                            outgoing,
-                            text: messageText(element),
-                        };
-                    })
-                    .filter((row) => row.incoming || row.outgoing);
+                    return {
+                        incoming: direction === 'incoming',
+                        outgoing: direction === 'outgoing',
+                        text: messageText(element),
+                    };
+                })
+                .filter((row) => row.incoming || row.outgoing);
 
                 let lastOutgoingIndex = -1;
 
@@ -310,131 +362,44 @@ class WhatsAppService:
                     }
                 });
 
-                const allIncomingTexts = rows
+                const unreadIncomingTexts = rows
+                    .filter((row, index) => row.incoming
+                        && row.text
+                        && index > lastOutgoingIndex)
+                    .map((row) => row.text);
+
+                if (unreadIncomingTexts.length) {
+                    return unreadIncomingTexts;
+                }
+
+                if (onlyAfterLastOutgoing) {
+                    return [];
+                }
+
+                return rows
                     .filter((row) => row.incoming && row.text)
                     .map((row) => row.text);
-
-                const allConversationTexts = rows
-                    .filter((row) => row.text)
-                    .map((row) => row.text);
-
-                const incomingAfterLastOutgoingTexts = lastOutgoingIndex === -1
-                    ? []
-                    : rows
-                        .filter((row, index) => row.incoming
-                            && row.text
-                            && index > lastOutgoingIndex)
-                        .map((row) => row.text);
-
-                return {
-                    allIncomingTexts,
-                    allConversationTexts,
-                    incomingAfterLastOutgoingTexts,
-                };
-                """
+                """,
+                only_after_last_outgoing,
             )
         except WebDriverException:
-            return (), ()
+            return []
 
-        if isinstance(message_snapshot, dict):
-            return (
-                self._message_texts_from_value(
-                    message_snapshot.get("allConversationTexts")
-                    or message_snapshot.get("allIncomingTexts"),
-                ),
-                self._message_texts_from_value(
-                    message_snapshot.get("incomingAfterLastOutgoingTexts"),
-                ),
-            )
-
-        text_messages = self._message_texts_from_value(message_snapshot)
-
-        return text_messages, text_messages
-
-    def _read_recent_customer_messages_from_dom(
-        self,
-        limit: int | None = None,
-    ) -> list[str]:
-        all_messages, incoming_after_last_outgoing = (
-            self._read_customer_message_snapshot_from_dom()
-        )
-        text_messages = incoming_after_last_outgoing or all_messages
+        if isinstance(messages, list):
+            text_messages = [
+                str(message).strip()
+                for message in messages
+                if str(message).strip()
+            ]
+        elif messages:
+            text_messages = [str(messages).strip()]
+        else:
+            text_messages = []
 
         if limit is not None and limit > 0:
-            return list(text_messages[-limit:])
+            return text_messages[-limit:]
 
-        return list(text_messages)
-
-    def _remember_visible_customer_messages(self, customer_contact: str) -> None:
-        all_messages, _ = self._read_customer_message_snapshot_from_dom()
-
-        self._visible_customer_messages_by_contact[customer_contact] = all_messages
-
-    def _remember_open_chat_messages(
-        self,
-        customer_contact: str | None = None,
-        fallback_messages: tuple[str, ...] = (),
-    ) -> None:
-        visible_customer_contact = self.get_customer_phone()
-        all_messages, _ = self._read_customer_message_snapshot_from_dom()
-
-        if len(all_messages) < len(fallback_messages):
-            all_messages = fallback_messages
-
-        self._visible_customer_messages_by_contact[visible_customer_contact] = (
-            all_messages
-        )
-
-        if customer_contact and customer_contact != visible_customer_contact:
-            self._visible_customer_messages_by_contact[customer_contact] = (
-                all_messages
-            )
-
-    def _new_customer_message_texts(
-        self,
-        previous_messages: tuple[str, ...],
-        current_messages: tuple[str, ...],
-    ) -> tuple[str, ...]:
-        if not current_messages:
-            return ()
-
-        if not previous_messages:
-            return current_messages
-
-        max_overlap = min(len(previous_messages), len(current_messages))
-
-        for overlap in range(max_overlap, 0, -1):
-            if previous_messages[-overlap:] == current_messages[:overlap]:
-                return current_messages[overlap:]
-
-        return current_messages
-
-    def _read_open_chat_messages(self) -> tuple[WhatsAppMessage, ...]:
-        customer_contact = self.get_customer_phone()
-        all_messages, incoming_after_last_outgoing = (
-            self._read_customer_message_snapshot_from_dom()
-        )
-        previous_messages = self._visible_customer_messages_by_contact.get(
-            customer_contact,
-        )
-
-        self._visible_customer_messages_by_contact[customer_contact] = all_messages
-
-        if previous_messages is None:
-            new_messages = incoming_after_last_outgoing or all_messages[-1:]
-        else:
-            new_messages = self._new_customer_message_texts(
-                previous_messages,
-                all_messages,
-            )
-
-        return tuple(
-            WhatsAppMessage(
-                customer_contact=customer_contact,
-                content=message,
-            )
-            for message in new_messages
-        )
+        return text_messages
 
     def _unread_count_from_chat(self, chat: WebElement) -> int:
         try:
@@ -471,6 +436,35 @@ class WhatsAppService:
             return 1
 
         return unread_count
+
+    def read_open_chat_new_messages(self) -> tuple[WhatsAppMessage, ...]:
+        if not self.has_open_chat():
+            return ()
+
+        customer_contact = self.get_customer_phone()
+
+        messages = self._read_recent_customer_messages_from_dom(
+            limit=1,
+            only_after_last_outgoing=True,
+        )
+
+        if not messages:
+            return ()
+
+        message = messages[-1]
+        signature = f"{customer_contact}|{message}"
+
+        if signature == self._last_processed_open_chat_signature:
+            return ()
+
+        self._last_processed_open_chat_signature = signature
+
+        return (
+            WhatsAppMessage(
+                customer_contact=customer_contact,
+                content=message,
+            ),
+        )
 
     def _find_chat_container(self, badge: WebElement) -> WebElement | None:
         return self.driver.execute_script(
@@ -589,16 +583,15 @@ class WhatsAppService:
         has_unread_chat = self.open_unread_chat()
 
         if not has_unread_chat:
-            if self.has_open_chat():
-                return self._read_open_chat_messages()
-
-            return ()
+            return self.read_open_chat_new_messages()
 
         customer_contact = self.get_customer_phone()
         messages = self.get_recent_customer_messages(
             limit=self._last_opened_unread_count,
-        ) or ("",)
-        self._remember_visible_customer_messages(customer_contact)
+        )
+
+        if not messages:
+            return ()
 
         return tuple(
             WhatsAppMessage(
@@ -626,15 +619,7 @@ class WhatsAppService:
         if message_box is None:
             return False
 
-        previous_messages = self._read_customer_message_snapshot_from_dom()[0]
-        previous_message_count = len(previous_messages)
         self._type_message(message_box, content)
-        self._wait_until_message_count_changes(previous_message_count)
-        self._remember_open_chat_messages(
-            customer_contact,
-            fallback_messages=previous_messages
-            + (self._normalize_message_text(content),),
-        )
 
         return True
 
@@ -691,12 +676,3 @@ class WhatsAppService:
 
     def _has_non_bmp_character(self, value: str) -> bool:
         return any(ord(character) > 0xFFFF for character in value)
-
-    def _wait_until_message_count_changes(self, previous_message_count: int) -> None:
-        try:
-            WebDriverWait(self.driver, 5).until(
-                lambda _: len(self._read_customer_message_snapshot_from_dom()[0])
-                > previous_message_count
-            )
-        except WebDriverException:
-            return
