@@ -8,6 +8,10 @@ use Illuminate\Support\Str;
 
 class TechnicalNotebookReplyBuilder
 {
+    private const string RecordTitle = 'PAINEL DE OBRAS';
+
+    private const string RecordSeparator = '────────────';
+
     /**
      * @var array<string, string>
      */
@@ -54,15 +58,21 @@ class TechnicalNotebookReplyBuilder
             'Encontrei %d %s%s.',
             $result['total'],
             $result['total'] === 1 ? 'registro' : 'registros',
-            $municipality !== null ? ' para o município '.Str::upper($municipality) : ' em cadernos técnicos',
+            $municipality !== null ? ' para o município '.Str::upper($municipality) : ' no '.self::RecordTitle,
         )];
 
         foreach ($result['data'] as $index => $record) {
+            if ($index > 0) {
+                $lines[] = '';
+                $lines[] = self::RecordSeparator;
+            }
+
             $lines[] = '';
-            $lines[] = sprintf('%d. Registro do Caderno Técnico', $index + 1);
+            $lines[] = sprintf('📌 Registro %d de %d — %s', $index + 1, $result['total'], self::RecordTitle);
+            $lines[] = '';
 
             foreach (self::Fields as $key => $label) {
-                $lines[] = sprintf('   %s: %s', $label, $this->valueFormatter->technicalNotebookValue($record, $key));
+                $lines[] = sprintf('• %s: %s', $label, $this->valueFormatter->technicalNotebookValue($record, $key));
             }
         }
 
