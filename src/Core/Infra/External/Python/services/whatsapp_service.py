@@ -29,6 +29,7 @@ class WhatsAppService:
     CUSTOMER_MESSAGE_FALLBACK_LOCATORS = CUSTOMER_MESSAGE_FALLBACK_LOCATORS
     UNREAD_CHAT_FALLBACK_LOCATORS = UNREAD_CHAT_FALLBACK_LOCATORS
     MESSAGE_BOX_FALLBACK_LOCATORS = MESSAGE_BOX_FALLBACK_LOCATORS
+    MESSAGE_SCAN_LIMIT = 50
 
     def __init__(
         self,
@@ -84,7 +85,9 @@ class WhatsAppService:
             return ()
 
         customer_contact = self.get_customer_phone()
-        snapshot = self.message_extractor.extract()
+        snapshot = self.message_extractor.extract(
+            message_limit=self._unread_message_scan_limit(),
+        )
         candidates = self._candidate_messages_from_unread_chat(snapshot)
         new_messages = self._filter_new_customer_messages(
             customer_contact,
@@ -107,7 +110,9 @@ class WhatsAppService:
             return False
 
         customer_contact = customer_contact or self.get_customer_phone()
-        snapshot = self.message_extractor.extract()
+        snapshot = self.message_extractor.extract(
+            message_limit=self.MESSAGE_SCAN_LIMIT,
+        )
 
         if snapshot.incoming_messages:
             self.message_state.remember_seen(
@@ -155,6 +160,11 @@ class WhatsAppService:
         )
 
         return candidates[-unread_count:]
+
+    def _unread_message_scan_limit(self) -> int:
+        unread_count = max(self.chat_list_reader.last_opened_unread_count, 1)
+
+        return max(unread_count + 10, self.MESSAGE_SCAN_LIMIT)
 
     def _filter_new_customer_messages(
         self,

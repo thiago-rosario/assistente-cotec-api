@@ -6,6 +6,7 @@ from pathlib import Path
 PYTHON_APP_PATH = Path(__file__).resolve().parents[2] / "src/Core/Infra/External/Python"
 sys.path.insert(0, str(PYTHON_APP_PATH))
 
+from services.whatsapp_message_extractor import WhatsAppMessageSnapshot  # noqa: E402
 from services.whatsapp_service import WhatsAppService  # noqa: E402
 
 
@@ -25,25 +26,40 @@ class FakeSelectors:
         return selector_key
 
 
-class NoTextWhatsAppService(WhatsAppService):
-    def open_unread_chat(self) -> bool:
-        return True
+class FakeHeaderReader:
+    def has_open_chat(self) -> bool:
+        return False
 
     def get_customer_phone(self) -> str:
         return "Thiago"
 
-    def get_recent_customer_messages(
-        self,
-        limit: int | None = None,
-    ) -> tuple[str, ...]:
+
+class FakeChatListReader:
+    last_opened_unread_count = 1
+
+    def open_unread_chat(self) -> bool:
+        return True
+
+
+class FakeOpenChatReader:
+    def read_new_customer_messages(self) -> tuple:
         return ()
+
+
+class FakeMessageExtractor:
+    def extract(self, message_limit: int | None = None) -> WhatsAppMessageSnapshot:
+        return WhatsAppMessageSnapshot()
 
 
 class WhatsAppServiceBugfixTest(unittest.TestCase):
     def test_does_not_emit_empty_payload_when_unread_text_was_not_read(self) -> None:
-        service = NoTextWhatsAppService(
+        service = WhatsAppService(
             driver=FakeDriver(),
             selectors=FakeSelectors(),
+            header_reader=FakeHeaderReader(),
+            chat_list_reader=FakeChatListReader(),
+            message_extractor=FakeMessageExtractor(),
+            open_chat_reader=FakeOpenChatReader(),
         )
 
         self.assertEqual(service.read_unread_messages(), ())
