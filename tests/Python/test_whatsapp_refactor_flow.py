@@ -23,8 +23,11 @@ class FakeSelectors:
 class FakeDriver:
     def __init__(self, script_result: object) -> None:
         self.script_result = script_result
+        self.script_arguments: list[tuple[object, ...]] = []
 
     def execute_script(self, script: str, *args: object) -> object:
+        self.script_arguments.append(args)
+
         return self.script_result
 
 
@@ -71,8 +74,11 @@ class FakeOpenChatReader:
 class FakeMessageExtractor:
     def __init__(self, snapshot: WhatsAppMessageSnapshot) -> None:
         self.snapshot = snapshot
+        self.message_limits: list[int | None] = []
 
-    def extract(self) -> WhatsAppMessageSnapshot:
+    def extract(self, message_limit: int | None = None) -> WhatsAppMessageSnapshot:
+        self.message_limits.append(message_limit)
+
         return self.snapshot
 
     def read_recent_customer_messages(
@@ -137,6 +143,14 @@ class WhatsAppRefactorFlowTest(unittest.TestCase):
         self.assertEqual(snapshot.incoming_texts, ("ANDARAÍ",))
         self.assertEqual(snapshot.incoming_after_last_outgoing_texts, ("ANDARAÍ",))
 
+    def test_extractor_can_limit_dom_message_scan(self) -> None:
+        driver = FakeDriver({})
+        extractor = WhatsAppMessageExtractor(driver)
+
+        extractor.extract(message_limit=25)
+
+        self.assertEqual(driver.script_arguments, [({"messageLimit": 25},)])
+
     def test_service_reads_only_unread_count_from_badged_chat(self) -> None:
         message_state = WhatsAppMessageState()
         snapshot = WhatsAppMessageSnapshot(
@@ -147,12 +161,13 @@ class WhatsAppRefactorFlowTest(unittest.TestCase):
             ),
             conversation_count=3,
         )
+        message_extractor = FakeMessageExtractor(snapshot)
         service = WhatsAppService(
             driver=FakeDriver({}),
             selectors=FakeSelectors(),
             header_reader=FakeHeaderReader(),
             chat_list_reader=FakeChatListReader(opened=True, unread_count=2),
-            message_extractor=FakeMessageExtractor(snapshot),
+            message_extractor=message_extractor,
             open_chat_reader=FakeOpenChatReader(),
             message_sender=FakeMessageSender(),
             message_state=message_state,
@@ -162,6 +177,30 @@ class WhatsAppRefactorFlowTest(unittest.TestCase):
 
         self.assertEqual(tuple(message.content for message in messages), ("new 1", "new 2"))
         self.assertEqual(messages[0].external_id, "Thiago|false_new_1")
+        self.assertEqual(message_extractor.message_limits, [50])
+
+    def test_service_expands_scan_window_for_large_unread_badge(self) -> None:
+        snapshot = WhatsAppMessageSnapshot(
+            incoming_messages=(
+                ExtractedWhatsAppMessage("incoming", "new", "false_new"),
+            ),
+            conversation_count=1,
+        )
+        message_extractor = FakeMessageExtractor(snapshot)
+        service = WhatsAppService(
+            driver=FakeDriver({}),
+            selectors=FakeSelectors(),
+            header_reader=FakeHeaderReader(),
+            chat_list_reader=FakeChatListReader(opened=True, unread_count=75),
+            message_extractor=message_extractor,
+            open_chat_reader=FakeOpenChatReader(),
+            message_sender=FakeMessageSender(),
+            message_state=WhatsAppMessageState(),
+        )
+
+        service.read_unread_messages()
+
+        self.assertEqual(message_extractor.message_limits, [85])
 
     def test_state_filters_bot_reply_misclassified_as_incoming(self) -> None:
         message_state = WhatsAppMessageState()
