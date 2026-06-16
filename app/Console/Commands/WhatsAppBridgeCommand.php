@@ -26,6 +26,7 @@ class WhatsAppBridgeCommand extends Command
 
         return $bridge->stream(
             handleMessage: function (ReceivedMessageInputDTO $message, callable $sendReply) use ($processWhatsappMessage): void {
+                $startedAt = microtime(true);
                 $sender = $message->senderName ?? $message->phone ?? 'Contato não identificado';
                 $displayMessage = trim($message->message) !== '' ? $message->message : '[mensagem sem texto]';
 
@@ -35,19 +36,43 @@ class WhatsAppBridgeCommand extends Command
                     $sender,
                     $displayMessage,
                 ));
+                $this->line(sprintf(
+                    'Payload recebido da ponte: source=%s external_id=%s',
+                    $message->source ?? 'python-whatsapp',
+                    $message->externalId ?? 'sem-id',
+                ));
 
                 $result = $processWhatsappMessage($message);
                 $reply = (string) ($result['reply'] ?? '');
+                $this->line(sprintf(
+                    'Resposta recebida da API: intent=%s total=%d caracteres=%d',
+                    (string) ($result['intent'] ?? 'desconhecido'),
+                    (int) ($result['total'] ?? 0),
+                    mb_strlen($reply),
+                ));
 
                 if ($reply === '') {
+                    $this->line(sprintf(
+                        'Nenhuma resposta enviada para %s. Tempo total: %.2fs.',
+                        $sender,
+                        microtime(true) - $startedAt,
+                    ));
+
                     return;
                 }
 
                 $sendReply($reply);
-                $this->line(sprintf('Resposta enviada para %s.', $sender));
+                $this->line(sprintf(
+                    'Resposta enviada para %s. Tempo total: %.2fs.',
+                    $sender,
+                    microtime(true) - $startedAt,
+                ));
             },
             handleError: function (string $error): void {
                 $this->error(trim($error));
+            },
+            handleStatus: function (string $status): void {
+                $this->line($status);
             },
         );
     }

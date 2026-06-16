@@ -28,7 +28,7 @@ it('processes a whatsapp message and returns a jsend response', function () {
             ->once()
             ->with($dto)
             ->andReturn([
-                'reply' => 'Encontrei 1 registro(s) em cadernos técnicos.',
+                'reply' => 'Encontrei 1 registro no PAINEL DE OBRAS.',
                 'intent' => 'search_technical_notebook',
                 'total' => 1,
                 'data' => [
@@ -51,7 +51,7 @@ it('processes a whatsapp message and returns a jsend response', function () {
         ->assertJson([
             'status' => 'success',
             'data' => [
-                'reply' => 'Encontrei 1 registro(s) em cadernos técnicos.',
+                'reply' => 'Encontrei 1 registro no PAINEL DE OBRAS.',
                 'intent' => 'search_technical_notebook',
                 'total' => 1,
                 'data' => [
