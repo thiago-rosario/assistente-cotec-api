@@ -11,6 +11,8 @@ from services.whatsapp_message_state import WhatsAppMessageState
 
 
 class WhatsAppOpenChatReader:
+    MESSAGE_SCAN_LIMIT = 50
+
     def __init__(
         self,
         header_reader: WhatsAppChatHeaderReader,
@@ -28,7 +30,9 @@ class WhatsAppOpenChatReader:
             return ()
 
         customer_contact = self.header_reader.get_customer_phone()
-        snapshot = self.message_extractor.extract()
+        snapshot = self.message_extractor.extract(
+            message_limit=self.MESSAGE_SCAN_LIMIT,
+        )
 
         if not snapshot.incoming_messages:
             return ()

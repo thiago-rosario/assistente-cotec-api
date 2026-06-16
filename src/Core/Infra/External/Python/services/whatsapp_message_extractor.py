@@ -46,9 +46,15 @@ class WhatsAppMessageExtractor:
     def __init__(self, driver: WebDriver) -> None:
         self.driver = driver
 
-    def extract(self) -> WhatsAppMessageSnapshot:
+    def extract(self, message_limit: int | None = None) -> WhatsAppMessageSnapshot:
         try:
-            raw_snapshot = self.driver.execute_script(extract_messages_script())
+            if message_limit is not None and message_limit > 0:
+                raw_snapshot = self.driver.execute_script(
+                    extract_messages_script(),
+                    {"messageLimit": message_limit},
+                )
+            else:
+                raw_snapshot = self.driver.execute_script(extract_messages_script())
         except WebDriverException:
             return WhatsAppMessageSnapshot()
 
@@ -59,7 +65,7 @@ class WhatsAppMessageExtractor:
         limit: int | None = None,
         only_after_last_outgoing: bool = False,
     ) -> tuple[str, ...]:
-        snapshot = self.extract()
+        snapshot = self.extract(message_limit=self._message_limit_for_read(limit))
         messages = snapshot.incoming_after_last_outgoing
 
         if not messages and not only_after_last_outgoing:
@@ -76,6 +82,12 @@ class WhatsAppMessageExtractor:
         messages = self.read_recent_customer_messages(limit=1)
 
         return messages[-1] if messages else ""
+
+    def _message_limit_for_read(self, limit: int | None) -> int:
+        if limit is not None and limit > 0:
+            return max(limit, 50)
+
+        return 50
 
     def _normalize_snapshot(self, raw_snapshot: Any) -> WhatsAppMessageSnapshot:
         if isinstance(raw_snapshot, list):

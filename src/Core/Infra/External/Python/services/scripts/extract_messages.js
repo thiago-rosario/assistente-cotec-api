@@ -8,6 +8,9 @@ const normalize = (value) => String(value || '')
     .replace(/\s+/g, ' ')
     .trim();
 
+const options = arguments[0] || {};
+const messageLimit = Number(options.messageLimit || 0);
+
 const visibleText = (element) => normalize(
     element?.innerText || element?.textContent || ''
 );
@@ -137,21 +140,36 @@ const messageText = (container) => {
     return [...new Set(fallbackLines)].join('\n').trim();
 };
 
-const messageContainers = [
+const messageContainerSelector = (
+    'div.message-in, div.message-out, '
+    + '[class*="message-in"], [class*="message-out"], '
+    + '[data-id]'
+);
+
+const messageElements = [
     ...document.querySelectorAll(
-        'div.message-in, div.message-out, '
-        + '[class*="message-in"], [class*="message-out"], '
-        + '[data-id], [data-pre-plain-text]'
+        messageContainerSelector + ', [data-pre-plain-text]'
     ),
-]
-    .map((element) => {
-        return element.closest(
-            'div.message-in, div.message-out, '
-            + '[class*="message-in"], [class*="message-out"], '
-            + '[data-id]'
-        ) || element.closest('[data-pre-plain-text]') || element;
-    })
-    .filter((element, index, list) => list.indexOf(element) === index);
+];
+const seenMessageContainers = new Set();
+const messageContainers = [];
+
+for (let index = messageElements.length - 1; index >= 0; index -= 1) {
+    const element = messageElements[index];
+    const messageContainer = element.closest(messageContainerSelector)
+        || element.closest('[data-pre-plain-text]') || element;
+
+    if (seenMessageContainers.has(messageContainer)) {
+        continue;
+    }
+
+    seenMessageContainers.add(messageContainer);
+    messageContainers.unshift(messageContainer);
+
+    if (messageLimit > 0 && messageContainers.length >= messageLimit) {
+        break;
+    }
+}
 
 const messages = messageContainers
     .map((element) => {
