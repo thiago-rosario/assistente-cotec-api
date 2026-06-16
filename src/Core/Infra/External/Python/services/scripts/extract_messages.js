@@ -1,3 +1,8 @@
+/* eslint-disable */
+// This script is injected via Selenium execute_script(), which wraps it in a
+// function automatically. The top-level `return` at the end is intentional.
+// noinspection JSAnnotator
+
 const normalize = (value) => String(value || '')
     .replace(/\u200e|\u200f/g, '')
     .replace(/\s+/g, ' ')
@@ -47,18 +52,6 @@ const senderMatchesChatTitle = (sender) => {
     return sender && chatTitle && sender === chatTitle;
 };
 
-const directionFromDataId = (messageDataIdValue) => {
-    if (messageDataIdValue.startsWith('true_')) {
-        return 'outgoing';
-    }
-
-    if (messageDataIdValue.startsWith('false_')) {
-        return 'incoming';
-    }
-
-    return '';
-};
-
 const messageDirection = (element) => {
     const dataId = messageDataId(element);
 
@@ -68,12 +61,6 @@ const messageDirection = (element) => {
 
     if (dataId.startsWith('false_')) {
         return 'incoming';
-    }
-
-    const dataIdDirection = directionFromDataId(dataId);
-
-    if (dataIdDirection) {
-        return dataIdDirection;
     }
 
     const sender = messageSender(element);
