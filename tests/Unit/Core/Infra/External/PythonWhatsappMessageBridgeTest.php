@@ -16,14 +16,14 @@ it('builds a python send message command for a processed whatsapp reply', functi
             senderName: 'Thiago',
             externalId: 'message-123',
         ),
-        'Encontrei 1 registro em cadernos técnicos.',
+        'Encontrei 1 registro no PAINEL DE OBRAS.',
     );
 
     expect(json_decode($command, true))->toBe([
         'type' => 'send_message',
         'payload' => [
             'customer_contact' => '+5571999999999',
-            'content' => 'Encontrei 1 registro em cadernos técnicos.',
+            'content' => 'Encontrei 1 registro no PAINEL DE OBRAS.',
             'external_id' => 'message-123',
         ],
     ]);

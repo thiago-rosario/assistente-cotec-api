@@ -64,7 +64,9 @@ it('maps python bridge json events into application dtos', function () {
 
     $messages = $adapter->fromPythonOutput(<<<'OUTPUT'
         Aguardando login no WhatsApp Web...
-        {"type": "received_message", "payload": {"customer_contact": "Gpairiito", "content": "Ou nem ?", "source": "python-whatsapp"}}
+        Mensagem ignorada por já ter sido processada: contato=Gpairiito, id=abc123, conteúdo="Ou nem ?"
+        Payload enviado ao PHP/Laravel: contato=Gpairiito, conteúdo="Ou nem ?"
+        {"type": "received_message", "payload": {"customer_contact": "Gpairiito", "content": "Ou nem ?", "source": "python-whatsapp", "external_id": "msg-456", "timestamp": "15/06/2026, 15:01:37"}}
         {"type": "received_message", "payload": {"customer_contact": "+5511999999999", "content": "Oi", "source": "python-whatsapp"}}
         OUTPUT);
 
@@ -72,6 +74,8 @@ it('maps python bridge json events into application dtos', function () {
         ->and($messages[0]->senderName)->toBe('Gpairiito')
         ->and($messages[0]->phone)->toBeNull()
         ->and($messages[0]->message)->toBe('Ou nem ?')
+        ->and($messages[0]->externalId)->toBe('msg-456')
+        ->and($messages[0]->receivedAt)->toBe('15/06/2026, 15:01:37')
         ->and($messages[1]->senderName)->toBeNull()
         ->and($messages[1]->phone)->toBe('+5511999999999')
         ->and($messages[1]->message)->toBe('Oi');
