@@ -1,9 +1,12 @@
 import hashlib
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from services.whatsapp_message_extractor import ExtractedWhatsAppMessage
+
+logger = logging.getLogger(__name__)
 
 
 class WhatsAppMessageState:
@@ -159,16 +162,30 @@ class WhatsAppMessageState:
 
         try:
             data = json.loads(self.state_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError) as error:
+            logger.warning(
+                "Não foi possível carregar o estado de mensagens do WhatsApp em %s. "
+                "O bot continuará sem esse histórico persistido.",
+                self.state_path,
+                exc_info=error,
+            )
+
             return
 
         if not isinstance(data, dict):
+            logger.warning(
+                "Estado de mensagens do WhatsApp ignorado: conteúdo inválido em %s.",
+                self.state_path,
+            )
+
             return
 
         self._seen_by_contact = self._tuple_dict(data.get("seen_by_contact"))
         self._processed_keys = set(self._string_tuple(data.get("processed_keys")))
         self._sent_messages = self._string_tuple(data.get("sent_messages"))
-        self._baseline_contacts = set(self._string_tuple(data.get("baseline_contacts")))
+        self._baseline_contacts = set(
+            self._string_tuple(data.get("baseline_contacts"))
+        )
 
     def _save(self) -> None:
         if self.state_path is None:
@@ -187,7 +204,14 @@ class WhatsAppMessageState:
                 json.dumps(data, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
-        except OSError:
+        except OSError as error:
+            logger.error(
+                "Não foi possível salvar o estado de mensagens do WhatsApp em %s. "
+                "Reinícios podem reprocessar mensagens já vistas.",
+                self.state_path,
+                exc_info=error,
+            )
+
             return
 
     def _tuple_dict(self, value: Any) -> dict[str, tuple[str, ...]]:

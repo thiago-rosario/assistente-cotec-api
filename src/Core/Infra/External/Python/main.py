@@ -1,14 +1,18 @@
 import argparse
+import logging
+from pathlib import Path
 
-from application.process_unread_message import ProcessUnreadMessageUseCase
-from application.whatsapp_bot import WhatsAppBot
-from browser import BrowserFactory
 from config.config import Config
+from core.bot_runner import BotRunner
+from core.driver_factory import DriverFactory
+from core.logger_config import configure_logging
+from core.message_processor import MessageProcessor
+from core.recovery_manager import RecoveryManager
+from core.whatsapp_health_checker import WhatsAppHealthChecker
 from services.editacodigo_service import EditaCodigoService
 from services.php_bridge_command_listener import PhpBridgeCommandListener
 from services.php_bridge_message_formatter import PhpBridgeMessageFormatter
-from services.selenium_error_formatter import SeleniumErrorFormatter
-from services.whatsapp_service import WhatsAppService
+from services.whatsapp_message_state import WhatsAppMessageState
 
 
 def flushed_print(message: str) -> None:
@@ -32,29 +36,39 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def main() -> None:
+    configure_logging(logging.INFO)
+
     arguments = parse_arguments()
     editacodigo_service = EditaCodigoService()
     selectors = editacodigo_service.get_whatsapp_selectors()
-
-    driver = BrowserFactory.create_chrome_driver(Config.SESSION_FOLDER)
-    driver.get(Config.WHATSAPP_URL)
-
-    whatsapp_service = WhatsAppService(driver, selectors)
-    if arguments.bridge_output == "json":
-        PhpBridgeCommandListener(
-            whatsapp_service.send_message,
-            output=discard_output,
-        ).start()
-
-    process_unread_message = ProcessUnreadMessageUseCase(whatsapp_service)
-    bot = WhatsAppBot(
-        process_unread_message,
-        Config.BOT_INTERVAL_SECONDS,
+    message_state = WhatsAppMessageState(Path(Config.MESSAGE_STATE_PATH).expanduser())
+    message_processor = MessageProcessor(
+        selectors=selectors,
+        message_state=message_state,
         output=flushed_print,
-        error_formatter=SeleniumErrorFormatter(),
         message_formatter=PhpBridgeMessageFormatter()
         if arguments.bridge_output == "json"
         else None,
+    )
+    driver_factory = DriverFactory(
+        session_folder=Config.SESSION_FOLDER,
+        whatsapp_url=Config.WHATSAPP_URL,
+    )
+    recovery_manager = RecoveryManager(driver_factory)
+    health_checker = WhatsAppHealthChecker(message_processor.has_whatsapp_loaded)
+
+    if arguments.bridge_output == "json":
+        PhpBridgeCommandListener(
+            message_processor.send_message,
+            output=discard_output,
+        ).start()
+
+    bot = BotRunner(
+        driver_factory=driver_factory,
+        recovery_manager=recovery_manager,
+        message_processor=message_processor,
+        health_checker=health_checker,
+        interval_seconds=Config.BOT_INTERVAL_SECONDS,
     )
 
     bot.run()

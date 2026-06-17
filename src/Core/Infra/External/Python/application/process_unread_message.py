@@ -8,6 +8,7 @@ from domain.whatsapp_message import WhatsAppMessage
 class ProcessUnreadMessageResult:
     messages: tuple[str, ...]
     whatsapp_messages: tuple[WhatsAppMessage, ...] = ()
+    whatsapp_loaded: bool | None = None
 
     @property
     def whatsapp_message(self) -> WhatsAppMessage | None:
@@ -32,11 +33,17 @@ class ProcessUnreadMessageUseCase:
                     )
                 ),
                 whatsapp_messages=whatsapp_messages,
+                whatsapp_loaded=True,
             )
 
         message = "Nenhuma mensagem nova encontrada."
 
-        if not self.whatsapp_gateway.has_whatsapp_loaded():
+        whatsapp_loaded = self.whatsapp_gateway.has_whatsapp_loaded()
+
+        if not whatsapp_loaded:
             message += " Aguardando login ou carregamento do WhatsApp Web."
 
-        return ProcessUnreadMessageResult(messages=(message,))
+        return ProcessUnreadMessageResult(
+            messages=(message,),
+            whatsapp_loaded=whatsapp_loaded,
+        )

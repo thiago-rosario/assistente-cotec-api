@@ -1,0 +1,25 @@
+{
+  "seen_by_contact": {
+    "Thiago Rosario Souza": [
+      "Oi",
+      "oI",
+      "Jeremoabo",
+      "Ubatã",
+      "Olá"
+    ]
+  },
+  "processed_keys": [
+    "Thiago Rosario Souza|2A1B6156FD058031A300",
+    "Thiago Rosario Souza|2A3C27968E612D334A91",
+    "Thiago Rosario Souza|2A3D2EA4907C4C4E6587",
+    "Thiago Rosario Souza|2ADD5F5D9FA428070A37",
+    "Thiago Rosario Souza|3B7FB296DE8412A690BC",
+    "Thiago Rosario Souza|3BA2632B37F11D6F3678",
+    "Thiago Rosario Souza|3BFA8DD77527E2CE5BCD"
+  ],
+  "sent_messages": [
+    "Encontrei 1 registro para o município UBATÃ.\n\n📌 Registro 1 de 1 — PAINEL DE OBRAS\n\n• Item: 348\n• Etapa: VII\n• Município: UBATÃ\n• Processo: 020.12859.2023.0015797-77 / 001.7313.2026.0001701-37\n• Força: PC\n• Pleito: CONSTRUÇÃO/REFORMA\n• Tipologia: 1B\n• Obs. tipologia: DT\n• Valor estimado: R$ 1.912.927,94\n• Vistoria: VISTORIADO\n• Relatório SEI: 121596601\n• Status do terreno: APROVADO\n• Regularização fundiária: LEGALIZADO\n• Estudo de solo: TOPOGRAFIA E SONDAGEM\n• Ambiental: ILA E OUTORGA\n• Comentário da fiscalização: Iniciado processo licitatório: 020.18069.2026.0005896-58\n• Etapa pleito: PLEITO-PROINFRA\n• SEI licitação: 020.18069.2026.0005896-58\n• Contrato: Não informado\n• Instrumento FIPLAN: Não informado\n• Status de obra: Não informado\n• Data de inauguração: Não informado",
+    "Olá! Eu sou o assistente da COTEC.\n\nPosso te ajudar a consultar informações do *Painel de Obras da CEIRF/SSP*.\n\nPara iniciar a consulta, envie uma das opções abaixo:\n\n• Nome do município\n• Número do processo\n\nO processo pode ser referente à solicitação do pleito, à licitação ou ao contrato.\n\nPara um melhor atendimento, envie apenas uma dessas informações por vez."
+  ],
+  "baseline_contacts": []
+}

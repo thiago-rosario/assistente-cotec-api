@@ -30,6 +30,10 @@ class Config:
         "WHATSAPP_SESSION_FOLDER",
         os.getenv("SESSAO_PASTA", str(EXTERNAL_DIR / "pasta" / "sessao")),
     )
+    MESSAGE_STATE_PATH = os.getenv(
+        "WHATSAPP_MESSAGE_STATE_PATH",
+        str(EXTERNAL_DIR / "pasta" / "whatsapp_message_state.json"),
+    )
     WEBHOOK_URL = os.getenv("WEBHOOK", os.getenv("SERVIDOR", "localhost"))
     USER = os.getenv("USUARIO", "editacodigo_user")
     PORT = int(os.getenv("PORTA", "5000"))
