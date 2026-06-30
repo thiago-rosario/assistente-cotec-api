@@ -65,6 +65,7 @@ it('maps python bridge json events into application dtos', function () {
     $messages = $adapter->fromPythonOutput(<<<'OUTPUT'
         Aguardando login no WhatsApp Web...
         Mensagem ignorada por já ter sido processada: contato=Gpairiito, id=abc123, conteúdo="Ou nem ?"
+        Bot ocupado aguardando processamento da resposta atual.
         Payload enviado ao PHP/Laravel: contato=Gpairiito, conteúdo="Ou nem ?"
         {"type": "received_message", "payload": {"customer_contact": "Gpairiito", "content": "Ou nem ?", "source": "python-whatsapp", "external_id": "msg-456", "timestamp": "15/06/2026, 15:01:37"}}
         {"type": "received_message", "payload": {"customer_contact": "+5511999999999", "content": "Oi", "source": "python-whatsapp"}}

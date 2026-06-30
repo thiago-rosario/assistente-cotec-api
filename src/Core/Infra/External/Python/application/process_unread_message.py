@@ -18,6 +18,19 @@ class ProcessUnreadMessageUseCase:
     def __init__(self, whatsapp_gateway: WhatsAppGateway) -> None:
         self.whatsapp_gateway = whatsapp_gateway
 
+    def begin_processing(
+        self,
+        whatsapp_messages: tuple[WhatsAppMessage, ...],
+    ) -> None:
+        begin_processing_messages = getattr(
+            self.whatsapp_gateway,
+            "begin_processing_messages",
+            None,
+        )
+
+        if callable(begin_processing_messages):
+            begin_processing_messages(whatsapp_messages)
+
     def execute(self) -> ProcessUnreadMessageResult:
         whatsapp_messages = self.whatsapp_gateway.read_unread_messages()
 
@@ -34,9 +47,19 @@ class ProcessUnreadMessageUseCase:
                 whatsapp_messages=whatsapp_messages,
             )
 
+        if self._is_gateway_busy():
+            return ProcessUnreadMessageResult(
+                messages=("Bot ocupado aguardando processamento da resposta atual.",)
+            )
+
         message = "Nenhuma mensagem nova encontrada."
 
         if not self.whatsapp_gateway.has_whatsapp_loaded():
             message += " Aguardando login ou carregamento do WhatsApp Web."
 
         return ProcessUnreadMessageResult(messages=(message,))
+
+    def _is_gateway_busy(self) -> bool:
+        is_busy = getattr(self.whatsapp_gateway, "is_busy", None)
+
+        return bool(callable(is_busy) and is_busy())
