@@ -6,6 +6,7 @@ from domain.whatsapp_selectors import WhatsAppSelectors
 from services.selenium_element_finder import SeleniumElementFinder
 from services.whatsapp_chat_header_reader import WhatsAppChatHeaderReader
 from services.whatsapp_chat_list_reader import WhatsAppChatListReader
+from services.whatsapp_driver_session import WhatsAppDriverSession
 from services.whatsapp_locators import (
     CUSTOMER_CONTACT_FALLBACK_LOCATORS,
     CUSTOMER_MESSAGE_FALLBACK_LOCATORS,
@@ -14,14 +15,13 @@ from services.whatsapp_locators import (
     Locator,
     LocatorGroup,
 )
-from services.whatsapp_message_extractor import (
-    ExtractedWhatsAppMessage,
-    WhatsAppMessageExtractor,
-    WhatsAppMessageSnapshot,
-)
+from services.whatsapp_message_extractor import WhatsAppMessageExtractor
 from services.whatsapp_message_sender import WhatsAppMessageSender
 from services.whatsapp_message_state import WhatsAppMessageState
 from services.whatsapp_open_chat_reader import WhatsAppOpenChatReader
+from services.whatsapp_reply_sender import WhatsAppReplySender
+from services.whatsapp_service_state import WhatsAppServiceState
+from services.whatsapp_unread_message_reader import WhatsAppUnreadMessageReader
 
 
 class WhatsAppService:
@@ -42,10 +42,14 @@ class WhatsAppService:
         open_chat_reader: WhatsAppOpenChatReader | None = None,
         message_sender: WhatsAppMessageSender | None = None,
         message_state: WhatsAppMessageState | None = None,
+        driver_session: WhatsAppDriverSession | None = None,
+        unread_message_reader: WhatsAppUnreadMessageReader | None = None,
+        reply_sender: WhatsAppReplySender | None = None,
     ) -> None:
         self.driver = driver
         self.selectors = selectors
         self.message_state = message_state or WhatsAppMessageState()
+        self._status_messages: list[str] = []
         self.element_finder = element_finder or SeleniumElementFinder(
             driver,
             selectors,
@@ -72,29 +76,38 @@ class WhatsAppService:
             self.element_finder,
             self.message_state,
         )
-        self._status_messages: list[str] = []
+        self.driver_session = driver_session or WhatsAppDriverSession(
+            driver,
+            self._status_messages.append,
+        )
+        self.unread_message_reader = (
+            unread_message_reader
+            or WhatsAppUnreadMessageReader(
+                self.header_reader,
+                self.chat_list_reader,
+                self.message_extractor,
+                self.open_chat_reader,
+                self.message_state,
+                self._status_messages.append,
+            )
+        )
+        self.reply_sender = reply_sender or WhatsAppReplySender(
+            self.header_reader,
+            self.message_extractor,
+            self.message_sender,
+            self.message_state,
+        )
         self._seen_incoming_messages_by_contact = self.message_state.seen_by_contact
 
+    @property
+    def state(self) -> WhatsAppServiceState:
+        return self.driver_session.state
+
+    def is_busy(self) -> bool:
+        return self.driver_session.is_busy()
+
     def read_unread_messages(self) -> tuple[WhatsAppMessage, ...]:
-        open_chat_messages = self.open_chat_reader.read_new_customer_messages()
-
-        if open_chat_messages:
-            return open_chat_messages
-
-        if not self.chat_list_reader.open_unread_chat():
-            return ()
-
-        customer_contact = self.get_customer_phone()
-        snapshot = self.message_extractor.extract(
-            message_limit=self._unread_message_scan_limit(),
-        )
-        candidates = self._candidate_messages_from_unread_chat(snapshot)
-        new_messages = self._filter_new_customer_messages(
-            customer_contact,
-            candidates,
-        )
-
-        return self._to_whatsapp_messages(customer_contact, new_messages)
+        return self.driver_session.run_read(self.unread_message_reader.read)
 
     def read_last_unread_message(self) -> WhatsAppMessage | None:
         messages = self.read_unread_messages()
@@ -106,21 +119,16 @@ class WhatsAppService:
         content: str,
         customer_contact: str | None = None,
     ) -> bool:
-        if not content.strip() or not self.has_open_chat():
-            return False
-
-        customer_contact = customer_contact or self.get_customer_phone()
-        snapshot = self.message_extractor.extract(
-            message_limit=self.MESSAGE_SCAN_LIMIT,
+        return self.driver_session.run_send(
+            lambda: self._send_message(content, customer_contact)
         )
 
-        if snapshot.incoming_messages:
-            self.message_state.remember_seen(
-                customer_contact,
-                snapshot.incoming_messages,
-            )
-
-        return self.message_sender.send_message(content, customer_contact)
+    def _send_message(
+        self,
+        content: str,
+        customer_contact: str | None = None,
+    ) -> bool:
+        return self.reply_sender.send(content, customer_contact)
 
     def pull_status_messages(self) -> tuple[str, ...]:
         messages = tuple(self._status_messages)
@@ -128,87 +136,40 @@ class WhatsAppService:
 
         return messages
 
+    def begin_processing_messages(
+        self,
+        messages: tuple[WhatsAppMessage, ...],
+    ) -> None:
+        self.driver_session.begin_processing_messages(messages)
+
+    def finish_processing_message(
+        self,
+        customer_contact: str | None,
+        external_id: str | None,
+    ) -> None:
+        self.driver_session.finish_processing_message(customer_contact, external_id)
+
     def open_unread_chat(self) -> bool:
-        return self.chat_list_reader.open_unread_chat()
+        return self.driver_session.run(self.chat_list_reader.open_unread_chat)
 
     def has_whatsapp_loaded(self) -> bool:
-        return self.header_reader.has_whatsapp_loaded()
+        return self.driver_session.run(self.header_reader.has_whatsapp_loaded)
 
     def has_open_chat(self) -> bool:
-        return self.header_reader.has_open_chat()
+        return self.driver_session.run(self.header_reader.has_open_chat)
 
     def get_customer_phone(self) -> str:
-        return self.header_reader.get_customer_phone()
+        return self.driver_session.run(self.header_reader.get_customer_phone)
 
     def get_last_customer_message(self) -> str:
-        return self.open_chat_reader.read_last_customer_message()
+        return self.driver_session.run(self.open_chat_reader.read_last_customer_message)
 
     def get_recent_customer_messages(
         self,
         limit: int | None = None,
     ) -> tuple[str, ...]:
-        return self.open_chat_reader.read_recent_customer_messages(limit)
-
-    def _candidate_messages_from_unread_chat(
-        self,
-        snapshot: WhatsAppMessageSnapshot,
-    ) -> tuple[ExtractedWhatsAppMessage, ...]:
-        unread_count = max(self.chat_list_reader.last_opened_unread_count, 1)
-        candidates = (
-            snapshot.incoming_after_last_outgoing
-            or snapshot.incoming_messages
-        )
-
-        return candidates[-unread_count:]
-
-    def _unread_message_scan_limit(self) -> int:
-        unread_count = max(self.chat_list_reader.last_opened_unread_count, 1)
-
-        return max(unread_count + 10, self.MESSAGE_SCAN_LIMIT)
-
-    def _filter_new_customer_messages(
-        self,
-        customer_contact: str,
-        messages: tuple[ExtractedWhatsAppMessage, ...],
-    ) -> tuple[ExtractedWhatsAppMessage, ...]:
-        new_messages: list[ExtractedWhatsAppMessage] = []
-
-        for message in messages:
-            if not message.text.strip():
-                continue
-
-            if self.message_state.was_sent_by_bot(message.text):
-                continue
-
-            if self.message_state.is_processed(customer_contact, message):
-                self._status_messages.append(
-                    "Mensagem ignorada por já ter sido processada: "
-                    f"contato={customer_contact}, "
-                    f"id={self.message_state.message_key(customer_contact, message)}, "
-                    f'conteúdo="{message.text}"'
-                )
-                continue
-
-            new_messages.append(message)
-
-        filtered_messages = tuple(new_messages)
-        self.message_state.remember_seen(customer_contact, filtered_messages)
-
-        return filtered_messages
-
-    def _to_whatsapp_messages(
-        self,
-        customer_contact: str,
-        messages: tuple[ExtractedWhatsAppMessage, ...],
-    ) -> tuple[WhatsAppMessage, ...]:
-        return tuple(
-            WhatsAppMessage(
-                customer_contact=customer_contact,
-                content=message.text,
-                external_id=self.message_state.message_key(customer_contact, message),
-                received_at=message.timestamp or None,
-            )
-            for message in messages
+        return self.driver_session.run(
+            lambda: self.open_chat_reader.read_recent_customer_messages(limit)
         )
 
     def _read_last_customer_message_from_dom(self) -> str:

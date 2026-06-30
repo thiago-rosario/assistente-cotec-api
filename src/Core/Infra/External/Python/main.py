@@ -43,6 +43,7 @@ def main() -> None:
     if arguments.bridge_output == "json":
         PhpBridgeCommandListener(
             whatsapp_service.send_message,
+            finish_processing_message=whatsapp_service.finish_processing_message,
             output=discard_output,
         ).start()
 

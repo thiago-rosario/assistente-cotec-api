@@ -36,6 +36,8 @@ class WhatsAppBot:
             result = self.process_unread_message.execute()
 
             if self.message_formatter and result.whatsapp_messages:
+                self.process_unread_message.begin_processing(result.whatsapp_messages)
+
                 for whatsapp_message in result.whatsapp_messages:
                     self.output(self.message_formatter(whatsapp_message))
 

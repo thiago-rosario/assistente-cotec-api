@@ -1,3 +1,5 @@
+import time
+
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -17,11 +19,15 @@ class WhatsAppMessageSender:
         header_reader: WhatsAppChatHeaderReader,
         element_finder: SeleniumElementFinder,
         message_state: WhatsAppMessageState,
+        max_send_attempts: int = 3,
+        retry_delay_seconds: float = 0.5,
     ) -> None:
         self.driver = driver
         self.header_reader = header_reader
         self.element_finder = element_finder
         self.message_state = message_state
+        self.max_send_attempts = max(1, max_send_attempts)
+        self.retry_delay_seconds = retry_delay_seconds
 
     def send_message(
         self,
@@ -33,15 +39,32 @@ class WhatsAppMessageSender:
         if not content or not self.header_reader.has_open_chat():
             return False
 
-        message_box = self._find_message_box()
+        for attempt in range(self.max_send_attempts):
+            message_box = self._find_message_box()
 
-        if message_box is None:
-            return False
+            if message_box is None:
+                if self._is_last_attempt(attempt):
+                    return False
 
-        self._type_message(message_box, content)
-        self.message_state.remember_sent_message(content)
+                self._wait_before_retry()
 
-        return True
+                continue
+
+            try:
+                self._type_message(message_box, content)
+            except WebDriverException:
+                if self._is_last_attempt(attempt):
+                    raise
+
+                self._wait_before_retry()
+
+                continue
+
+            self.message_state.remember_sent_message(content)
+
+            return True
+
+        return False
 
     def _find_message_box(self) -> WebElement | None:
         locator_groups = (
@@ -99,3 +122,10 @@ class WhatsAppMessageSender:
 
     def _has_non_bmp_character(self, value: str) -> bool:
         return any(ord(character) > 0xFFFF for character in value)
+
+    def _is_last_attempt(self, attempt: int) -> bool:
+        return attempt >= self.max_send_attempts - 1
+
+    def _wait_before_retry(self) -> None:
+        if self.retry_delay_seconds > 0:
+            time.sleep(self.retry_delay_seconds)
