@@ -91,11 +91,8 @@ class WhatsappMessageInterpretationParser implements WhatsappMessageInterpretati
         $intent = mb_strtolower(str_replace('-', '_', trim($intent)));
 
         return match ($intent) {
-            'technical_notebook', 'caderno_tecnico', 'cadernos_tecnicos' => 'search_technical_notebook',
-            'construction_demand', 'demanda_construcao', 'demandas_construcao' => 'search_construction_demand',
-            'land_survey', 'levantamento_terreno', 'levantamentos_terreno' => 'search_land_survey',
-            'travel_itinerary', 'itinerario_viagem', 'itinerarios_viagem' => 'search_travel_itinerary',
-            default => $intent,
+            'search_technical_notebook', 'technical_notebook', 'caderno_tecnico', 'cadernos_tecnicos' => 'search_technical_notebook',
+            default => 'unknown',
         };
     }
 }
