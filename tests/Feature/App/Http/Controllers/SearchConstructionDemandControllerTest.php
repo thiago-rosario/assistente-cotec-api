@@ -3,7 +3,7 @@
 use App\Core\Domain\Entity\ConstructionDemandEntity;
 use App\Core\Domain\Repository\ConstructionDemandRepositoryInterface;
 
-it('searches construction demands by sei process through the controller', function () {
+beforeEach(function () {
     app()->bind(ConstructionDemandRepositoryInterface::class, fn (): ConstructionDemandRepositoryInterface => new class implements ConstructionDemandRepositoryInterface
     {
         public function all(): array
@@ -46,7 +46,9 @@ it('searches construction demands by sei process through the controller', functi
             return [];
         }
     });
+});
 
+it('searches construction demands by sei process through the controller', function () {
     $this->getJson('/api/construction-demands/search?process=001.7313.2023.0006626-49')
         ->assertSuccessful()
         ->assertJson([

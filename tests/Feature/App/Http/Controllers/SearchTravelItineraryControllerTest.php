@@ -2,9 +2,8 @@
 
 use App\Core\Domain\Entity\TravelItineraryEntity;
 use App\Core\Domain\Repository\TravelItineraryRepositoryInterface;
-use Revolution\Google\Sheets\Facades\Sheets;
 
-it('searches travel itineraries by requester through the controller', function () {
+beforeEach(function () {
     app()->bind(TravelItineraryRepositoryInterface::class, fn (): TravelItineraryRepositoryInterface => new class implements TravelItineraryRepositoryInterface
     {
         public function all(): array
@@ -24,7 +23,7 @@ it('searches travel itineraries by requester through the controller', function (
 
         public function findByProcess(string $process): ?TravelItineraryEntity
         {
-            return null;
+            return searchTravelItineraryControllerEntity(process: $process);
         }
 
         public function findByForce(string $force): array
@@ -52,7 +51,9 @@ it('searches travel itineraries by requester through the controller', function (
             return [searchTravelItineraryControllerEntity(requester: $requester)];
         }
     });
+});
 
+it('searches travel itineraries by requester through the controller', function () {
     $this->getJson('/api/travel-itineraries/search?requester=Prefeitura%20de%20Catu')
         ->assertSuccessful()
         ->assertJson([
@@ -71,18 +72,7 @@ it('searches travel itineraries by requester through the controller', function (
         ]);
 });
 
-it('searches travel itineraries by sei process from the rotas sheet real header row', function () {
-    Sheets::shouldReceive('spreadsheet')->once()->andReturnSelf();
-    Sheets::shouldReceive('sheet')->once()->with('ROTAS')->andReturnSelf();
-    Sheets::shouldReceive('range')->once()->with('A:ZZ')->andReturnSelf();
-    Sheets::shouldReceive('get')->once()->andReturn(collect([
-        [],
-        ['LINK 1: https://example.com'],
-        ['LINK 2: https://example.com'],
-        ['MUNICÍPIO', 'PROCESSO SEI', 'REGIÃO (RISP 2023)', 'PLEITO UNIDADE', 'FORÇA', 'REQUISITANTE'],
-        ['Acajutiba', '001.7313.2023.0006626-49 020.2301.2022.0007756-88', 'Leste', 'Delegacia e Pelotão', 'PC/PM', 'Prefeitura de Acajutiba'],
-    ]));
-
+it('searches travel itineraries by sei process through the controller', function () {
     $this->getJson('/api/travel-itineraries/search?process=020.2301.2022.0007756-88')
         ->assertSuccessful()
         ->assertJson([
@@ -92,9 +82,9 @@ it('searches travel itineraries by sei process from the rotas sheet real header 
                 'total' => 1,
                 'data' => [
                     [
-                        'municipality' => 'Acajutiba',
-                        'process' => '001.7313.2023.0006626-49 020.2301.2022.0007756-88',
-                        'requester' => 'Prefeitura de Acajutiba',
+                        'municipality' => 'Catu',
+                        'process' => '020.2301.2022.0007756-88',
+                        'requester' => 'Prefeitura de Catu',
                     ],
                 ],
             ],

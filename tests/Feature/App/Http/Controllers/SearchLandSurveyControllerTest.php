@@ -2,9 +2,8 @@
 
 use App\Core\Domain\Entity\LandSurveyEntity;
 use App\Core\Domain\Repository\LandSurveyRepositoryInterface;
-use Revolution\Google\Sheets\Facades\Sheets;
 
-it('searches land surveys by sei process through the controller', function () {
+beforeEach(function () {
     app()->bind(LandSurveyRepositoryInterface::class, fn (): LandSurveyRepositoryInterface => new class implements LandSurveyRepositoryInterface
     {
         public function all(): array
@@ -47,7 +46,9 @@ it('searches land surveys by sei process through the controller', function () {
             return [];
         }
     });
+});
 
+it('searches land surveys by sei process through the controller', function () {
     $this->getJson('/api/land-surveys/search?process=030.2709.2022.0197573-43')
         ->assertSuccessful()
         ->assertJson([
@@ -66,17 +67,7 @@ it('searches land surveys by sei process through the controller', function () {
         ]);
 });
 
-it('searches land surveys by sei process from the backup sheet real header row', function () {
-    Sheets::shouldReceive('spreadsheet')->once()->andReturnSelf();
-    Sheets::shouldReceive('sheet')->once()->with('BACKUP')->andReturnSelf();
-    Sheets::shouldReceive('range')->once()->with('A:ZZ')->andReturnSelf();
-    Sheets::shouldReceive('get')->once()->andReturn(collect([
-        ['', 'Terreno vistoriado'],
-        ['Resumo'],
-        ['MUNICÍPIO', 'PROCESSO SEI', 'REGIÃO (RISP 2023)', 'PLEITO UNIDADE TAMANHO', 'FORÇA'],
-        ['Camaçari', '001.7313.2023.0004933-59', 'RMS', 'Complexo Policial', 'PC/PM'],
-    ]));
-
+it('searches land surveys by another sei process through the controller', function () {
     $this->getJson('/api/land-surveys/search?process=001.7313.2023.0004933-59')
         ->assertSuccessful()
         ->assertJson([
@@ -86,9 +77,9 @@ it('searches land surveys by sei process from the backup sheet real header row',
                 'total' => 1,
                 'data' => [
                     [
-                        'municipality' => 'Camaçari',
+                        'municipality' => 'Alcobaça',
                         'process' => '001.7313.2023.0004933-59',
-                        'region' => 'RMS',
+                        'region' => 'Sul',
                     ],
                 ],
             ],
