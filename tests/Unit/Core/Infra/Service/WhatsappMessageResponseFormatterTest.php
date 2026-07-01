@@ -1,10 +1,8 @@
 <?php
 
 use App\Core\Infra\Message\FoundRecordsReplyBuilder;
-use App\Core\Infra\Message\GenericRecordsReplyBuilder;
 use App\Core\Infra\Message\TechnicalNotebookReplyBuilder;
 use App\Core\Infra\Message\WhatsappDefaultReplies;
-use App\Core\Infra\Message\WhatsappIntentLabel;
 use App\Core\Infra\Message\WhatsappRecordValueFormatter;
 use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
@@ -124,51 +122,9 @@ TEXT;
         ->not->toContain('2. Item:');
 });
 
-it('summarizes generic records and suggests refinement when results are limited', function () {
-    $result = whatsappMessageResponseFormatter()->format(
-        intent: 'search_construction_demand',
-        filters: ['municipality' => 'Feira de Santana'],
-        result: [
-            'term' => null,
-            'total' => 4,
-            'data' => [
-                [
-                    'process' => 'PROC-1',
-                    'municipality' => 'Feira de Santana',
-                    'force' => 'PM',
-                    'region' => 'Norte',
-                    'landStatus' => 'Regular',
-                    'progress' => 'Em análise',
-                    'buildStatus' => 'Licitado',
-                    'requester' => 'COTEC',
-                ],
-                [
-                    'process' => 'PROC-2',
-                    'municipality' => 'Feira de Santana',
-                ],
-                [
-                    'unknown' => 'Sem campos conhecidos',
-                ],
-                [
-                    'process' => 'PROC-4',
-                    'municipality' => 'Feira de Santana',
-                ],
-            ],
-        ],
-    );
-
-    expect($result['reply'])
-        ->toContain('Encontrei 4 registro(s) em demandas de construção.')
-        ->toContain('1. Processo: PROC-1 | Município: Feira de Santana | Força: PM | Região: Norte | Terreno: Regular | Andamento: Em análise | Construção: Licitado | Solicitante: COTEC')
-        ->toContain('2. Processo: PROC-2 | Município: Feira de Santana')
-        ->toContain('3. Registro sem resumo disponível.')
-        ->toContain('Mostrei os primeiros resultados. Refine a busca para localizar um registro específico.')
-        ->not->toContain('4. Processo: PROC-4');
-});
-
 it('returns no records message while preserving payload filters', function () {
     $result = whatsappMessageResponseFormatter()->format(
-        intent: 'search_land_survey',
+        intent: 'search_technical_notebook',
         filters: ['municipality' => 'Antas'],
         result: [
             'term' => null,
@@ -179,7 +135,7 @@ it('returns no records message while preserving payload filters', function () {
 
     expect($result)->toBe([
         'reply' => 'Não encontrei registros para essa consulta. Tente informar o nome do município ou o número do processo.',
-        'intent' => 'search_land_survey',
+        'intent' => 'search_technical_notebook',
         'total' => 0,
         'data' => [],
         'filters' => ['municipality' => 'Antas'],
@@ -225,7 +181,6 @@ function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
         new WhatsappResponsePayloadFactory,
         new FoundRecordsReplyBuilder(
             new TechnicalNotebookReplyBuilder($valueFormatter),
-            new GenericRecordsReplyBuilder(new WhatsappIntentLabel, $valueFormatter),
         ),
     );
 }

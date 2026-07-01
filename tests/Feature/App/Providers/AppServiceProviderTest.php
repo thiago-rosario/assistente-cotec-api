@@ -29,12 +29,8 @@ use App\Core\Application\Service\GreetingMessageMatcherService;
 use App\Core\Application\Service\MunicipalityExtractorService;
 use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
-use App\Core\Domain\Repository\ConstructionDemandRepositoryInterface;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
-use App\Core\Domain\Repository\LandSurveyRepositoryInterface;
-use App\Core\Domain\Repository\NotebookRepositoryInterface;
 use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;
-use App\Core\Domain\Repository\TravelItineraryRepositoryInterface;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\SearchTechnicalNotebookAdapter;
@@ -44,12 +40,8 @@ use App\Core\Infra\Mapper\LandSurveySheetMapper;
 use App\Core\Infra\Mapper\NotebookSheetMapper;
 use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
 use App\Core\Infra\Mapper\TravelItinerarySheetMapper;
-use App\Core\Infra\Repository\Gateway\ConstructionDemandGoogleSheetGatewayRepository;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
-use App\Core\Infra\Repository\Gateway\LandSurveyGoogleSheetGatewayRepository;
-use App\Core\Infra\Repository\Gateway\NotebookGoogleSheetGatewayRepository;
 use App\Core\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
-use App\Core\Infra\Repository\Gateway\TravelItineraryGoogleSheetGatewayRepository;
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
 
 it('resolves application bindings from the container', function (
@@ -69,11 +61,7 @@ it('resolves application bindings from the container', function (
     [TechnicalNotebookSheetMapperInterface::class, TechnicalNotebookSheetMapper::class],
     [TravelItinerarySheetMapperInterface::class, TravelItinerarySheetMapper::class],
     [GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class],
-    [ConstructionDemandRepositoryInterface::class, ConstructionDemandGoogleSheetGatewayRepository::class],
-    [LandSurveyRepositoryInterface::class, LandSurveyGoogleSheetGatewayRepository::class],
-    [NotebookRepositoryInterface::class, NotebookGoogleSheetGatewayRepository::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
-    [TravelItineraryRepositoryInterface::class, TravelItineraryGoogleSheetGatewayRepository::class],
     [GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class],
     [MunicipalityExtractorServiceInterface::class, MunicipalityExtractorService::class],
     [SeiProcessWhatsappMessageInterpretationRuleInterface::class, SeiProcessWhatsappMessageInterpretationRule::class],
