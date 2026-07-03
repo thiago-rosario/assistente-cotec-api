@@ -5,13 +5,25 @@ use App\Core\Infra\Parser\WhatsappMessageInterpretationParser;
 
 it('parses whatsapp message interpretations into dto', function () {
     $interpretation = (new WhatsappMessageInterpretationParser)->parse(
-        '{"intent":"land-survey","filters":{"municipio":"Antas","land_status":"Aprovado","empty":" "}}',
+        '{"intent":"search-technical-notebook","filters":{"municipio":"Antas","land_status":"Aprovado","empty":" "}}',
     );
 
-    expect($interpretation->intent)->toBe('search_land_survey')
+    expect($interpretation->intent)->toBe(WhatsappMessageIntentEnum::SEARCH_TECHNICAL_NOTEBOOK->value)
         ->and($interpretation->filters)->toBe([
             'municipality' => 'Antas',
             'landStatus' => 'Aprovado',
+        ]);
+});
+
+it('normalizes unsupported intents to unknown', function () {
+    $interpretation = (new WhatsappMessageInterpretationParser)->parse([
+        'intent' => 'unsupported-intent',
+        'filters' => ['municipio' => 'Antas'],
+    ]);
+
+    expect($interpretation->intent)->toBe(WhatsappMessageIntentEnum::UNKNOWN->value)
+        ->and($interpretation->filters)->toBe([
+            'municipality' => 'Antas',
         ]);
 });
 

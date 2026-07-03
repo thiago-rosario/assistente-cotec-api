@@ -26,7 +26,7 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
     {
         $reply = $result['total'] === 0
             ? $this->defaultReplies->noRecords()
-            : $this->foundRecordsReplyBuilder->build($intent, $filters, $result);
+            : $this->foundRecordsReplyBuilder->build($filters, $result);
 
         return $this->payloadFactory->withRecords($intent, $filters, $result, $reply);
     }

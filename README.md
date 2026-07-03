@@ -11,8 +11,8 @@ Principais capacidades:
 - Receber payloads de mensagens pela rota `POST /api/whatsapp/messages`.
 - Executar o bot de WhatsApp Web via comando Artisan `php artisan whatsapp:bridge`.
 - Interpretar mensagens com regras diretas e OpenAI.
-- Consultar Google Sheets por caderno técnico, demandas de construção, levantamento de terrenos e itinerários de viagem.
-- Expor endpoints REST para buscas específicas em planilhas.
+- Consultar Google Sheets por caderno técnico.
+- Expor endpoints REST para buscas em planilhas.
 - Padronizar respostas no formato JSend.
 
 ## Tecnologias
@@ -64,15 +64,9 @@ flowchart TD
     K --> L{Qual intenção foi identificada?}
 
     L -->|Buscar Caderno Técnico| M[SearchTechnicalNotebookUsecase]
-    L -->|Buscar Demanda de Construção| N[SearchConstructionDemandUsecase]
-    L -->|Buscar Reformas| O[SearchReformUsecase]
-    L -->|Buscar Rotas| P[SearchRouteUsecase]
     L -->|Intenção desconhecida| Q[Resposta padrão solicitando mais detalhes]
 
     M --> R[Repositório consulta Google Sheets]
-    N --> R
-    O --> R
-    P --> R
 
     R --> S[Entidade de domínio da planilha]
     S --> T[Adapter normaliza os dados]
@@ -91,10 +85,7 @@ flowchart TD
 | --- | --- | --- |
 | `GET` | `/api/google-sheet` | Lê dados de uma planilha configurada. |
 | `GET` | `/api/google-sheets/{sheetId}/search` | Busca genérica por planilha. |
-| `GET` | `/api/construction-demands/search` | Busca demandas de construção. |
-| `GET` | `/api/land-surveys/search` | Busca levantamentos de terreno. |
 | `GET` | `/api/technical-notebooks/search` | Busca cadernos técnicos. |
-| `GET` | `/api/travel-itineraries/search` | Busca itinerários de viagem. |
 | `POST` | `/api/whatsapp/messages` | Processa uma mensagem recebida pelo WhatsApp. |
 
 ## Configuração
@@ -197,6 +188,6 @@ vendor/bin/pint --dirty --format agent
 
 ## Estrutura de dados
 
-A fonte principal de dados é o Google Sheets. Os gateways em `src/Core/Infra/Repository/Gateway` acessam os dados e os repositórios em `src/Core/Infra/Repository/SheetRepository` aplicam buscas específicas por campos como processo, município, força, região, situação do terreno, andamento e solicitante.
+A fonte principal de dados é o Google Sheets. Os gateways em `src/Core/Infra/Repository/Gateway` acessam os dados e o repositório em `src/Core/Infra/Repository/SheetRepository` aplica buscas específicas por campos como processo, município, força e região.
 
 Os mappers em `src/Core/Infra/Mapper` normalizam linhas de planilha para entidades e DTOs usados pelos casos de uso. As respostas são montadas por `WhatsappMessageResponseFormatter`, limitando os primeiros resultados e orientando o usuário a refinar a busca quando houver muitos registros.
