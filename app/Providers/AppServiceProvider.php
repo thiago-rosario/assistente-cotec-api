@@ -7,6 +7,7 @@ use App\Core\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterfac
 use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Application\Interfaces\Log\WhatsappBotLoggerInterface;
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Application\Interfaces\Mapper\PythonMessagePayloadMapperInterface;
 use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
@@ -44,6 +45,7 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\SearchTechnicalNotebookAdapter;
 use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
+use App\Core\Infra\Log\WhatsappBotLogger;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
@@ -89,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PythonBridgeEventParserInterface::class, PythonBridgeEventParser::class);
         $this->app->bind(PythonMessagePayloadMapperInterface::class, PythonMessagePayloadMapper::class);
         $this->app->bind(PythonMessageOutputParserInterface::class, PythonMessageOutputParser::class);
+        $this->app->bind(WhatsappBotLoggerInterface::class, WhatsappBotLogger::class);
     }
 
     /**

@@ -151,7 +151,7 @@ The `Context` facade passes data through the entire request lifecycle — middle
 // In middleware
 Context::add('tenant_id', $request->header('X-Tenant-ID'));
 
-// Anywhere later — controllers, jobs, log context
+// Anywhere later — controllers, jobs, Log context
 $tenantId = Context::get('tenant_id');
 ```
 

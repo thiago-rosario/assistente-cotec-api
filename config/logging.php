@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Infra\Log\CustomizeWhatsappBotLogger;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -125,6 +126,16 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'whatsapp_bot' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/whatsapp_bot.log'),
+            'level' => env('LOG_WHATSAPP_BOT_LEVEL', env('LOG_LEVEL', 'info')),
+            'days' => env('LOG_WHATSAPP_BOT_DAYS', 7),
+            'timezone' => env('LOG_WHATSAPP_BOT_TIMEZONE', 'America/Bahia'),
+            'tap' => [CustomizeWhatsappBotLogger::class],
+            'replace_placeholders' => true,
         ],
 
     ],
