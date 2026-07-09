@@ -1,24 +1,10 @@
 <?php
 
-use App\Core\Application\DTO\SearchTechnicalNotebookInputDTO;
-use App\Core\Application\DTO\SearchTechnicalNotebookOutputDTO;
-use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
-use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
+use App\Core\Application\Interfaces\Service\WhatsappMessageSearchHandlerInterface;
 use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
 
-it('searches technical notebooks from whatsapp filters', function () {
+it('delegates whatsapp searches to the handler that supports the intent', function () {
     $filters = ['municipality' => 'Antas'];
-    $input = new SearchTechnicalNotebookInputDTO(municipality: 'Antas');
-    $output = new SearchTechnicalNotebookOutputDTO(
-        term: null,
-        total: 1,
-        data: [
-            [
-                'municipality' => 'Antas',
-                'process' => '020.4487.2021.0009714-69',
-            ],
-        ],
-    );
     $payload = [
         'term' => null,
         'total' => 1,
@@ -30,23 +16,24 @@ it('searches technical notebooks from whatsapp filters', function () {
         ],
     ];
 
-    $usecase = Mockery::mock(SearchTechnicalNotebookUsecaseInterface::class);
-    $usecase->shouldReceive('__invoke')
+    $unsupportedHandler = Mockery::mock(WhatsappMessageSearchHandlerInterface::class);
+    $unsupportedHandler->shouldReceive('supports')
         ->once()
-        ->with($input)
-        ->andReturn($output);
+        ->with('search_technical_notebook')
+        ->andReturnFalse();
+    $unsupportedHandler->shouldReceive('search')->never();
 
-    $adapter = Mockery::mock(SearchTechnicalNotebookAdapterInterface::class);
-    $adapter->shouldReceive('fromArray')
+    $supportedHandler = Mockery::mock(WhatsappMessageSearchHandlerInterface::class);
+    $supportedHandler->shouldReceive('supports')
+        ->once()
+        ->with('search_technical_notebook')
+        ->andReturnTrue();
+    $supportedHandler->shouldReceive('search')
         ->once()
         ->with($filters)
-        ->andReturn($input);
-    $adapter->shouldReceive('toArray')
-        ->once()
-        ->with($output)
         ->andReturn($payload);
 
-    $result = (new WhatsappMessageSearchAdapter($usecase, $adapter))->search(
+    $result = (new WhatsappMessageSearchAdapter([$unsupportedHandler, $supportedHandler]))->search(
         intent: 'search_technical_notebook',
         filters: $filters,
     );
@@ -55,14 +42,14 @@ it('searches technical notebooks from whatsapp filters', function () {
 });
 
 it('returns an empty result for unsupported whatsapp search intents', function () {
-    $usecase = Mockery::mock(SearchTechnicalNotebookUsecaseInterface::class);
-    $usecase->shouldReceive('__invoke')->never();
+    $handler = Mockery::mock(WhatsappMessageSearchHandlerInterface::class);
+    $handler->shouldReceive('supports')
+        ->once()
+        ->with('unsupported_intent')
+        ->andReturnFalse();
+    $handler->shouldReceive('search')->never();
 
-    $adapter = Mockery::mock(SearchTechnicalNotebookAdapterInterface::class);
-    $adapter->shouldReceive('fromArray')->never();
-    $adapter->shouldReceive('toArray')->never();
-
-    $result = (new WhatsappMessageSearchAdapter($usecase, $adapter))->search(
+    $result = (new WhatsappMessageSearchAdapter([$handler]))->search(
         intent: 'unsupported_intent',
         filters: ['municipality' => 'Antas'],
     );

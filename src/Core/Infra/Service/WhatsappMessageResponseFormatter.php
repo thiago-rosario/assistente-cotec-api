@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Service;
 
+use App\Core\Application\Interfaces\Service\WhatsappDefaultRepliesInterface;
+use App\Core\Application\Interfaces\Service\WhatsappFoundRecordsReplyBuilderInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
-use App\Core\Infra\Message\FoundRecordsReplyBuilder;
-use App\Core\Infra\Message\WhatsappDefaultReplies;
 use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
 
 class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatterInterface
 {
+    /**
+     * @param  iterable<WhatsappFoundRecordsReplyBuilderInterface>  $foundRecordsReplyBuilders
+     */
     public function __construct(
-        private readonly WhatsappDefaultReplies $defaultReplies,
+        private readonly WhatsappDefaultRepliesInterface $defaultReplies,
         private readonly WhatsappResponsePayloadFactory $payloadFactory,
-        private readonly FoundRecordsReplyBuilder $foundRecordsReplyBuilder,
+        private readonly iterable $foundRecordsReplyBuilders,
     ) {}
 
     /**
@@ -26,7 +29,7 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
     {
         $reply = $result['total'] === 0
             ? $this->defaultReplies->noRecords()
-            : $this->foundRecordsReplyBuilder->build($filters, $result);
+            : $this->foundRecordsReply($intent, $filters, $result);
 
         return $this->payloadFactory->withRecords($intent, $filters, $result, $reply);
     }
@@ -103,5 +106,24 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
     private function emptyResponse(string $intent, string $reply): array
     {
         return $this->payloadFactory->empty($intent, $reply);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @param  array{term: string|null, total: int, data: list<array<string, mixed>>}  $result
+     */
+    private function foundRecordsReply(string $intent, array $filters, array $result): string
+    {
+        foreach ($this->foundRecordsReplyBuilders as $builder) {
+            if ($builder->supports($intent)) {
+                return $builder->build($filters, $result);
+            }
+        }
+
+        return sprintf(
+            'Encontrei %d %s para essa consulta.',
+            $result['total'],
+            $result['total'] === 1 ? 'registro' : 'registros',
+        );
     }
 }
