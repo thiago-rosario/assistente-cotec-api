@@ -1,9 +1,9 @@
 <?php
 
-use App\Core\Infra\Message\FoundRecordsReplyBuilder;
-use App\Core\Infra\Message\TechnicalNotebookReplyBuilder;
-use App\Core\Infra\Message\WhatsappDefaultReplies;
-use App\Core\Infra\Message\WhatsappRecordValueFormatter;
+use App\BuildPanel\Infra\Message\TechnicalNotebookFoundRecordsReplyBuilder;
+use App\BuildPanel\Infra\Message\TechnicalNotebookReplyBuilder;
+use App\BuildPanel\Infra\Message\WhatsappDefaultReplies;
+use App\BuildPanel\Infra\Message\WhatsappRecordValueFormatter;
 use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
 
@@ -179,9 +179,11 @@ function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
     return new WhatsappMessageResponseFormatter(
         new WhatsappDefaultReplies,
         new WhatsappResponsePayloadFactory,
-        new FoundRecordsReplyBuilder(
-            new TechnicalNotebookReplyBuilder($valueFormatter),
-        ),
+        [
+            new TechnicalNotebookFoundRecordsReplyBuilder(
+                new TechnicalNotebookReplyBuilder($valueFormatter),
+            ),
+        ],
     );
 }
 

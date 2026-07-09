@@ -1,14 +1,30 @@
 <?php
 
-use App\Core\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterface;
-use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
-use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
+use App\BuildPanel\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
+use App\BuildPanel\Application\Interfaces\Usecase\ReadGoogleSpreadsheetUsecaseInterface;
+use App\BuildPanel\Application\Interfaces\Usecase\SearchGoogleSheetUsecaseInterface;
+use App\BuildPanel\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
+use App\BuildPanel\Application\Usecase\ReadGoogleSpreadsheetUsecase;
+use App\BuildPanel\Application\Usecase\SearchGoogleSheetUsecase;
+use App\BuildPanel\Application\Usecase\SearchTechnicalNotebookUsecase;
+use App\BuildPanel\Domain\Repository\GoogleSheetRepositoryInterface;
+use App\BuildPanel\Domain\Repository\TechnicalNotebookRepositoryInterface;
+use App\BuildPanel\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
+use App\BuildPanel\Infra\Adapter\SearchGoogleSheetAdapter;
+use App\BuildPanel\Infra\Adapter\SearchTechnicalNotebookAdapter;
+use App\BuildPanel\Infra\Adapter\TechnicalNotebookWhatsappSearchHandler;
+use App\BuildPanel\Infra\Mapper\GoogleSheetRowMapper;
+use App\BuildPanel\Infra\Mapper\TechnicalNotebookSheetMapper;
+use App\BuildPanel\Infra\Message\TechnicalNotebookFoundRecordsReplyBuilder;
+use App\BuildPanel\Infra\Message\WhatsappDefaultReplies;
+use App\BuildPanel\Infra\Providers\BuildPanelServiceProvider;
+use App\BuildPanel\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\BuildPanel\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
 use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
-use App\Core\Application\Interfaces\Mapper\ConstructionDemandSheetMapperInterface;
-use App\Core\Application\Interfaces\Mapper\LandSurveySheetMapperInterface;
-use App\Core\Application\Interfaces\Mapper\NotebookSheetMapperInterface;
-use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
-use App\Core\Application\Interfaces\Mapper\TravelItinerarySheetMapperInterface;
 use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
 use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
@@ -16,11 +32,9 @@ use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServ
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
+use App\Core\Application\Interfaces\Service\WhatsappDefaultRepliesInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Application\Interfaces\Usecase\SearchConstructionDemandUsecaseInterface;
-use App\Core\Application\Interfaces\Usecase\SearchLandSurveyUsecaseInterface;
-use App\Core\Application\Interfaces\Usecase\SearchTravelItineraryUsecaseInterface;
 use App\Core\Application\Rules\MunicipalityWhatsappMessageInterpretationRule;
 use App\Core\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
 use App\Core\Application\Service\AcceptedWhatsappMessageInterpretationService;
@@ -29,20 +43,20 @@ use App\Core\Application\Service\GreetingMessageMatcherService;
 use App\Core\Application\Service\MunicipalityExtractorService;
 use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
-use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
-use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;
-use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
-use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
-use App\Core\Infra\Adapter\SearchTechnicalNotebookAdapter;
 use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
-use App\Core\Infra\Mapper\ConstructionDemandSheetMapper;
-use App\Core\Infra\Mapper\LandSurveySheetMapper;
-use App\Core\Infra\Mapper\NotebookSheetMapper;
-use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
-use App\Core\Infra\Mapper\TravelItinerarySheetMapper;
-use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
-use App\Core\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
+use App\Core\Infra\Providers\CoreServiceProvider;
 use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
+use App\Providers\AppServiceProvider;
+
+it('registers application module service providers', function () {
+    $providers = require base_path('bootstrap/providers.php');
+
+    expect($providers)->toContain(
+        AppServiceProvider::class,
+        BuildPanelServiceProvider::class,
+        CoreServiceProvider::class,
+    );
+});
 
 it('resolves application bindings from the container', function (
     string $abstract,
@@ -54,14 +68,15 @@ it('resolves application bindings from the container', function (
     [SearchGoogleSheetAdapterInterface::class, SearchGoogleSheetAdapter::class],
     [SearchTechnicalNotebookAdapterInterface::class, SearchTechnicalNotebookAdapter::class],
     [WhatsappMessageSearchAdapterInterface::class, WhatsappMessageSearchAdapter::class],
+    [ReadGoogleSpreadsheetUsecaseInterface::class, ReadGoogleSpreadsheetUsecase::class],
+    [SearchGoogleSheetUsecaseInterface::class, SearchGoogleSheetUsecase::class],
+    [SearchTechnicalNotebookUsecaseInterface::class, SearchTechnicalNotebookUsecase::class],
     [ProcessWhatsappMessageUsecaseInterface::class, ProcessWhatsappMessageUsecase::class],
-    [ConstructionDemandSheetMapperInterface::class, ConstructionDemandSheetMapper::class],
-    [LandSurveySheetMapperInterface::class, LandSurveySheetMapper::class],
-    [NotebookSheetMapperInterface::class, NotebookSheetMapper::class],
+    [GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class],
     [TechnicalNotebookSheetMapperInterface::class, TechnicalNotebookSheetMapper::class],
-    [TravelItinerarySheetMapperInterface::class, TravelItinerarySheetMapper::class],
     [GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
+    [WhatsappDefaultRepliesInterface::class, WhatsappDefaultReplies::class],
     [GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class],
     [MunicipalityExtractorServiceInterface::class, MunicipalityExtractorService::class],
     [SeiProcessWhatsappMessageInterpretationRuleInterface::class, SeiProcessWhatsappMessageInterpretationRule::class],
@@ -72,10 +87,16 @@ it('resolves application bindings from the container', function (
     [WhatsappMessageResponseFormatterInterface::class, WhatsappMessageResponseFormatter::class],
 ]);
 
-it('binds the spreadsheet domain search usecase interfaces', function () {
-    expect(app()->bound(SearchConstructionDemandUsecaseInterface::class))->toBeTrue()
-        ->and(app()->bound(SearchLandSurveyUsecaseInterface::class))->toBeTrue()
-        ->and(app()->bound(SearchTravelItineraryUsecaseInterface::class))->toBeTrue();
+it('registers build panel whatsapp extension handlers', function () {
+    $searchHandlers = collect(app()->tagged('whatsapp.search_handlers'))->all();
+    $replyBuilders = collect(app()->tagged('whatsapp.found_records_reply_builders'))->all();
+
+    expect($searchHandlers)
+        ->toHaveCount(1)
+        ->and($searchHandlers[0])->toBeInstanceOf(TechnicalNotebookWhatsappSearchHandler::class)
+        ->and($replyBuilders)
+        ->toHaveCount(1)
+        ->and($replyBuilders[0])->toBeInstanceOf(TechnicalNotebookFoundRecordsReplyBuilder::class);
 });
 
 it('resolves direct whatsapp interpreter with bound interpretation rules', function () {
