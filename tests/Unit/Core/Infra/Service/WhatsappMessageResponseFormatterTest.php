@@ -174,6 +174,27 @@ it('returns the COTEC welcome message for greetings', function () {
     ]);
 });
 
+it('returns the build panel module entry message', function () {
+    $result = whatsappMessageResponseFormatter()->buildPanelConsultation();
+
+    expect($result)->toBe([
+        'reply' => <<<'TEXT'
+Olá! Você acessou o módulo *Painel de Obras*.
+
+Aqui você pode consultar informações sobre obras por meio de uma destas opções:
+
+• Nome do município
+• Número do processo SEI
+
+Envie apenas uma informação por vez para iniciar a consulta.
+TEXT,
+        'intent' => 'search_technical_notebook',
+        'total' => 0,
+        'data' => [],
+        'filters' => [],
+    ]);
+});
+
 function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
 {
     $valueFormatter = new WhatsappRecordValueFormatter;

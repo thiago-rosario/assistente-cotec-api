@@ -25,6 +25,7 @@ use App\Core\BuildPanel\Infra\Providers\BuildPanelServiceProvider;
 use App\Core\BuildPanel\Infra\Repository\Gateway\GoogleSheetGateway;
 use App\Core\BuildPanel\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
 use App\Core\Conversation\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Conversation\Application\Interfaces\Repository\ConversationStateRepositoryInterface;
 use App\Core\Conversation\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Conversation\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
 use App\Core\Conversation\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
@@ -45,6 +46,7 @@ use App\Core\Conversation\Application\Service\ResolveWhatsappMessageInterpretati
 use App\Core\Conversation\Application\Usecase\ProcessWhatsappMessageUsecase;
 use App\Core\Conversation\Infra\Adapter\WhatsappMessageSearchAdapter;
 use App\Core\Conversation\Infra\Providers\CoreServiceProvider;
+use App\Core\Conversation\Infra\Repository\CacheConversationStateRepository;
 use App\Core\Conversation\Infra\Service\WhatsappMessageResponseFormatter;
 use App\Providers\AppServiceProvider;
 
@@ -84,6 +86,7 @@ it('resolves application bindings from the container', function (
     [DirectWhatsappMessageInterpreterServiceInterface::class, DirectWhatsappMessageInterpreterService::class],
     [ResolveWhatsappMessageInterpretationServiceInterface::class, ResolveWhatsappMessageInterpretationService::class],
     [AcceptedWhatsappMessageInterpretationServiceInterface::class, AcceptedWhatsappMessageInterpretationService::class],
+    [ConversationStateRepositoryInterface::class, CacheConversationStateRepository::class],
     [WhatsappMessageResponseFormatterInterface::class, WhatsappMessageResponseFormatter::class],
 ]);
 
