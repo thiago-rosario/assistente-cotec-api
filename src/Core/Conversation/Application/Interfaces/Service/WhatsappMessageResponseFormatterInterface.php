@@ -21,6 +21,11 @@ interface WhatsappMessageResponseFormatterInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function buildPanelConsultation(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function unknownIntent(): array;
 
     /**

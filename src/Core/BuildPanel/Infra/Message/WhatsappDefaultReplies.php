@@ -11,6 +11,17 @@ final readonly class WhatsappDefaultReplies implements WhatsappDefaultRepliesInt
 {
     private const string NoRecordsMessage = 'Não encontrei registros para essa consulta. Tente informar o nome do município ou o número do processo.';
 
+    private const string BuildPanelConsultationMessage = <<<'TEXT'
+Olá! Você acessou o módulo *Painel de Obras*.
+
+Aqui você pode consultar informações sobre obras por meio de uma destas opções:
+
+• Nome do município
+• Número do processo SEI
+
+Envie apenas uma informação por vez para iniciar a consulta.
+TEXT;
+
     private const string UnknownIntentMessage = 'Não consegui identificar exatamente qual consulta você deseja fazer. Envie o número de uma opção do menu ou informe o nome do município ou o número do processo.';
 
     private const string UnsupportedMessageContentMessage = 'Recebi sua mensagem, mas não consegui ler conteúdo em texto. Envie uma opção do menu ou uma consulta em texto com o nome do município ou o número do processo.';
@@ -33,6 +44,11 @@ final readonly class WhatsappDefaultReplies implements WhatsappDefaultRepliesInt
     public function greeting(): string
     {
         return $this->userMenuMessage->content();
+    }
+
+    public function buildPanelConsultation(): string
+    {
+        return self::BuildPanelConsultationMessage;
     }
 
     public function unknownIntent(): string

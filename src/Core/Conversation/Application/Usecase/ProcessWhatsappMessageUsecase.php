@@ -6,11 +6,13 @@ namespace App\Core\Conversation\Application\Usecase;
 
 use App\Core\Conversation\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Conversation\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\Core\Conversation\Application\Interfaces\Repository\ConversationStateRepositoryInterface;
 use App\Core\Conversation\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Conversation\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
+use App\Core\Conversation\Enum\ConversationState;
 use App\Core\Conversation\Enum\WhatsappMessageIntentEnum;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
@@ -25,6 +27,7 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
         private readonly WhatsappMessageSearchAdapterInterface $searchAdapter,
         private readonly WhatsappMessageResponseFormatterInterface $responseFormatter,
         private readonly AcceptedWhatsappMessageInterpretationServiceInterface $service,
+        private readonly ConversationStateRepositoryInterface $conversationStateRepository,
     ) {}
 
     /**
@@ -38,10 +41,21 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
             }
 
             if ($this->greetingMatcher->matches($input->message)) {
+                $this->conversationStateRepository->put($input, ConversationState::MainMenu);
+
                 return $this->responseFormatter->greeting();
             }
 
-            $interpretation = ($this->resolveInterpretation)($input->message);
+            $state = $this->conversationStateRepository->get($input);
+            $interpretation = $state === null
+                ? ($this->resolveInterpretation)($input->message)
+                : ($this->resolveInterpretation)($input->message, $state);
+
+            if ($interpretation->intent === WhatsappMessageIntentEnum::OPEN_BUILD_PANEL->value) {
+                $this->conversationStateRepository->put($input, ConversationState::BuildPanelConsultation);
+
+                return $this->responseFormatter->buildPanelConsultation();
+            }
 
             if ($interpretation->intent === WhatsappMessageIntentEnum::UNKNOWN->value) {
                 return $this->responseFormatter->unknownIntent();

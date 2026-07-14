@@ -10,6 +10,8 @@ interface WhatsappDefaultRepliesInterface
 
     public function greeting(): string;
 
+    public function buildPanelConsultation(): string;
+
     public function unknownIntent(): string;
 
     public function unsupportedMessageContent(): string;

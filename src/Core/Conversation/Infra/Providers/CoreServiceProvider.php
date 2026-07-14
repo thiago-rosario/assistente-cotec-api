@@ -8,6 +8,7 @@ use App\Core\Conversation\Application\Interfaces\Mapper\PythonMessagePayloadMapp
 use App\Core\Conversation\Application\Interfaces\Parser\PythonBridgeEventParserInterface;
 use App\Core\Conversation\Application\Interfaces\Parser\PythonMessageOutputParserInterface;
 use App\Core\Conversation\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
+use App\Core\Conversation\Application\Interfaces\Repository\ConversationStateRepositoryInterface;
 use App\Core\Conversation\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Conversation\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
 use App\Core\Conversation\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
@@ -34,6 +35,7 @@ use App\Core\Conversation\Infra\Message\WhatsappResponsePayloadFactory;
 use App\Core\Conversation\Infra\Parser\PythonBridgeEventParser;
 use App\Core\Conversation\Infra\Parser\PythonMessageOutputParser;
 use App\Core\Conversation\Infra\Parser\WhatsappMessageInterpretationParser;
+use App\Core\Conversation\Infra\Repository\CacheConversationStateRepository;
 use App\Core\Conversation\Infra\Service\InterpretWhatsappMessageWithAiService;
 use App\Core\Conversation\Infra\Service\WhatsappMessageResponseFormatter;
 use Illuminate\Contracts\Foundation\Application;
@@ -57,6 +59,7 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->bind(PythonBridgeEventParserInterface::class, PythonBridgeEventParser::class);
         $this->app->bind(PythonMessagePayloadMapperInterface::class, PythonMessagePayloadMapper::class);
         $this->app->bind(PythonMessageOutputParserInterface::class, PythonMessageOutputParser::class);
+        $this->app->bind(ConversationStateRepositoryInterface::class, CacheConversationStateRepository::class);
 
         $this->app->bind(
             WhatsappMessageSearchAdapterInterface::class,

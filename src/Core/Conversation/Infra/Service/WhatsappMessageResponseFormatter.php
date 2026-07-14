@@ -7,6 +7,7 @@ namespace App\Core\Conversation\Infra\Service;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappDefaultRepliesInterface;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappFoundRecordsReplyBuilderInterface;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
+use App\Core\Conversation\Enum\WhatsappMessageIntentEnum;
 use App\Core\Conversation\Infra\Message\WhatsappResponsePayloadFactory;
 
 class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatterInterface
@@ -42,6 +43,17 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
         return $this->emptyResponse(
             intent: 'greeting',
             reply: $this->defaultReplies->greeting(),
+        );
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
+    public function buildPanelConsultation(): array
+    {
+        return $this->emptyResponse(
+            intent: WhatsappMessageIntentEnum::SEARCH_TECHNICAL_NOTEBOOK->value,
+            reply: $this->defaultReplies->buildPanelConsultation(),
         );
     }
 
