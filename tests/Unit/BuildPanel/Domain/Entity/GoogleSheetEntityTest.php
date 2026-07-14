@@ -1,9 +1,9 @@
 <?php
 
-use App\BuildPanel\Domain\Entity\GoogleSheetEntity;
-use App\BuildPanel\Exception\GoogleSheetGidInvalidException;
-use App\BuildPanel\Exception\GoogleSheetNameRequiredException;
-use App\BuildPanel\Exception\GoogleSpreadsheetIdRequiredException;
+use App\Core\BuildPanel\Domain\Entity\GoogleSheetEntity;
+use App\Core\BuildPanel\Exception\GoogleSheetGidInvalidException;
+use App\Core\BuildPanel\Exception\GoogleSheetNameRequiredException;
+use App\Core\BuildPanel\Exception\GoogleSpreadsheetIdRequiredException;
 
 it('creates google sheet entities from configured sheets', function () {
     $sheets = GoogleSheetEntity::fromConfiguredSheets('spreadsheet-id', [

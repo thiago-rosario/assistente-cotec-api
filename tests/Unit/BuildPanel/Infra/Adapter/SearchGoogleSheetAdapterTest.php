@@ -1,8 +1,8 @@
 <?php
 
-use App\BuildPanel\Application\DTO\SearchGoogleSheetInputDTO;
-use App\BuildPanel\Application\DTO\SearchGoogleSheetOutputDTO;
-use App\BuildPanel\Infra\Adapter\SearchGoogleSheetAdapter;
+use App\Core\BuildPanel\Application\DTO\SearchGoogleSheetInputDTO;
+use App\Core\BuildPanel\Application\DTO\SearchGoogleSheetOutputDTO;
+use App\Core\BuildPanel\Infra\Adapter\SearchGoogleSheetAdapter;
 
 it('maps google sheet search input arrays into dtos', function () {
     $adapter = new SearchGoogleSheetAdapter;

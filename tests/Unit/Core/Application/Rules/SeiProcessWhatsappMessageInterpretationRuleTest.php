@@ -1,6 +1,6 @@
 <?php
 
-use App\Core\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
+use App\Core\Conversation\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
 
 it('interprets messages with sei process number', function () {
     $interpretation = (new SeiProcessWhatsappMessageInterpretationRule)(

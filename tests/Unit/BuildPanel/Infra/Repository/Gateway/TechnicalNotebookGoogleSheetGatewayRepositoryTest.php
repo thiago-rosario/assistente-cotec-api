@@ -1,13 +1,13 @@
 <?php
 
-use App\BuildPanel\Domain\Entity\TechnicalNotebookEntity;
-use App\BuildPanel\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\FindAllTechnicalNotebookGoogleSheetRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByBuildStatusGoogleSheetRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByForceGoogleSheetRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByMunicipalityGoogleSheetRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByProcessGoogleSheetRepository;
-use App\BuildPanel\Infra\Repository\SheetRepository\SearchTechnicalNotebookGoogleSheetRepository;
+use App\Core\BuildPanel\Domain\Entity\TechnicalNotebookEntity;
+use App\Core\BuildPanel\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\FindAllTechnicalNotebookGoogleSheetRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByBuildStatusGoogleSheetRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByForceGoogleSheetRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByMunicipalityGoogleSheetRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\FindTechnicalNotebookByProcessGoogleSheetRepository;
+use App\Core\BuildPanel\Infra\Repository\SheetRepository\SearchTechnicalNotebookGoogleSheetRepository;
 
 it('delegates technical notebook gateway methods to their specific repositories', function () {
     $allRepository = new class extends FindAllTechnicalNotebookGoogleSheetRepository

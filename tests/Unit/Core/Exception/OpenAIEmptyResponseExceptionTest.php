@@ -1,7 +1,7 @@
 <?php
 
-use App\Core\Enum\CodeExceptionEnum;
-use App\Core\Exception\OpenAIEmptyResponseException;
+use App\Core\Conversation\Enum\CodeExceptionEnum;
+use App\Core\Conversation\Exception\OpenAIEmptyResponseException;
 
 it('defines openai empty response exception defaults', function () {
     $exception = new OpenAIEmptyResponseException;

@@ -1,11 +1,12 @@
 <?php
 
-use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
-use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
-use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
-use App\Core\Domain\Resolver\WhatsappMessageIntentResolver;
+use App\Core\Conversation\Application\DTO\WhatsappMessageInterpretationDTO;
+use App\Core\Conversation\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
+use App\Core\Conversation\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\Core\Conversation\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
+use App\Core\Conversation\Application\Service\ResolveWhatsappMessageInterpretationService;
+use App\Core\Conversation\Domain\Resolver\WhatsappMessageIntentResolver;
+use App\Core\Conversation\Enum\ConversationState;
 
 it('uses direct interpretation before ai interpretation', function () {
     $directInterpreter = Mockery::mock(DirectWhatsappMessageInterpreterServiceInterface::class);
@@ -67,4 +68,25 @@ it('parses ai interpretation when no direct interpretation is found', function (
 
     expect($interpretation->intent)->toBe('search_technical_notebook')
         ->and($interpretation->filters)->toBe(['municipality' => 'Antas']);
+});
+
+it('interprets option one as build panel only when conversation is in the main menu', function () {
+    $directInterpreter = Mockery::mock(DirectWhatsappMessageInterpreterServiceInterface::class);
+    $directInterpreter->shouldReceive('interpret')->never();
+
+    $aiInterpreter = Mockery::mock(InterpretWhatsappMessageWithAiServiceInterface::class);
+    $aiInterpreter->shouldReceive('__invoke')->never();
+
+    $parser = Mockery::mock(WhatsappMessageInterpretationParserInterface::class);
+    $parser->shouldReceive('parse')->never();
+
+    $interpretation = (new ResolveWhatsappMessageInterpretationService(
+        directInterpreter: $directInterpreter,
+        aiInterpreter: $aiInterpreter,
+        parser: $parser,
+        resolver: new WhatsappMessageIntentResolver,
+    ))('1', ConversationState::MainMenu);
+
+    expect($interpretation->intent)->toBe('open_build_panel')
+        ->and($interpretation->filters)->toBe([]);
 });

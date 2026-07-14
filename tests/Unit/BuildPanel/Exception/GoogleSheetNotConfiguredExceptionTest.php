@@ -1,7 +1,7 @@
 <?php
 
-use App\BuildPanel\Enum\CodeExceptionEnum;
-use App\BuildPanel\Exception\GoogleSheetNotConfiguredException;
+use App\Core\BuildPanel\Enum\CodeExceptionEnum;
+use App\Core\BuildPanel\Exception\GoogleSheetNotConfiguredException;
 
 it('defines google sheet not configured exception defaults', function () {
     $exception = new GoogleSheetNotConfiguredException(sheetId: 999);

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Infra\External\PythonWhatsappMessageBridge;
+use App\Core\Conversation\Application\DTO\ReceivedMessageInputDTO;
+use App\Core\Conversation\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
+use App\Core\Conversation\Infra\External\PythonWhatsappMessageBridge;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;

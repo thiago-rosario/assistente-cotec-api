@@ -1,13 +1,13 @@
 <?php
 
-use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
-use App\Core\Domain\Resolver\PhoneNormalizerResolver;
-use App\Core\Exception\MessageNotContentException;
-use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
-use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
-use App\Core\Infra\Parser\PythonBridgeEventParser;
-use App\Core\Infra\Parser\PythonMessageOutputParser;
+use App\Core\Conversation\Application\DTO\ReceivedMessageInputDTO;
+use App\Core\Conversation\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
+use App\Core\Conversation\Domain\Resolver\PhoneNormalizerResolver;
+use App\Core\Conversation\Exception\MessageNotContentException;
+use App\Core\Conversation\Infra\Adapter\PythonMessagePayloadAdapter;
+use App\Core\Conversation\Infra\Mapper\PythonMessagePayloadMapper;
+use App\Core\Conversation\Infra\Parser\PythonBridgeEventParser;
+use App\Core\Conversation\Infra\Parser\PythonMessageOutputParser;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -41,7 +41,7 @@ it('maps the real python bot output into application dtos', function () {
         Conteúdo da mensagem: Oiii
         17:13
         ^CTraceback (most recent call last):
-          File "/Users/thiago/INOVA/assistente-cotec-api/src/Core/Infra/External/Python/main.py", line 29, in <module>
+          File "/Users/thiago/INOVA/assistente-cotec-api/src/Conversation/Infra/External/Python/main.py", line 29, in <module>
             main()
         KeyboardInterrupt
         OUTPUT);

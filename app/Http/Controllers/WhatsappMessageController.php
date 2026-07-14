@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
-use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Exception\WhatsapppMessageException;
+use App\Core\Conversation\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
+use App\Core\Conversation\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
+use App\Core\Conversation\Exception\WhatsapppMessageException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\WhatsappMessageRequest;
 use Illuminate\Http\JsonResponse;

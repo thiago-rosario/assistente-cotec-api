@@ -1,8 +1,8 @@
 <?php
 
-use App\BuildPanel\Application\DTO\SearchTechnicalNotebookInputDTO;
-use App\BuildPanel\Application\DTO\SearchTechnicalNotebookOutputDTO;
-use App\BuildPanel\Infra\Adapter\SearchTechnicalNotebookAdapter;
+use App\Core\BuildPanel\Application\DTO\SearchTechnicalNotebookInputDTO;
+use App\Core\BuildPanel\Application\DTO\SearchTechnicalNotebookOutputDTO;
+use App\Core\BuildPanel\Infra\Adapter\SearchTechnicalNotebookAdapter;
 
 it('maps technical notebook search input arrays into dtos', function () {
     $adapter = new SearchTechnicalNotebookAdapter;

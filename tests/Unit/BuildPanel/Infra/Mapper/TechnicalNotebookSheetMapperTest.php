@@ -1,6 +1,6 @@
 <?php
 
-use App\BuildPanel\Infra\Mapper\TechnicalNotebookSheetMapper;
+use App\Core\BuildPanel\Infra\Mapper\TechnicalNotebookSheetMapper;
 
 it('maps a technical notebook spreadsheet row and casts numeric values', function () {
     $entity = (new TechnicalNotebookSheetMapper)->fromRow([

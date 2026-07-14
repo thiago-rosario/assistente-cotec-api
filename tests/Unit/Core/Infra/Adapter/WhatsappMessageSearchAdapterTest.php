@@ -1,7 +1,7 @@
 <?php
 
-use App\Core\Application\Interfaces\Service\WhatsappMessageSearchHandlerInterface;
-use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
+use App\Core\Conversation\Application\Interfaces\Service\WhatsappMessageSearchHandlerInterface;
+use App\Core\Conversation\Infra\Adapter\WhatsappMessageSearchAdapter;
 
 it('delegates whatsapp searches to the handler that supports the intent', function () {
     $filters = ['municipality' => 'Antas'];

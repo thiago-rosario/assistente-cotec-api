@@ -2,3 +2,6 @@
 command = "php"
 args = ["artisan", "boost:mcp"]
 cwd = "/home/thiago_souza/Documentos/Core/assistente-cotec-api"
+
+[mcp_servers.laravel-boost.tools.search-docs]
+approval_mode = "approve"
