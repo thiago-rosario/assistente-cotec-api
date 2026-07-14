@@ -1,7 +1,7 @@
 <?php
 
-use App\BuildPanel\Infra\Providers\BuildPanelServiceProvider;
-use App\Core\Infra\Providers\CoreServiceProvider;
+use App\Core\BuildPanel\Infra\Providers\BuildPanelServiceProvider;
+use App\Core\Conversation\Infra\Providers\CoreServiceProvider;
 use App\Providers\AppServiceProvider;
 
 return [

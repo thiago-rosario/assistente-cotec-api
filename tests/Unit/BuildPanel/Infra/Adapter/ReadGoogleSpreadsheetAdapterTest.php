@@ -1,8 +1,8 @@
 <?php
 
-use App\BuildPanel\Application\DTO\ReadGoogleSpreadsheetInputDTO;
-use App\BuildPanel\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
-use App\BuildPanel\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
+use App\Core\BuildPanel\Application\DTO\ReadGoogleSpreadsheetInputDTO;
+use App\Core\BuildPanel\Application\DTO\ReadGoogleSpreadsheetOutputDTO;
+use App\Core\BuildPanel\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 
 it('maps google spreadsheet input arrays into dtos', function () {
     $adapter = new ReadGoogleSpreadsheetAdapter;

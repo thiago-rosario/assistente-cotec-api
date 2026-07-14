@@ -1,7 +1,7 @@
 <?php
 
-use App\Core\Enum\CodeExceptionEnum;
-use App\Core\Exception\MessageNotContentException;
+use App\Core\Conversation\Enum\CodeExceptionEnum;
+use App\Core\Conversation\Exception\MessageNotContentException;
 
 it('defines message content exception as a runtime exception', function () {
     $exception = new MessageNotContentException;

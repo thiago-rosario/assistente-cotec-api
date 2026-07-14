@@ -1,6 +1,6 @@
 <?php
 
-use App\Core\Application\Service\GreetingMessageMatcherService;
+use App\Core\Conversation\Application\Service\GreetingMessageMatcherService;
 
 it('matches possible greeting messages', function (string $message) {
     expect((new GreetingMessageMatcherService)->matches($message))->toBeTrue();

@@ -1,11 +1,11 @@
 <?php
 
-use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
-use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
-use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
-use App\Core\Domain\Resolver\WhatsappMessageIntentResolver;
+use App\Core\Conversation\Application\DTO\WhatsappMessageInterpretationDTO;
+use App\Core\Conversation\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
+use App\Core\Conversation\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\Core\Conversation\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
+use App\Core\Conversation\Application\Service\ResolveWhatsappMessageInterpretationService;
+use App\Core\Conversation\Domain\Resolver\WhatsappMessageIntentResolver;
 
 it('uses direct interpretation before ai interpretation', function () {
     $directInterpreter = Mockery::mock(DirectWhatsappMessageInterpreterServiceInterface::class);

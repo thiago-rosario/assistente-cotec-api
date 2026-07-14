@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\BuildPanel\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
-use App\BuildPanel\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
-use App\BuildPanel\Exception\SearchTechnicalNotebookException;
+use App\Core\BuildPanel\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\Core\BuildPanel\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
+use App\Core\BuildPanel\Exception\SearchTechnicalNotebookException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\SearchTechnicalNotebookRequest;
 use Illuminate\Http\JsonResponse;

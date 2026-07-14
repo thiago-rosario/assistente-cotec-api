@@ -1,7 +1,7 @@
 <?php
 
-use App\Core\Enum\WhatsappMessageIntentEnum;
-use App\Core\Infra\Parser\WhatsappMessageInterpretationParser;
+use App\Core\Conversation\Enum\WhatsappMessageIntentEnum;
+use App\Core\Conversation\Infra\Parser\WhatsappMessageInterpretationParser;
 
 it('parses whatsapp message interpretations into dto', function () {
     $interpretation = (new WhatsappMessageInterpretationParser)->parse(

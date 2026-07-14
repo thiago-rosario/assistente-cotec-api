@@ -1,6 +1,6 @@
 <?php
 
-use App\BuildPanel\Domain\Resolver\UnitSizeResolver;
+use App\Core\BuildPanel\Domain\Resolver\UnitSizeResolver;
 
 it('resolves unit sizes from the tamanhos sheet values', function () {
     $resolver = new UnitSizeResolver;

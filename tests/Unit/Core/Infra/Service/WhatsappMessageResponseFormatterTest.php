@@ -1,11 +1,12 @@
 <?php
 
-use App\BuildPanel\Infra\Message\TechnicalNotebookFoundRecordsReplyBuilder;
-use App\BuildPanel\Infra\Message\TechnicalNotebookReplyBuilder;
-use App\BuildPanel\Infra\Message\WhatsappDefaultReplies;
-use App\BuildPanel\Infra\Message\WhatsappRecordValueFormatter;
-use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
-use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
+use App\Core\BuildPanel\Infra\Message\TechnicalNotebookFoundRecordsReplyBuilder;
+use App\Core\BuildPanel\Infra\Message\TechnicalNotebookReplyBuilder;
+use App\Core\BuildPanel\Infra\Message\WhatsappDefaultReplies;
+use App\Core\BuildPanel\Infra\Message\WhatsappRecordValueFormatter;
+use App\Core\Conversation\Infra\Message\UserMenuMessage;
+use App\Core\Conversation\Infra\Message\WhatsappResponsePayloadFactory;
+use App\Core\Conversation\Infra\Service\WhatsappMessageResponseFormatter;
 
 it('returns every technical notebook field for all municipality records', function () {
     $result = whatsappMessageResponseFormatter()->format(
@@ -158,13 +159,14 @@ it('returns the COTEC welcome message for greetings', function () {
     $result = whatsappMessageResponseFormatter()->greeting();
 
     expect($result)->toBe([
-        'reply' => "Olá! Eu sou o assistente da COTEC.\n\n"
-            ."Posso te ajudar a consultar informações do *Painel de Obras da CEIRF/SSP*.\n\n"
-            ."Para iniciar a consulta, envie uma das opções abaixo:\n\n"
-            ."• Nome do município\n"
-            ."• Número do processo\n\n"
-            ."O processo pode ser referente à solicitação do pleito, à licitação ou ao contrato.\n\n"
-            .'Para um melhor atendimento, envie apenas uma dessas informações por vez.',
+        'reply' => "Olá! Eu sou o Assistente da CEIRF.\n\n"
+            ."Como posso ajudar?\n\n"
+            ."1 - Consultar o Painel de Obras\n"
+            ."2 - Enviar Relatório de Viagem\n"
+            ."3 - Consultar Relatório de Viagem\n"
+            ."4 - Informações sobre o assistente\n"
+            ."0 - Encerrar atendimento\n\n"
+            .'Digite o número da opção desejada.',
         'intent' => 'greeting',
         'total' => 0,
         'data' => [],
@@ -177,7 +179,7 @@ function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
     $valueFormatter = new WhatsappRecordValueFormatter;
 
     return new WhatsappMessageResponseFormatter(
-        new WhatsappDefaultReplies,
+        new WhatsappDefaultReplies(new UserMenuMessage),
         new WhatsappResponsePayloadFactory,
         [
             new TechnicalNotebookFoundRecordsReplyBuilder(
