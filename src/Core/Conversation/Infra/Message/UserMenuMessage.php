@@ -21,7 +21,7 @@ final readonly class UserMenuMessage
 
     public function accepts(string $option): bool
     {
-        return MainMenuOptionEnum::fromInput($option) !== null;
+        return MainMenuOptionEnum::tryFrom(trim($option)) !== null;
     }
 
     private function label(MainMenuOptionEnum $option): string
