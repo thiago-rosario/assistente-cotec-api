@@ -10,8 +10,8 @@ use App\Core\Conversation\Application\Interfaces\Service\DirectWhatsappMessageIn
 use App\Core\Conversation\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Conversation\Domain\Resolver\WhatsappMessageIntentResolver;
-use App\Core\Conversation\Enum\ConversationState;
-use App\Core\Conversation\Enum\MainMenuOption;
+use App\Core\Conversation\Enum\ConversationStateEnum;
+use App\Core\Conversation\Enum\MainMenuOptionEnum;
 use App\Core\Conversation\Enum\WhatsappMessageIntentEnum;
 
 class ResolveWhatsappMessageInterpretationService implements ResolveWhatsappMessageInterpretationServiceInterface
@@ -23,7 +23,7 @@ class ResolveWhatsappMessageInterpretationService implements ResolveWhatsappMess
         private readonly WhatsappMessageIntentResolver $resolver,
     ) {}
 
-    public function __invoke(string $message, ?ConversationState $state = null): WhatsappMessageInterpretationDTO
+    public function __invoke(string $message, ?ConversationStateEnum $state = null): WhatsappMessageInterpretationDTO
     {
         $menuInterpretation = $this->interpretMainMenuOption($message, $state);
 
@@ -38,14 +38,14 @@ class ResolveWhatsappMessageInterpretationService implements ResolveWhatsappMess
         return $this->resolver->resolve($interpretation);
     }
 
-    private function interpretMainMenuOption(string $message, ?ConversationState $state): ?WhatsappMessageInterpretationDTO
+    private function interpretMainMenuOption(string $message, ?ConversationStateEnum $state): ?WhatsappMessageInterpretationDTO
     {
-        if ($state !== ConversationState::MainMenu) {
+        if ($state !== ConversationStateEnum::MainMenu) {
             return null;
         }
 
-        return match (MainMenuOption::fromInput($message)) {
-            MainMenuOption::BuildPanelConsultation => new WhatsappMessageInterpretationDTO(
+        return match (MainMenuOptionEnum::fromInput($message)) {
+            MainMenuOptionEnum::BuildPanelConsultation => new WhatsappMessageInterpretationDTO(
                 intent: WhatsappMessageIntentEnum::OPEN_BUILD_PANEL->value,
             ),
             default => null,

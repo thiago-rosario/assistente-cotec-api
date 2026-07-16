@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Conversation\Enum;
 
-enum ConversationState: string
+enum ConversationStateEnum: string
 {
     case MainMenu = 'main_menu';
     case BuildPanelConsultation = 'build_panel_consultation';

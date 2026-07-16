@@ -6,7 +6,7 @@ use App\Core\Conversation\Application\Interfaces\Service\DirectWhatsappMessageIn
 use App\Core\Conversation\Application\Interfaces\Service\InterpretWhatsappMessageWithAiServiceInterface;
 use App\Core\Conversation\Application\Service\ResolveWhatsappMessageInterpretationService;
 use App\Core\Conversation\Domain\Resolver\WhatsappMessageIntentResolver;
-use App\Core\Conversation\Enum\ConversationState;
+use App\Core\Conversation\Enum\ConversationStateEnum;
 
 it('uses direct interpretation before ai interpretation', function () {
     $directInterpreter = Mockery::mock(DirectWhatsappMessageInterpreterServiceInterface::class);
@@ -85,7 +85,7 @@ it('interprets option one as build panel only when conversation is in the main m
         aiInterpreter: $aiInterpreter,
         parser: $parser,
         resolver: new WhatsappMessageIntentResolver,
-    ))('1', ConversationState::MainMenu);
+    ))('1', ConversationStateEnum::MainMenu);
 
     expect($interpretation->intent)->toBe('open_build_panel')
         ->and($interpretation->filters)->toBe([]);

@@ -12,7 +12,7 @@ use App\Core\Conversation\Application\Interfaces\Service\GreetingMessageMatcherS
 use App\Core\Conversation\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Conversation\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
-use App\Core\Conversation\Enum\ConversationState;
+use App\Core\Conversation\Enum\ConversationStateEnum;
 use App\Core\Conversation\Enum\WhatsappMessageIntentEnum;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
@@ -41,7 +41,7 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
             }
 
             if ($this->greetingMatcher->matches($input->message)) {
-                $this->conversationStateRepository->put($input, ConversationState::MainMenu);
+                $this->conversationStateRepository->put($input, ConversationStateEnum::MainMenu);
 
                 return $this->responseFormatter->greeting();
             }
@@ -52,7 +52,7 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
                 : ($this->resolveInterpretation)($input->message, $state);
 
             if ($interpretation->intent === WhatsappMessageIntentEnum::OPEN_BUILD_PANEL->value) {
-                $this->conversationStateRepository->put($input, ConversationState::BuildPanelConsultation);
+                $this->conversationStateRepository->put($input, ConversationStateEnum::BuildPanelConsultation);
 
                 return $this->responseFormatter->buildPanelConsultation();
             }

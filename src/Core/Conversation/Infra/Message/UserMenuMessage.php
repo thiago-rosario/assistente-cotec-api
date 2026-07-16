@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Conversation\Infra\Message;
 
-use App\Core\Conversation\Enum\MainMenuOption;
+use App\Core\Conversation\Enum\MainMenuOptionEnum;
 
 final readonly class UserMenuMessage
 {
@@ -21,21 +21,21 @@ final readonly class UserMenuMessage
 
     public function accepts(string $option): bool
     {
-        return MainMenuOption::fromInput($option) !== null;
+        return MainMenuOptionEnum::fromInput($option) !== null;
     }
 
-    private function label(MainMenuOption $option): string
+    private function label(MainMenuOptionEnum $option): string
     {
         return match ($option) {
-            MainMenuOption::BuildPanelConsultation => 'Consultar o Painel de Obras',
-            MainMenuOption::TravelReportSubmission => 'Enviar Relatório de Viagem',
-            MainMenuOption::TravelReportConsultation => 'Consultar Relatório de Viagem',
-            MainMenuOption::AssistantInformation => 'Informações sobre o assistente',
-            MainMenuOption::CloseAttendance => 'Encerrar atendimento',
+            MainMenuOptionEnum::BuildPanelConsultation => 'Consultar o Painel de Obras',
+            MainMenuOptionEnum::TravelReportSubmission => 'Enviar Relatório de Viagem',
+            MainMenuOptionEnum::TravelReportConsultation => 'Consultar Relatório de Viagem',
+            MainMenuOptionEnum::AssistantInformation => 'Informações sobre o assistente',
+            MainMenuOptionEnum::CloseAttendance => 'Encerrar atendimento',
         };
     }
 
-    private function line(MainMenuOption $option): string
+    private function line(MainMenuOptionEnum $option): string
     {
         return sprintf('%s - %s', $option->value, $this->label($option));
     }
@@ -45,8 +45,8 @@ final readonly class UserMenuMessage
         return implode(
             "\n",
             array_map(
-                fn (MainMenuOption $option): string => $this->line($option),
-                MainMenuOption::cases(),
+                fn (MainMenuOptionEnum $option): string => $this->line($option),
+                MainMenuOptionEnum::cases(),
             ),
         );
     }

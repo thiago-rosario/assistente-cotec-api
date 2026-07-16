@@ -9,7 +9,7 @@ use App\Core\Conversation\Application\Interfaces\Service\GreetingMessageMatcherS
 use App\Core\Conversation\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Conversation\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Conversation\Application\Usecase\ProcessWhatsappMessageUsecase;
-use App\Core\Conversation\Enum\ConversationState;
+use App\Core\Conversation\Enum\ConversationStateEnum;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
@@ -48,7 +48,7 @@ it('answers greeting messages without resolving interpretation or searching reco
     $conversationStateRepository = conversationStateRepositoryMock();
     $conversationStateRepository->shouldReceive('put')
         ->once()
-        ->with($input, ConversationState::MainMenu);
+        ->with($input, ConversationStateEnum::MainMenu);
 
     $result = (new ProcessWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
@@ -257,7 +257,7 @@ it('redirects the main menu build panel option to the build panel module', funct
     $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
     $resolveInterpretation->shouldReceive('__invoke')
         ->once()
-        ->with('1', ConversationState::MainMenu)
+        ->with('1', ConversationStateEnum::MainMenu)
         ->andReturn(new WhatsappMessageInterpretationDTO(intent: 'open_build_panel'));
 
     $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
@@ -287,10 +287,10 @@ TEXT,
     $conversationStateRepository->shouldReceive('get')
         ->once()
         ->with($input)
-        ->andReturn(ConversationState::MainMenu);
+        ->andReturn(ConversationStateEnum::MainMenu);
     $conversationStateRepository->shouldReceive('put')
         ->once()
-        ->with($input, ConversationState::BuildPanelConsultation);
+        ->with($input, ConversationStateEnum::BuildPanelConsultation);
 
     $result = (new ProcessWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,

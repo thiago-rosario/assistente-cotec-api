@@ -1,21 +1,21 @@
 <?php
 
-use App\Core\Conversation\Enum\ConversationState;
-use App\Core\Conversation\Enum\MainMenuOption;
+use App\Core\Conversation\Enum\ConversationStateEnum;
+use App\Core\Conversation\Enum\MainMenuOptionEnum;
 
 it('resolves menu options from user input', function () {
-    expect(MainMenuOption::fromInput('1'))->toBe(MainMenuOption::BuildPanelConsultation)
-        ->and(MainMenuOption::fromInput(' 2 '))->toBe(MainMenuOption::TravelReportSubmission)
-        ->and(MainMenuOption::fromInput('9'))->toBeNull()
-        ->and(MainMenuOption::fromInput('Enviar Relatório de Viagem'))->toBeNull();
+    expect(MainMenuOptionEnum::fromInput('1'))->toBe(MainMenuOptionEnum::BuildPanelConsultation)
+        ->and(MainMenuOptionEnum::fromInput(' 2 '))->toBe(MainMenuOptionEnum::TravelReportSubmission)
+        ->and(MainMenuOptionEnum::fromInput('9'))->toBeNull()
+        ->and(MainMenuOptionEnum::fromInput('Enviar Relatório de Viagem'))->toBeNull();
 });
 
-it('maps menu options to conversation states', function (MainMenuOption $option, ConversationState $state) {
+it('maps menu options to conversation states', function (MainMenuOptionEnum $option, ConversationStateEnum $state) {
     expect($option->nextState())->toBe($state);
 })->with([
-    [MainMenuOption::BuildPanelConsultation, ConversationState::BuildPanelConsultation],
-    [MainMenuOption::TravelReportSubmission, ConversationState::TravelReportLogin],
-    [MainMenuOption::TravelReportConsultation, ConversationState::TravelReportConsultation],
-    [MainMenuOption::AssistantInformation, ConversationState::AssistantInformation],
-    [MainMenuOption::CloseAttendance, ConversationState::Closed],
+    [MainMenuOptionEnum::BuildPanelConsultation, ConversationStateEnum::BuildPanelConsultation],
+    [MainMenuOptionEnum::TravelReportSubmission, ConversationStateEnum::TravelReportLogin],
+    [MainMenuOptionEnum::TravelReportConsultation, ConversationStateEnum::TravelReportConsultation],
+    [MainMenuOptionEnum::AssistantInformation, ConversationStateEnum::AssistantInformation],
+    [MainMenuOptionEnum::CloseAttendance, ConversationStateEnum::Closed],
 ]);

@@ -6,7 +6,7 @@ namespace App\Core\Conversation\Infra\Repository;
 
 use App\Core\Conversation\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Conversation\Application\Interfaces\Repository\ConversationStateRepositoryInterface;
-use App\Core\Conversation\Enum\ConversationState;
+use App\Core\Conversation\Enum\ConversationStateEnum;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -19,7 +19,7 @@ final readonly class CacheConversationStateRepository implements ConversationSta
         private CacheRepository $cache,
     ) {}
 
-    public function get(ReceivedMessageInputDTO $input): ?ConversationState
+    public function get(ReceivedMessageInputDTO $input): ?ConversationStateEnum
     {
         $key = $this->key($input);
 
@@ -33,10 +33,10 @@ final readonly class CacheConversationStateRepository implements ConversationSta
             return null;
         }
 
-        return ConversationState::tryFrom($state);
+        return ConversationStateEnum::tryFrom($state);
     }
 
-    public function put(ReceivedMessageInputDTO $input, ConversationState $state): void
+    public function put(ReceivedMessageInputDTO $input, ConversationStateEnum $state): void
     {
         $key = $this->key($input);
 
