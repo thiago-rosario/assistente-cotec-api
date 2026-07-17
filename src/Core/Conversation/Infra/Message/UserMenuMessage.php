@@ -28,8 +28,8 @@ final readonly class UserMenuMessage
     {
         return match ($option) {
             MainMenuOptionEnum::BuildPanelConsultation => 'Consultar o Painel de Obras',
-            MainMenuOptionEnum::TravelReportSubmission => 'Enviar Relatório de Viagem',
-            MainMenuOptionEnum::TravelReportConsultation => 'Consultar Relatório de Viagem',
+            MainMenuOptionEnum::TravelReportSubmission => 'Enviar Relatório de Vistoria Tecnica',
+            MainMenuOptionEnum::TravelReportConsultation => 'Consultar Relatório de Vistoria Tecnica',
             MainMenuOptionEnum::AssistantInformation => 'Informações sobre o assistente',
             MainMenuOptionEnum::CloseAttendance => 'Encerrar atendimento',
         };

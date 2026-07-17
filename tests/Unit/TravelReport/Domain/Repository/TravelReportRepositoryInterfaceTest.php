@@ -40,6 +40,8 @@ it('defines the travel report repository contract for entity persistence and que
         ['name' => 'id', 'type' => 'int'],
     ], TravelReportEntity::class, allowsNullReturn: true);
 
+    $assertMethodSignature('all', [], 'array');
+
     $assertMethodSignature('findBySeiProcess', [
         ['name' => 'seiProcess', 'type' => 'string'],
     ], TravelReportEntity::class, allowsNullReturn: true);
@@ -51,4 +53,8 @@ it('defines the travel report repository contract for entity persistence and que
     $assertMethodSignature('findByMunicipalityId', [
         ['name' => 'municipalityId', 'type' => 'int'],
     ], 'array');
+
+    $assertMethodSignature('delete', [
+        ['name' => 'id', 'type' => 'int'],
+    ], 'bool');
 });

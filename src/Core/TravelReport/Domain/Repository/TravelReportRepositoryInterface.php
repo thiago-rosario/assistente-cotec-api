@@ -19,6 +19,13 @@ interface TravelReportRepositoryInterface
     public function findById(int $id): ?TravelReportEntity;
 
     /**
+     * Retorna todos os relatórios de viagem.
+     *
+     * @return list<TravelReportEntity>
+     */
+    public function all(): array;
+
+    /**
      * Localiza um relatório de viagem pelo processo SEI.
      */
     public function findBySeiProcess(string $seiProcess): ?TravelReportEntity;
@@ -36,4 +43,9 @@ interface TravelReportRepositoryInterface
      * @return list<TravelReportEntity>
      */
     public function findByMunicipalityId(int $municipalityId): array;
+
+    /**
+     * Remove um relatório de viagem pelo identificador.
+     */
+    public function delete(int $id): bool;
 }
