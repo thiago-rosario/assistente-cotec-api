@@ -11,9 +11,11 @@ return new class extends Migration
         Schema::create('travel_report_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('municipality_id')->constrained()->restrictOnDelete();
+            $table->string('submitted_by_user_id');
             $table->string('file_name');
             $table->string('file_path');
             $table->unsignedBigInteger('file_size')->nullable();
+            $table->string('sei_process');
             $table->string('mime_type')->default('application/pdf');
             $table->timestamps();
             $table->softDeletes();
