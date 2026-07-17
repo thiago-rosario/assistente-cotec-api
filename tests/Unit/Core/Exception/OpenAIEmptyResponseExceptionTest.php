@@ -1,6 +1,6 @@
 <?php
 
-use App\Core\Conversation\Enum\CodeExceptionEnum;
+use App\Core\Conversation\Enum\ConversationCodeExceptionEnum;
 use App\Core\Conversation\Exception\OpenAIEmptyResponseException;
 
 it('defines openai empty response exception defaults', function () {
@@ -8,5 +8,5 @@ it('defines openai empty response exception defaults', function () {
 
     expect($exception)->toBeInstanceOf(RuntimeException::class)
         ->and($exception->getMessage())->toBe('A OpenAI não retornou conteúdo para o prompt informado.')
-        ->and($exception->getCode())->toBe(CodeExceptionEnum::OpenAIEmptyResponse->value);
+        ->and($exception->getCode())->toBe(ConversationCodeExceptionEnum::OpenAIEmptyResponse->value);
 });

@@ -44,7 +44,7 @@ class ResolveWhatsappMessageInterpretationService implements ResolveWhatsappMess
             return null;
         }
 
-        return match (MainMenuOptionEnum::fromInput($message)) {
+        return match (MainMenuOptionEnum::tryFrom(trim($message))) {
             MainMenuOptionEnum::BuildPanelConsultation => new WhatsappMessageInterpretationDTO(
                 intent: WhatsappMessageIntentEnum::OPEN_BUILD_PANEL->value,
             ),
