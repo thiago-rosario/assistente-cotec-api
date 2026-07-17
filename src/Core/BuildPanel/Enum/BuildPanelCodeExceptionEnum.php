@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\BuildPanel\Enum;
 
-enum CodeExceptionEnum: int
+enum BuildPanelCodeExceptionEnum: int
 {
     case GoogleSheetRead = 1002;
     case GoogleSpreadsheetIdRequired = 1003;
