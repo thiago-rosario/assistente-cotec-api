@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Core\TravelReport\Trait;
+namespace App\Core\TravelReport\Domain\Trait;
 
 use DateTimeImmutable;
 use DateTimeInterface;

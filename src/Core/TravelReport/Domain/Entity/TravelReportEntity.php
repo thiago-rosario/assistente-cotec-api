@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\TravelReport\Domain\Entity;
 
+use App\Core\TravelReport\Domain\Trait\MethodsMagicsTrait;
 use App\Core\TravelReport\Domain\Validation\DomainValidation;
-use App\Core\TravelReport\Trait\MethodsMagicsTrait;
 use DateTimeImmutable;
 use DateTimeInterface;
 
