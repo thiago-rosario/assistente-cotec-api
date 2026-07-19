@@ -8,7 +8,7 @@ use App\Core\TravelReport\Application\DTO\ListTravelReportsInputDTO;
 use App\Core\TravelReport\Application\DTO\ListTravelReportsOutputDTO;
 use App\Core\TravelReport\Application\DTO\PersistTravelReportOutputDTO;
 use App\Core\TravelReport\Application\Interface\Usecase\ListTravelReportsUsecaseInterface;
-use App\Core\TravelReport\Application\ToOutputTrait;
+use App\Core\TravelReport\Application\Trait\ToOutputTrait;
 use App\Core\TravelReport\Domain\Entity\TravelReportEntity;
 use App\Core\TravelReport\Domain\Repository\TravelReportRepositoryInterface;
 

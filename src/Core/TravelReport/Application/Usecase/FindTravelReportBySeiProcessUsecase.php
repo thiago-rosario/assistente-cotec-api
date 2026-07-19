@@ -6,9 +6,8 @@ namespace App\Core\TravelReport\Application\Usecase;
 
 use App\Core\TravelReport\Application\DTO\FindTravelReportBySeiProcessInputDTO;
 use App\Core\TravelReport\Application\DTO\FindTravelReportBySeiProcessOutputDTO;
-use App\Core\TravelReport\Application\DTO\PersistTravelReportOutputDTO;
 use App\Core\TravelReport\Application\Interface\Usecase\FindTravelReportBySeiProcessUsecaseInterface;
-use App\Core\TravelReport\Application\ToOutputTrait;
+use App\Core\TravelReport\Application\Trait\ToOutputTrait;
 use App\Core\TravelReport\Domain\Entity\TravelReportEntity;
 use App\Core\TravelReport\Domain\Repository\TravelReportRepositoryInterface;
 
