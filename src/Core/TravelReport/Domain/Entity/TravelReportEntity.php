@@ -6,6 +6,7 @@ namespace App\Core\TravelReport\Domain\Entity;
 
 use App\Core\TravelReport\Domain\Trait\MethodsMagicsTrait;
 use App\Core\TravelReport\Domain\Validation\DomainValidation;
+use App\Models\TravelReport;
 use DateTimeImmutable;
 use DateTimeInterface;
 
@@ -98,6 +99,23 @@ final class TravelReportEntity
             seiProcess: $seiProcess,
             createdAt: $submittedAt,
             updatedAt: $submittedAt,
+        );
+    }
+
+    public static function fromModel(TravelReport $travelReport): self
+    {
+        return new self(
+            id: (int) $travelReport->getKey(),
+            municipalityId: $travelReport->municipality_id,
+            submittedByUserId: $travelReport->submitted_by_user_id,
+            fileName: $travelReport->file_name,
+            filePath: $travelReport->file_path,
+            fileSize: $travelReport->file_size,
+            mimeType: $travelReport->mime_type,
+            seiProcess: $travelReport->sei_process,
+            createdAt: $travelReport->created_at,
+            updatedAt: $travelReport->updated_at,
+            deletedAt: $travelReport->deleted_at,
         );
     }
 
