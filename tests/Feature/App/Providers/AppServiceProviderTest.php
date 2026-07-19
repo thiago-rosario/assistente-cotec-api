@@ -48,6 +48,19 @@ use App\Core\Conversation\Infra\Adapter\WhatsappMessageSearchAdapter;
 use App\Core\Conversation\Infra\Providers\CoreServiceProvider;
 use App\Core\Conversation\Infra\Repository\CacheConversationStateRepository;
 use App\Core\Conversation\Infra\Service\WhatsappMessageResponseFormatter;
+use App\Core\TravelReport\Application\Interface\Usecase\DeleteTravelReportUsecaseInterface;
+use App\Core\TravelReport\Application\Interface\Usecase\FindTravelReportBySeiProcessUsecaseInterface;
+use App\Core\TravelReport\Application\Interface\Usecase\ListTravelReportByMunicipalityIdUsecaseInterface;
+use App\Core\TravelReport\Application\Interface\Usecase\ListTravelReportsUsecaseInterface;
+use App\Core\TravelReport\Application\Interface\Usecase\PersistTravelReportUsecaseInterface;
+use App\Core\TravelReport\Application\Usecase\DeleteTravelReportUsecase;
+use App\Core\TravelReport\Application\Usecase\FindTravelReportBySeiProcessUsecase;
+use App\Core\TravelReport\Application\Usecase\ListTravelReportByMunicipalityIdUsecase;
+use App\Core\TravelReport\Application\Usecase\ListTravelReportsUsecase;
+use App\Core\TravelReport\Application\Usecase\PersistTravelReportUsecase;
+use App\Core\TravelReport\Domain\Repository\TravelReportRepositoryInterface;
+use App\Core\TravelReport\Infra\Providers\TravelReportServiceProvider;
+use App\Core\TravelReport\Infra\Repository\Gateway\TravelReportGatewayRepository;
 use App\Providers\AppServiceProvider;
 
 it('registers application module service providers', function () {
@@ -57,6 +70,7 @@ it('registers application module service providers', function () {
         AppServiceProvider::class,
         BuildPanelServiceProvider::class,
         CoreServiceProvider::class,
+        TravelReportServiceProvider::class,
     );
 });
 
@@ -78,6 +92,12 @@ it('resolves application bindings from the container', function (
     [TechnicalNotebookSheetMapperInterface::class, TechnicalNotebookSheetMapper::class],
     [GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
+    [TravelReportRepositoryInterface::class, TravelReportGatewayRepository::class],
+    [PersistTravelReportUsecaseInterface::class, PersistTravelReportUsecase::class],
+    [ListTravelReportsUsecaseInterface::class, ListTravelReportsUsecase::class],
+    [ListTravelReportByMunicipalityIdUsecaseInterface::class, ListTravelReportByMunicipalityIdUsecase::class],
+    [FindTravelReportBySeiProcessUsecaseInterface::class, FindTravelReportBySeiProcessUsecase::class],
+    [DeleteTravelReportUsecaseInterface::class, DeleteTravelReportUsecase::class],
     [WhatsappDefaultRepliesInterface::class, WhatsappDefaultReplies::class],
     [GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class],
     [MunicipalityExtractorServiceInterface::class, MunicipalityExtractorService::class],
