@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Core\TravelReport\Application;
+namespace App\Core\TravelReport\Application\Trait;
 
 use App\Core\TravelReport\Application\DTO\PersistTravelReportOutputDTO;
 use App\Core\TravelReport\Domain\Entity\TravelReportEntity;

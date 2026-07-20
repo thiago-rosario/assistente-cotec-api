@@ -8,4 +8,5 @@ return [
     AppServiceProvider::class,
     BuildPanelServiceProvider::class,
     CoreServiceProvider::class,
+    App\Core\TravelReport\Infra\Providers\TravelReportServiceProvider::class,
 ];

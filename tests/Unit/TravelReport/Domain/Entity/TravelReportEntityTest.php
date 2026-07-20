@@ -7,6 +7,10 @@ use App\Core\TravelReport\Exception\FilePathRequiredException;
 use App\Core\TravelReport\Exception\InvalidMunicipalityIdException;
 use App\Core\TravelReport\Exception\SeiProcessRequiredException;
 use App\Core\TravelReport\Exception\SubmittedByUserIdRequiredException;
+use App\Models\TravelReport;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 it('creates a valid travel report entity', function () {
     $entity = new TravelReportEntity(...validTravelReportAttributes());
@@ -90,6 +94,37 @@ it('returns persistence attributes for saving a submitted travel report', functi
         'updated_at' => $submittedAt,
         'deleted_at' => null,
     ]);
+});
+
+it('creates a travel report entity from the eloquent model', function () {
+    $model = new TravelReport;
+    $model->setRawAttributes([
+        'id' => 10,
+        'municipality_id' => 1,
+        'submitted_by_user_id' => 'user-1',
+        'file_name' => 'relatorio.pdf',
+        'file_path' => '/tmp/relatorio.pdf',
+        'file_size' => 2048,
+        'mime_type' => 'application/pdf',
+        'sei_process' => 'SEI-12345',
+        'created_at' => '2026-07-20 08:30:00',
+        'updated_at' => '2026-07-20 08:30:00',
+        'deleted_at' => null,
+    ], true);
+
+    $entity = TravelReportEntity::fromModel($model);
+
+    expect($entity->id)->toBe(10)
+        ->and($entity->municipalityId)->toBe(1)
+        ->and($entity->submittedByUserId)->toBe('user-1')
+        ->and($entity->fileName)->toBe('relatorio.pdf')
+        ->and($entity->filePath)->toBe('/tmp/relatorio.pdf')
+        ->and($entity->fileSize)->toBe(2048)
+        ->and($entity->mimeType)->toBe('application/pdf')
+        ->and($entity->seiProcess)->toBe('SEI-12345')
+        ->and($entity->createdAt->format('Y-m-d H:i:s'))->toBe('2026-07-20 08:30:00')
+        ->and($entity->updatedAt->format('Y-m-d H:i:s'))->toBe('2026-07-20 08:30:00')
+        ->and($entity->deletedAt)->toBeNull();
 });
 
 it('does not expose domain operations that update travel reports after submission', function () {
