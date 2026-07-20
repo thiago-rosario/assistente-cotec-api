@@ -48,6 +48,11 @@ use App\Core\Conversation\Infra\Adapter\WhatsappMessageSearchAdapter;
 use App\Core\Conversation\Infra\Providers\CoreServiceProvider;
 use App\Core\Conversation\Infra\Repository\CacheConversationStateRepository;
 use App\Core\Conversation\Infra\Service\WhatsappMessageResponseFormatter;
+use App\Core\TravelReport\Application\Interface\Adapter\DeleteTravelReportAdapterInterface;
+use App\Core\TravelReport\Application\Interface\Adapter\FindTravelReportBySeiProcessAdapterInterface;
+use App\Core\TravelReport\Application\Interface\Adapter\ListTravelReportByMunicipalityIdAdapterInterface;
+use App\Core\TravelReport\Application\Interface\Adapter\ListTravelReportsAdapterInterface;
+use App\Core\TravelReport\Application\Interface\Adapter\PersistTravelReportAdapterInterface;
 use App\Core\TravelReport\Application\Interface\Usecase\DeleteTravelReportUsecaseInterface;
 use App\Core\TravelReport\Application\Interface\Usecase\FindTravelReportBySeiProcessUsecaseInterface;
 use App\Core\TravelReport\Application\Interface\Usecase\ListTravelReportByMunicipalityIdUsecaseInterface;
@@ -59,6 +64,11 @@ use App\Core\TravelReport\Application\Usecase\ListTravelReportByMunicipalityIdUs
 use App\Core\TravelReport\Application\Usecase\ListTravelReportsUsecase;
 use App\Core\TravelReport\Application\Usecase\PersistTravelReportUsecase;
 use App\Core\TravelReport\Domain\Repository\TravelReportRepositoryInterface;
+use App\Core\TravelReport\Infra\Adapter\DeleteTravelReportAdapter;
+use App\Core\TravelReport\Infra\Adapter\FindTravelReportBySeiProcessAdapter;
+use App\Core\TravelReport\Infra\Adapter\ListTravelReportByMunicipalityIdAdapter;
+use App\Core\TravelReport\Infra\Adapter\ListTravelReportsAdapter;
+use App\Core\TravelReport\Infra\Adapter\PersistTravelReportAdapter;
 use App\Core\TravelReport\Infra\Providers\TravelReportServiceProvider;
 use App\Core\TravelReport\Infra\Repository\Gateway\TravelReportGatewayRepository;
 use App\Providers\AppServiceProvider;
@@ -93,6 +103,11 @@ it('resolves application bindings from the container', function (
     [GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
     [TravelReportRepositoryInterface::class, TravelReportGatewayRepository::class],
+    [PersistTravelReportAdapterInterface::class, PersistTravelReportAdapter::class],
+    [ListTravelReportsAdapterInterface::class, ListTravelReportsAdapter::class],
+    [ListTravelReportByMunicipalityIdAdapterInterface::class, ListTravelReportByMunicipalityIdAdapter::class],
+    [FindTravelReportBySeiProcessAdapterInterface::class, FindTravelReportBySeiProcessAdapter::class],
+    [DeleteTravelReportAdapterInterface::class, DeleteTravelReportAdapter::class],
     [PersistTravelReportUsecaseInterface::class, PersistTravelReportUsecase::class],
     [ListTravelReportsUsecaseInterface::class, ListTravelReportsUsecase::class],
     [ListTravelReportByMunicipalityIdUsecaseInterface::class, ListTravelReportByMunicipalityIdUsecase::class],
