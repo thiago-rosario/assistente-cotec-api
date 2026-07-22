@@ -33,6 +33,28 @@ it('represents an identified user without exposing passwords', function (): void
         ]);
 });
 
+it('represents a new user registration before persistence', function (): void {
+    $registeredAt = new DateTimeImmutable('2026-07-20 08:30:00');
+
+    $entity = UserEntity::newRegistration(
+        name: 'Thiago Souza',
+        login: Login::fromString('thiago@example.com'),
+        registeredAt: $registeredAt,
+    );
+
+    expect($entity->id)->toBeNull()
+        ->and($entity->name)->toBe('Thiago Souza')
+        ->and((string) $entity->login)->toBe('thiago@example.com')
+        ->and($entity->createdAt)->toBe($registeredAt)
+        ->and($entity->updatedAt)->toBe($registeredAt)
+        ->and($entity->toPersistenceArray())->toBe([
+            'name' => 'Thiago Souza',
+            'email' => 'thiago@example.com',
+            'created_at' => $registeredAt,
+            'updated_at' => $registeredAt,
+        ]);
+});
+
 it('normalizes login value objects', function (): void {
     $login = Login::fromString(' thiago@example.com ');
 
@@ -93,6 +115,16 @@ it('validates credential input without storing the plain password', function ():
 it('keeps email validation available for email based login repositories', function (): void {
     expect(fn () => UserDomainValidation::validateEmail('invalid-email'))
         ->toThrow(InvalidUserEmailException::class, 'O e-mail do usuário é inválido.');
+});
+
+it('requires an identified user for authorization payloads', function (): void {
+    $entity = UserEntity::newRegistration(
+        name: 'Thiago Souza',
+        login: 'thiago@example.com',
+    );
+
+    expect(fn () => $entity->toAuthorizationArray())
+        ->toThrow(UserIdRequiredException::class, 'O identificador do usuário é obrigatório.');
 });
 
 it('rejects access to unknown magic attributes', function (): void {
