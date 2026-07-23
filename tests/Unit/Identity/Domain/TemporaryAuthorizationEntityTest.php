@@ -3,6 +3,7 @@
 use App\Core\Identity\Domain\Entity\TemporaryAuthorizationEntity;
 use App\Core\Identity\Domain\Entity\UserEntity;
 use App\Core\Identity\Domain\Policy\TemporaryAuthorizationPolicy;
+use App\Core\Identity\Domain\Policy\TemporaryAuthorizationStatusPolicy;
 use App\Core\Identity\Domain\ValueObject\AuthorizationContext;
 use App\Core\Identity\Enum\IdentityCodeExceptionEnum;
 use App\Core\Identity\Enum\ProtectedActionEnum;
@@ -151,9 +152,9 @@ it('cancels and revokes temporary authorizations as terminal states', function (
     )->revoke('2026-07-20 08:33:00');
 
     expect($cancelled->status)->toBe(TemporaryAuthorizationStatusEnum::Cancelled)
-        ->and($cancelled->status->isTerminal())->toBeTrue()
+        ->and(TemporaryAuthorizationStatusPolicy::isTerminal($cancelled->status))->toBeTrue()
         ->and($revoked->status)->toBe(TemporaryAuthorizationStatusEnum::Revoked)
-        ->and($revoked->status->isTerminal())->toBeTrue()
+        ->and(TemporaryAuthorizationStatusPolicy::isTerminal($revoked->status))->toBeTrue()
         ->and($revoked->isAuthorized('2026-07-20 08:33:30'))->toBeFalse();
 });
 

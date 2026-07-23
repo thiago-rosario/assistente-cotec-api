@@ -12,26 +12,4 @@ enum TemporaryAuthorizationStatusEnum: string
     case Expired = 'expired';
     case Cancelled = 'cancelled';
     case Revoked = 'revoked';
-
-    public function isPending(): bool
-    {
-        return $this === self::PendingCredentials;
-    }
-
-    public function isAuthorized(): bool
-    {
-        return $this === self::Authorized;
-    }
-
-    public function isTerminal(): bool
-    {
-        return match ($this) {
-            self::AttemptsExceeded,
-            self::Expired,
-            self::Cancelled,
-            self::Revoked => true,
-            self::PendingCredentials,
-            self::Authorized => false,
-        };
-    }
 }
