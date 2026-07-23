@@ -35,7 +35,7 @@ final class TemporaryAuthorizationPolicy
         TemporaryAuthorizationEntity $authorization,
         DateTimeInterface|string|null $now = null,
     ): bool {
-        return ! $authorization->status->isTerminal()
+        return ! TemporaryAuthorizationStatusPolicy::isTerminal($authorization->status)
             && $authorization->hasExpired($now);
     }
 }

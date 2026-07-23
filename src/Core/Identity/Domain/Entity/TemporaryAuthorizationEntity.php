@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Identity\Domain\Entity;
 
+use App\Core\Identity\Domain\Policy\TemporaryAuthorizationStatusPolicy;
 use App\Core\Identity\Domain\Trait\DateTimeConversionTrait;
 use App\Core\Identity\Domain\Trait\MethodsMagicsTrait;
 use App\Core\Identity\Domain\Validation\TemporaryAuthorizationDomainValidation;
@@ -125,7 +126,7 @@ final class TemporaryAuthorizationEntity
         return $this->rebuild(
             status: $status,
             failedAttempts: $failedAttempts,
-            finishedAt: $status->isTerminal() ? $now : $this->finishedAt,
+            finishedAt: TemporaryAuthorizationStatusPolicy::isTerminal($status) ? $now : $this->finishedAt,
         );
     }
 
@@ -175,14 +176,14 @@ final class TemporaryAuthorizationEntity
 
     public function canReceiveCredentialAttempt(DateTimeInterface|string|null $now = null): bool
     {
-        return $this->status->isPending()
+        return TemporaryAuthorizationStatusPolicy::isPending($this->status)
             && ! $this->hasExpired($now)
             && $this->failedAttempts < $this->maxAttempts;
     }
 
     public function isAuthorized(DateTimeInterface|string|null $now = null): bool
     {
-        return $this->status->isAuthorized()
+        return TemporaryAuthorizationStatusPolicy::isAuthorized($this->status)
             && $this->authorizedUserId !== null
             && ! $this->hasExpired($now);
     }
@@ -260,7 +261,7 @@ final class TemporaryAuthorizationEntity
         TemporaryAuthorizationDomainValidation::validateFailedAttempts($this->failedAttempts);
         TemporaryAuthorizationDomainValidation::validateExpiration($this->issuedAt, $this->expiresAt);
 
-        if ($this->status->isAuthorized()) {
+        if (TemporaryAuthorizationStatusPolicy::isAuthorized($this->status)) {
             UserDomainValidation::validateId((string) $this->authorizedUserId);
         }
     }
