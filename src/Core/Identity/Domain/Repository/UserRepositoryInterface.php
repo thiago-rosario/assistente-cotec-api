@@ -12,7 +12,7 @@ interface UserRepositoryInterface
     /**
      * Persiste um novo usuário.
      */
-    public function insert(UserEntity $user): UserEntity;
+    public function insert(UserEntity $user, string $plainPassword): UserEntity;
 
     /**
      * Retorna todos os usuários.
