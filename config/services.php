@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'editacodigo_bot' => [
+        'webhook_url' => env('EDITACODIGO_BOT_WEBHOOK_URL', 'http://host.docker.internal:5000/webhook'),
+        'user' => env('EDITACODIGO_BOT_USER', 'editacodigo_user'),
+        'token' => env('EDITACODIGO_BOT_TOKEN', ''),
+        'timeout' => (int) env('EDITACODIGO_BOT_TIMEOUT', 15),
+        'retry_times' => (int) env('EDITACODIGO_BOT_RETRY_TIMES', 3),
+    ],
+
 ];

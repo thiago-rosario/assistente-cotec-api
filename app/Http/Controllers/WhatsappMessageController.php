@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
-use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
+use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
+use App\Core\Application\Interfaces\Usecase\AcceptIncomingWhatsappWebhookUsecaseInterface;
+use App\Core\Exception\MessageNotContentException;
 use App\Core\Exception\WhatsapppMessageException;
 use App\Http\Helper\ResponseJsend;
 use App\Http\Requests\WhatsappMessageRequest;
@@ -14,8 +15,8 @@ use Illuminate\Http\JsonResponse;
 class WhatsappMessageController extends Controller
 {
     public function __construct(
-        private readonly ProcessWhatsappMessageUsecaseInterface $usecase,
-        private readonly PythonMessagePayloadAdapterInterface $adapter,
+        private readonly AcceptIncomingWhatsappWebhookUsecaseInterface $usecase,
+        private readonly WhatsappWebhookPayloadAdapterInterface $adapter,
     ) {}
 
     public function __invoke(WhatsappMessageRequest $request): JsonResponse
@@ -28,7 +29,17 @@ class WhatsappMessageController extends Controller
             $response = new ResponseJsend($result);
 
             return response()
-                ->json($response->toArray());
+                ->json($response->toArray(), 202);
+        } catch (MessageNotContentException $e) {
+            $response = new ResponseJsend(
+                data: [
+                    'message' => [$e->getMessage()],
+                ],
+                status: ResponseJsend::STATUS_FAIL,
+            );
+
+            return response()
+                ->json($response->toArray(), 422);
         } catch (WhatsapppMessageException $e) {
             $response = new ResponseJsend(
                 status: ResponseJsend::STATUS_ERROR,
