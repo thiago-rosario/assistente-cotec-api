@@ -36,6 +36,9 @@ class WhatsappMessageRequest extends FormRequest
     {
         return [
             'message' => ['required', 'string'],
+            'body' => ['nullable', 'string'],
+            'content' => ['nullable', 'string'],
+            'text' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
             'from' => ['nullable', 'string'],
             'sender_phone' => ['nullable', 'string'],

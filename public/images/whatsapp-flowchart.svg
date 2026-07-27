@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="2170" viewBox="0 0 1200 2170" role="img" aria-labelledby="title desc">
   <title id="title">Fluxograma do fluxo de atendimento pelo WhatsApp</title>
-  <desc id="desc">Fluxo desde o envio da mensagem pelo usuário no WhatsApp até a resposta enviada pelo robô Python após processamento pela API Laravel.</desc>
+  <desc id="desc">Fluxo desde o envio da mensagem pelo usuário no WhatsApp até a resposta enviada pela EditaCódigo após processamento em fila pela API Laravel.</desc>
   <defs>
     <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
       <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb" />
@@ -21,34 +21,34 @@
 
   <rect class="background" x="0" y="0" width="1200" height="2170" />
   <text class="title" x="600" y="48" text-anchor="middle">Fluxo de atendimento do Assistente COTEC</text>
-  <text class="subtitle" x="600" y="78" text-anchor="middle">WhatsApp Web, ponte Python, API Laravel, OpenAI e Google Sheets</text>
+  <text class="subtitle" x="600" y="78" text-anchor="middle">EditaCódigo API, webhook HTTP, fila Laravel, OpenAI e Google Sheets</text>
 
   <rect class="node-alt" x="360" y="120" width="480" height="58" />
   <text class="text" x="600" y="149">Usuário envia mensagem no WhatsApp</text>
 
   <rect class="node" x="360" y="215" width="480" height="58" />
-  <text class="text" x="600" y="244">Robô Python monitora WhatsApp Web</text>
+  <text class="text" x="600" y="244">EditaCódigo API externa na VPS</text>
 
   <rect class="node" x="360" y="310" width="480" height="58" />
-  <text class="text" x="600" y="339">Python captura mensagem recebida</text>
+  <text class="text" x="600" y="339">POST /api/whatsapp/messages</text>
 
   <rect class="node" x="360" y="405" width="480" height="58" />
-  <text class="text" x="600" y="434">Python envia evento estruturado para o Laravel</text>
+  <text class="text" x="600" y="434">WhatsappMessageController</text>
 
   <rect class="node-alt" x="360" y="500" width="480" height="58" />
-  <text class="text" x="600" y="529">API Laravel recebe payload da mensagem</text>
+  <text class="text" x="600" y="529">Laravel normaliza payload recebido</text>
 
   <rect class="node" x="360" y="595" width="480" height="58" />
-  <text class="text" x="600" y="624">PythonMessageOutputParser</text>
+  <text class="text" x="600" y="624">WhatsappWebhookPayloadAdapter</text>
 
   <rect class="node" x="360" y="690" width="480" height="58" />
-  <text class="text" x="600" y="719">PythonBridgeEventParser</text>
+  <text class="text" x="600" y="719">AcceptIncomingWhatsappWebhookUsecase</text>
 
   <rect class="node" x="360" y="785" width="480" height="58" />
-  <text class="text" x="600" y="814">PythonMessagePayloadMapper</text>
+  <text class="text" x="600" y="814">ProcessIncomingWhatsappMessageJob</text>
 
   <rect class="node-alt" x="360" y="880" width="480" height="58" />
-  <text class="text" x="600" y="909">ReceivedMessageInputDTO</text>
+  <text class="text" x="600" y="909">ProcessIncomingWhatsappWebhookUsecase</text>
 
   <rect class="node-alt" x="360" y="975" width="480" height="58" />
   <text class="text" x="600" y="1004">ProcessWhatsappMessageUsecase</text>
@@ -97,10 +97,10 @@
   <text class="text" x="600" y="1844">Formatter monta resposta amigável</text>
 
   <rect class="node" x="360" y="1910" width="480" height="58" />
-  <text class="text" x="600" y="1939">API retorna resposta formatada</text>
+  <text class="text" x="600" y="1939">WhatsappMessageSenderInterface</text>
 
   <rect class="node" x="360" y="2005" width="480" height="58" />
-  <text class="text" x="600" y="2034">Robô Python envia resposta no WhatsApp</text>
+  <text class="text" x="600" y="2034">EditaCódigo envia resposta no WhatsApp</text>
 
   <rect class="node-alt" x="360" y="2100" width="480" height="58" />
   <text class="text" x="600" y="2129">Usuário recebe a resposta</text>

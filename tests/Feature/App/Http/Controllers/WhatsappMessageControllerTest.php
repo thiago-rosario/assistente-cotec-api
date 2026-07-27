@@ -1,123 +1,81 @@
 <?php
 
-use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
-use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
-use Mockery\MockInterface;
+use App\Jobs\ProcessIncomingWhatsappMessageJob;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-it('processes a whatsapp message and returns a jsend response', function () {
-    $dto = new ReceivedMessageInputDTO(
-        message: 'Procure Salvador',
-        phone: '+5571999999999',
-        senderName: 'Thiago',
-    );
+beforeEach(function () {
+    config(['cache.default' => 'array']);
 
-    $this->mock(PythonMessagePayloadAdapterInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('fromArray')
-            ->once()
-            ->with([
-                'message' => 'Procure Salvador',
-                'phone' => '+55 71 99999-9999',
-                'sender_name' => 'Thiago',
-            ])
-            ->andReturn($dto);
-    });
+    Cache::flush();
+    Bus::fake();
+    Log::spy();
+});
 
-    $this->mock(ProcessWhatsappMessageUsecaseInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('__invoke')
-            ->once()
-            ->with($dto)
-            ->andReturn([
-                'reply' => 'Encontrei 1 registro no PAINEL DE OBRAS.',
-                'intent' => 'search_technical_notebook',
-                'total' => 1,
-                'data' => [
-                    [
-                        'municipality' => 'Salvador',
-                    ],
-                ],
-                'filters' => [
-                    'municipality' => 'Salvador',
-                ],
-            ]);
-    });
-
+it('accepts the canonical EditaCodigo payload and dispatches processing', function () {
     $this->postJson('/api/whatsapp/messages', [
-        'message' => 'Procure Salvador',
-        'phone' => '+55 71 99999-9999',
-        'sender_name' => 'Thiago',
+        'customer_contact' => '5571999999999',
+        'content' => 'Olá',
+        'external_id' => 'editacodigo-001',
+        'received_at' => '2026-07-27T14:30:00-03:00',
+        'source' => 'editacodigo',
     ])
-        ->assertSuccessful()
+        ->assertStatus(202)
         ->assertJson([
             'status' => 'success',
             'data' => [
-                'reply' => 'Encontrei 1 registro no PAINEL DE OBRAS.',
-                'intent' => 'search_technical_notebook',
-                'total' => 1,
-                'data' => [
-                    [
-                        'municipality' => 'Salvador',
-                    ],
-                ],
-                'filters' => [
-                    'municipality' => 'Salvador',
-                ],
+                'accepted' => true,
+                'external_id' => 'editacodigo-001',
+                'duplicate' => false,
             ],
         ]);
+
+    Bus::assertDispatched(ProcessIncomingWhatsappMessageJob::class, function (ProcessIncomingWhatsappMessageJob $job): bool {
+        $payload = $job->payload();
+
+        return $payload['message'] === 'Olá'
+            && $payload['phone'] === '5571999999999'
+            && $payload['received_at'] === '2026-07-27T14:30:00-03:00'
+            && $payload['source'] === 'editacodigo'
+            && $payload['external_id'] === 'editacodigo-001';
+    });
 });
 
-it('accepts body as a whatsapp message alias', function () {
-    $dto = new ReceivedMessageInputDTO(message: 'Buscar processo 123');
-
-    $this->mock(PythonMessagePayloadAdapterInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('fromArray')
-            ->once()
-            ->with([
-                'message' => 'Buscar processo 123',
-            ])
-            ->andReturn($dto);
-    });
-
-    $this->mock(ProcessWhatsappMessageUsecaseInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('__invoke')
-            ->once()
-            ->with($dto)
-            ->andReturn([
-                'reply' => 'Não encontrei registros para essa consulta.',
-                'intent' => 'search_technical_notebook',
-                'total' => 0,
-                'data' => [],
-                'filters' => [],
-            ]);
-    });
-
+it('keeps accepting legacy aliases for whatsapp payloads', function () {
     $this->postJson('/api/whatsapp/messages', [
-        'body' => 'Buscar processo 123',
+        'body' => 'Buscar processo 020.4487.2021.0009714-69',
+        'from' => 'whatsapp:+55 (71) 98888-7777',
+        'name' => 'Thiago',
+        'timestamp' => '2026-07-27T15:00:00-03:00',
+        'message_id' => 'legacy-001',
+        'provider' => 'legacy-provider',
     ])
-        ->assertSuccessful()
+        ->assertStatus(202)
         ->assertJson([
             'status' => 'success',
             'data' => [
-                'reply' => 'Não encontrei registros para essa consulta.',
-                'intent' => 'search_technical_notebook',
-                'total' => 0,
-                'data' => [],
-                'filters' => [],
+                'accepted' => true,
+                'external_id' => 'legacy-001',
+                'duplicate' => false,
             ],
         ]);
+
+    Bus::assertDispatched(ProcessIncomingWhatsappMessageJob::class, function (ProcessIncomingWhatsappMessageJob $job): bool {
+        $payload = $job->payload();
+
+        return $payload['message'] === 'Buscar processo 020.4487.2021.0009714-69'
+            && $payload['phone'] === '+5571988887777'
+            && $payload['sender_name'] === 'Thiago'
+            && $payload['received_at'] === '2026-07-27T15:00:00-03:00'
+            && $payload['source'] === 'legacy-provider'
+            && $payload['external_id'] === 'legacy-001';
+    });
 });
 
-it('returns jsend validation errors when the whatsapp message is missing', function () {
-    $this->mock(PythonMessagePayloadAdapterInterface::class, function (MockInterface $mock) {
-        $mock->shouldReceive('fromArray')->never();
-    });
-
-    $this->mock(ProcessWhatsappMessageUsecaseInterface::class, function (MockInterface $mock) {
-        $mock->shouldReceive('__invoke')->never();
-    });
-
+it('returns jsend validation errors when the whatsapp message content is missing', function () {
     $this->postJson('/api/whatsapp/messages', [
-        'phone' => '+5571999999999',
+        'customer_contact' => '5571999999999',
     ])
         ->assertUnprocessable()
         ->assertJson([
@@ -126,32 +84,27 @@ it('returns jsend validation errors when the whatsapp message is missing', funct
                 'message' => ['The message field is required.'],
             ],
         ]);
+
+    Bus::assertNotDispatched(ProcessIncomingWhatsappMessageJob::class);
 });
 
-it('returns a standardized error when whatsapp message processing fails', function () {
-    $dto = new ReceivedMessageInputDTO(message: 'Buscar Salvador');
+it('does not dispatch duplicated external ids twice', function () {
+    $payload = [
+        'customer_contact' => '5571999999999',
+        'content' => 'Olá',
+        'external_id' => 'duplicated-001',
+        'source' => 'editacodigo',
+    ];
 
-    $this->mock(PythonMessagePayloadAdapterInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('fromArray')
-            ->once()
-            ->andReturn($dto);
-    });
+    $this->postJson('/api/whatsapp/messages', $payload)
+        ->assertStatus(202)
+        ->assertJsonPath('data.accepted', true)
+        ->assertJsonPath('data.duplicate', false);
 
-    $this->mock(ProcessWhatsappMessageUsecaseInterface::class, function (MockInterface $mock) use ($dto) {
-        $mock->shouldReceive('__invoke')
-            ->once()
-            ->with($dto)
-            ->andThrow(new RuntimeException('Processing failed'));
-    });
+    $this->postJson('/api/whatsapp/messages', $payload)
+        ->assertStatus(202)
+        ->assertJsonPath('data.accepted', false)
+        ->assertJsonPath('data.duplicate', true);
 
-    $this->postJson('/api/whatsapp/messages', [
-        'message' => 'Buscar Salvador',
-    ])
-        ->assertInternalServerError()
-        ->assertJson([
-            'status' => 'error',
-            'message' => 'An unexpected error occurred',
-            'code' => 500,
-            'data' => null,
-        ]);
+    Bus::assertDispatchedTimes(ProcessIncomingWhatsappMessageJob::class, 1);
 });

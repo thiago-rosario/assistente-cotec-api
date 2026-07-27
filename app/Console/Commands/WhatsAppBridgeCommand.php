@@ -12,17 +12,25 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('whatsapp:bridge')]
-#[Description('Executa o bot Python do WhatsApp e envia as mensagens recebidas para a aplicação.')]
+#[Description('Legado: executa a ponte Python/Selenium do WhatsApp quando WHATSAPP_TRANSPORT=python_bridge.')]
 class WhatsAppBridgeCommand extends Command
 {
     /**
      * Execute the console command.
      */
-    public function handle(
-        PythonWhatsappMessageBridge $bridge,
-        ProcessWhatsappMessageUsecaseInterface $processWhatsappMessage,
-    ): int {
-        $this->info('Iniciando ponte Python/PHP do WhatsApp...');
+    public function handle(): int
+    {
+        if (config('whatsapp.transport') !== 'python_bridge') {
+            $this->warn('A ponte Python/Selenium do WhatsApp está depreciada e não será iniciada.');
+            $this->warn('Defina WHATSAPP_TRANSPORT=python_bridge apenas para usar o fallback legado.');
+
+            return self::SUCCESS;
+        }
+
+        $bridge = $this->laravel->make(PythonWhatsappMessageBridge::class);
+        $processWhatsappMessage = $this->laravel->make(ProcessWhatsappMessageUsecaseInterface::class);
+
+        $this->info('Iniciando ponte Python/PHP legada do WhatsApp...');
 
         return $bridge->stream(
             handleMessage: function (ReceivedMessageInputDTO $message, callable $sendReply) use ($processWhatsappMessage): void {
