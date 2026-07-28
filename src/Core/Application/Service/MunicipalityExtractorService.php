@@ -12,6 +12,8 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
     private const array Patterns = [
         '/(?:munic[ií]pio|cidade)\s+(?:de\s+|do\s+|da\s+)?([\p{L}\s\'-]+?)(?:[?.!,;:]|$)/iu',
         '/\bobras?\b.+\bem\s+([\p{L}\s\'-]+?)(?:[?.!,;:]|$)/iu',
+        '/\bcadernos?\s+t[eé]cnicos?\s+(?:de\s+|do\s+|da\s+|em\s+)?([\p{L}\s\'-]+?)(?:[?.!,;:]|$)/iu',
+        '/\b(?:consultar|consulta|buscar|busca|pesquisar|pesquisa|procurar|procura)\b\s+(?:(?:o|a|os|as|do|da|dos|das)\s+)?(?:cadernos?\s+t[eé]cnicos?\s+(?:de\s+|do\s+|da\s+|em\s+)?|munic[ií]pio\s+(?:de\s+|do\s+|da\s+)?|cidade\s+(?:de\s+|do\s+|da\s+)?|em\s+|de\s+|do\s+|da\s+|sobre\s+)?([\p{L}\s\'-]+?)(?:[?.!,;:]|$)/iu',
     ];
 
     private const array LeadingGreetingPatterns = [
@@ -26,15 +28,28 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
         'como',
         'consulta',
         'consultar',
+        'caderno',
         'favor',
+        'forca',
+        'levantamento',
         'oi',
         'ola',
         'onde',
+        'obra',
+        'obras',
+        'por',
         'porque',
+        'processo',
         'qual',
         'quando',
         'quero',
+        'regiao',
+        'sei',
         'sobre',
+        'situacao',
+        'status',
+        'tecnico',
+        'terreno',
     ];
 
     public function extract(string $message): ?string

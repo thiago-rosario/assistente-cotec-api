@@ -15,3 +15,11 @@ Route::get('/google-sheet', GoogleSheetController::class);
 Route::get('/google-sheets/{sheetId}/search', SearchGoogleSheetController::class);
 Route::get('/technical-notebooks/search', SearchTechnicalNotebookController::class);
 Route::post('/whatsapp/messages', WhatsappMessageController::class);
+
+Route::post('/whatsapp/validate', function (Request $request) {
+    return response()->json([
+        'status' => 'success',
+        'valid' => true,
+        'usuarios' => $request->input('usuarios', []),
+    ]);
+});

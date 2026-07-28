@@ -77,7 +77,7 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
                 externalId: $messageId,
             );
         } catch (Throwable $throwable) {
-            Log::error('whatsapp_reply_failed', [
+            Log::error('whatsapp_reply_attempt_failed', [
                 ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
                 'id_msg' => $messageId,
                 'intent' => $result['intent'] ?? null,
@@ -86,10 +86,21 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
                 'http_status' => $this->httpStatus($throwable),
                 'attempt' => $attempt,
                 'exception' => $throwable::class,
+                'exception_message' => $throwable->getMessage(),
+                'exception_context' => $this->exceptionContext($throwable),
             ]);
 
             throw $throwable;
         }
+
+        Log::info('whatsapp_reply_delivery_confirmed', [
+            ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
+            'id_msg' => $messageId,
+            'intent' => $result['intent'] ?? null,
+            'reply_length' => mb_strlen($reply),
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'attempt' => $attempt,
+        ]);
 
         return $result;
     }
@@ -103,5 +114,19 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
         $context = $throwable->context();
 
         return is_array($context) ? ($context['status'] ?? null) : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function exceptionContext(Throwable $throwable): ?array
+    {
+        if (! method_exists($throwable, 'context')) {
+            return null;
+        }
+
+        $context = $throwable->context();
+
+        return is_array($context) ? $context : null;
     }
 }

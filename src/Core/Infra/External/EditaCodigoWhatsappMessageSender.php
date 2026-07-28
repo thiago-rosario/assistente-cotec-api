@@ -29,11 +29,21 @@ class EditaCodigoWhatsappMessageSender implements WhatsappMessageSenderInterface
         }
 
         try {
-            $response = Http::timeout($this->timeout())
+            $request = Http::timeout($this->timeout())
                 ->connectTimeout($this->connectTimeout())
-                ->retry($this->retryTimes(), fn (int $attempt): int => $this->retryDelay($attempt), $this->shouldRetry(...))
+                ->retry(
+                    $this->retryTimes(),
+                    fn (int $attempt): int => $this->retryDelay($attempt),
+                    fn (Throwable $throwable): bool => $this->shouldRetry($throwable, $url, $phone, $externalId),
+                )
                 ->acceptJson()
-                ->asJson()
+                ->asJson();
+
+            if (! $this->verifyTls()) {
+                $request->withoutVerifying();
+            }
+
+            $response = $request
                 ->throw()
                 ->post($url, $this->payload($phone, $message, $externalId));
         } catch (Throwable $throwable) {
@@ -86,7 +96,10 @@ class EditaCodigoWhatsappMessageSender implements WhatsappMessageSenderInterface
 
     private function connectTimeout(): int
     {
-        return min(5, $this->timeout());
+        return min(
+            $this->timeout(),
+            max(1, (int) config('services.editacodigo_bot.connect_timeout', 3)),
+        );
     }
 
     private function retryTimes(): int
@@ -94,22 +107,41 @@ class EditaCodigoWhatsappMessageSender implements WhatsappMessageSenderInterface
         return max(1, (int) config('services.editacodigo_bot.retry_times', 3));
     }
 
-    private function retryDelay(int $attempt): int
+    private function verifyTls(): bool
     {
-        return min(1000, 100 * (2 ** max(0, $attempt - 1)));
+        return filter_var(config('services.editacodigo_bot.verify_tls', true), FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? true;
     }
 
-    private function shouldRetry(Throwable $throwable): bool
+    private function retryDelay(int $attempt): int
     {
+        $delay = max(1, (int) config('services.editacodigo_bot.retry_delay_ms', 250));
+        $maxDelay = max($delay, (int) config('services.editacodigo_bot.retry_max_delay_ms', 2000));
+
+        return min($maxDelay, $delay * (2 ** max(0, $attempt - 1)));
+    }
+
+    private function shouldRetry(Throwable $throwable, string $url, string $phone, ?string $externalId): bool
+    {
+        $shouldRetry = false;
+
         if ($throwable instanceof ConnectionException) {
-            return true;
+            $shouldRetry = true;
+        } elseif ($throwable instanceof RequestException) {
+            $shouldRetry = $throwable->response->serverError();
         }
 
-        if ($throwable instanceof RequestException) {
-            return $throwable->response->serverError();
+        if ($shouldRetry) {
+            Log::warning('whatsapp_reply_retrying', [
+                ...WhatsappLogContext::message($externalId, $phone, null),
+                'id_msg' => $externalId,
+                'url' => $url,
+                'http_status' => $this->statusFromThrowable($throwable),
+                'exception' => $throwable::class,
+                'exception_message' => $throwable->getMessage(),
+            ]);
         }
 
-        return false;
+        return $shouldRetry;
     }
 
     private function statusFromThrowable(Throwable $throwable): ?int

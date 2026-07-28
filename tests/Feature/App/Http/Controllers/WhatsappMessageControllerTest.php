@@ -42,6 +42,35 @@ it('accepts the canonical EditaCodigo payload and dispatches processing', functi
     });
 });
 
+it('accepts the real EditaCodigo payload aliases with numeric timestamp', function () {
+    $this->postJson('/api/whatsapp/messages', [
+        'telefone' => '5571999999999',
+        'texto' => 'Consultar Andaraí',
+        'id_mensagem' => 'editacodigo-real-001',
+        'timestamp' => 1785162600,
+        'source' => 'editacodigo',
+    ])
+        ->assertStatus(202)
+        ->assertJson([
+            'status' => 'success',
+            'data' => [
+                'accepted' => true,
+                'external_id' => 'editacodigo-real-001',
+                'duplicate' => false,
+            ],
+        ]);
+
+    Bus::assertDispatched(ProcessIncomingWhatsappMessageJob::class, function (ProcessIncomingWhatsappMessageJob $job): bool {
+        $payload = $job->payload();
+
+        return $payload['message'] === 'Consultar Andaraí'
+            && $payload['phone'] === '5571999999999'
+            && $payload['received_at'] === '1785162600'
+            && $payload['source'] === 'editacodigo'
+            && $payload['external_id'] === 'editacodigo-real-001';
+    });
+});
+
 it('keeps accepting legacy aliases for whatsapp payloads', function () {
     $this->postJson('/api/whatsapp/messages', [
         'body' => 'Buscar processo 020.4487.2021.0009714-69',

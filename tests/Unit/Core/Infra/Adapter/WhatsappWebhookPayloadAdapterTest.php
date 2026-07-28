@@ -53,6 +53,22 @@ it('maps EditaCodigo webhook payload into the application dto', function () {
         ->and($dto->externalId)->toBe('editacodigo-123');
 });
 
+it('maps real EditaCodigo aliases into the application dto', function () {
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'telefone' => '5571999999999',
+        'texto' => 'Consultar Andaraí',
+        'id_mensagem' => 'editacodigo-real-001',
+        'timestamp' => 1785162600,
+    ]);
+
+    expect($dto)->toBeInstanceOf(ReceivedMessageInputDTO::class)
+        ->and($dto->message)->toBe('Consultar Andaraí')
+        ->and($dto->phone)->toBe('5571999999999')
+        ->and($dto->receivedAt)->toBe('1785162600')
+        ->and($dto->source)->toBe('whatsapp-webhook')
+        ->and($dto->externalId)->toBe('editacodigo-real-001');
+});
+
 it('maps accepted aliases into the application dto', function () {
     $dto = whatsappWebhookPayloadAdapter()->fromArray([
         'last_message' => [

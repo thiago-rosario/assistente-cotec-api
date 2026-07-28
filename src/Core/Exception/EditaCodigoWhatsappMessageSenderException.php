@@ -19,13 +19,43 @@ class EditaCodigoWhatsappMessageSenderException extends RuntimeException
     }
 
     /**
-     * @return array{status: int|null, url: string|null}
+     * @return array{
+     *     status: int|null,
+     *     url: string|null,
+     *     previous_exception: class-string<Throwable>|null,
+     *     previous_message: string|null
+     * }
      */
     public function context(): array
     {
+        $previous = $this->getPrevious();
+
         return [
             'status' => $this->status,
-            'url' => $this->url,
+            'url' => $this->sanitizedUrl(),
+            'previous_exception' => $previous === null ? null : $previous::class,
+            'previous_message' => $previous?->getMessage(),
         ];
+    }
+
+    private function sanitizedUrl(): ?string
+    {
+        if ($this->url === null) {
+            return null;
+        }
+
+        $parts = parse_url($this->url);
+
+        if ($parts === false || ! isset($parts['scheme'], $parts['host'])) {
+            return null;
+        }
+
+        $url = $parts['scheme'].'://'.$parts['host'];
+
+        if (isset($parts['port'])) {
+            $url .= ':'.$parts['port'];
+        }
+
+        return $url.($parts['path'] ?? '');
     }
 }

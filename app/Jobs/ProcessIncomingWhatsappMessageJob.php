@@ -52,10 +52,12 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
     {
         $input = $this->input();
 
-        Log::error('whatsapp_reply_failed', [
+        Log::critical('whatsapp_reply_permanently_failed', [
             ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
             'attempt' => $this->attempts(),
             'exception' => $exception?->getMessage(),
+            'exception_class' => $exception === null ? null : $exception::class,
+            'exception_context' => $this->exceptionContext($exception),
         ]);
     }
 
@@ -91,5 +93,19 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
         $metadata = $this->payload['metadata'] ?? [];
 
         return is_array($metadata) ? $metadata : [];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function exceptionContext(?Throwable $throwable): ?array
+    {
+        if ($throwable === null || ! method_exists($throwable, 'context')) {
+            return null;
+        }
+
+        $context = $throwable->context();
+
+        return is_array($context) ? $context : null;
     }
 }

@@ -7,6 +7,7 @@ namespace App\Core\Infra\Mapper;
 use App\Core\Application\Interfaces\Mapper\WhatsappWebhookPayloadMapperInterface;
 use App\Core\Exception\MessageNotContentException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterface
 {
@@ -26,11 +27,21 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
     {
         $message = $this->firstPresentString($payload, [
             'message',
+            'texto',
             'body',
             'content',
+            'text.body',
             'text',
             'last_message.content',
             'whatsapp_message.content',
+            'messages.*.text.body',
+            'messages.*.button.text',
+            'messages.*.interactive.button_reply.title',
+            'messages.*.interactive.list_reply.title',
+            'entry.*.changes.*.value.messages.*.text.body',
+            'entry.*.changes.*.value.messages.*.button.text',
+            'entry.*.changes.*.value.messages.*.interactive.button_reply.title',
+            'entry.*.changes.*.value.messages.*.interactive.list_reply.title',
         ]);
 
         if ($message === null) {
@@ -45,8 +56,12 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'sender_phone',
                 'customer_contact',
                 'contact',
+                'telefone',
                 'last_message.customer_contact',
                 'whatsapp_message.customer_contact',
+                'messages.*.from',
+                'entry.*.changes.*.value.messages.*.from',
+                'entry.*.changes.*.value.contacts.*.wa_id',
             ]),
             'sender_name' => $this->firstString($payload, [
                 'sender_name',
@@ -54,17 +69,23 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'name',
                 'customer_name',
                 'contact_name',
+                'contacts.*.profile.name',
+                'entry.*.changes.*.value.contacts.*.profile.name',
             ]),
             'received_at' => $this->firstString($payload, [
                 'received_at',
                 'receivedAt',
                 'timestamp',
                 'created_at',
+                'messages.*.timestamp',
+                'entry.*.changes.*.value.messages.*.timestamp',
             ]),
             'source' => $this->firstString($payload, [
                 'source',
                 'channel',
                 'provider',
+                'object',
+                'entry.*.changes.*.value.messaging_product',
             ]) ?? $this->defaultSource(),
             'external_id' => $this->firstString($payload, [
                 'id',
@@ -72,7 +93,10 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'messageId',
                 'external_id',
                 'externalId',
+                'id_mensagem',
                 'MessageSid',
+                'messages.*.id',
+                'entry.*.changes.*.value.messages.*.id',
             ]),
             'metadata' => $payload,
         ];
@@ -90,7 +114,7 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
     private function firstString(array $payload, array $keys): ?string
     {
         foreach ($keys as $key) {
-            $value = Arr::get($payload, $key);
+            $value = $this->valueForKey($payload, $key);
 
             if (! is_scalar($value)) {
                 continue;
@@ -113,17 +137,39 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
     private function firstPresentString(array $payload, array $keys): ?string
     {
         foreach ($keys as $key) {
-            if (! Arr::has($payload, $key)) {
+            $value = $this->valueForKey($payload, $key);
+
+            if ($value === null) {
                 continue;
             }
-
-            $value = Arr::get($payload, $key);
 
             if (! is_scalar($value)) {
                 continue;
             }
 
-            return trim((string) $value);
+            $value = trim((string) $value);
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function valueForKey(array $payload, string $key): mixed
+    {
+        if (! str_contains($key, '*')) {
+            return Arr::get($payload, $key);
+        }
+
+        foreach (Arr::dot($payload) as $dottedKey => $value) {
+            if (Str::is($key, (string) $dottedKey)) {
+                return $value;
+            }
         }
 
         return null;

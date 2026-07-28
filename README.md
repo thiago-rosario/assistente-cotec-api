@@ -76,7 +76,7 @@ flowchart TD
 
     U --> V[WhatsappMessageSenderInterface]
     V --> W[EditaCodigoWhatsappMessageSender]
-    W --> Y[POST http://host.docker.internal:5000/webhook]
+    W --> Y[POST https://host.docker.internal:8443/]
     Y --> Z[EditaCódigo envia resposta no WhatsApp]
     Z --> X[Usuário recebe a resposta]
 ```
@@ -106,11 +106,12 @@ Variáveis importantes:
 - `OPENAI_ORGANIZATION` e `OPENAI_PROJECT`: opcionais, conforme configuração da conta OpenAI.
 - `GOOGLE_SHEETS_COTEC_SPREADSHEET_ID`: ID da planilha principal da COTEC.
 - `WHATSAPP_TRANSPORT`: transporte de WhatsApp. O padrão é `editacodigo_http`; `python_bridge` é fallback legado.
-- `EDITACODIGO_BOT_WEBHOOK_URL`: endpoint local do bot EditaCódigo para envio de respostas, padrão `http://host.docker.internal:5000/webhook`.
+- `EDITACODIGO_BOT_WEBHOOK_URL`: endpoint local do bot EditaCódigo para envio de respostas, padrão `https://host.docker.internal:8443/`.
 - `EDITACODIGO_BOT_USER`: usuário configurado no bot EditaCódigo.
 - `EDITACODIGO_BOT_TOKEN`: token configurado no bot EditaCódigo.
 - `EDITACODIGO_BOT_TIMEOUT`: timeout da chamada HTTP de envio.
 - `EDITACODIGO_BOT_RETRY_TIMES`: tentativas da chamada HTTP de envio.
+- `EDITACODIGO_BOT_VERIFY_TLS`: validação TLS do endpoint de envio. Use `false` quando a EditaCódigo local usar certificado self-signed em `host.docker.internal`.
 - `EDITACODIGO_API_URL` e `EDITACODIGO_API_KEY`: API de licenciamento/carregamento da EditaCódigo. Não confunda com `EDITACODIGO_BOT_WEBHOOK_URL`.
 - `WHATSAPP_URL` e `WHATSAPP_SESSION_FOLDER`: usados apenas pelo fallback Python/Selenium legado.
 
@@ -169,7 +170,7 @@ POST http://127.0.0.1:4200/api/whatsapp/messages
 A aplicação Laravel processa a mensagem em fila e envia a resposta para:
 
 ```text
-POST http://host.docker.internal:5000/webhook
+POST https://host.docker.internal:8443/
 ```
 
 Exemplo de webhook de entrada:
