@@ -42,6 +42,22 @@ it('accepts the canonical EditaCodigo payload and dispatches processing', functi
     });
 });
 
+it('validates the whatsapp integration handshake', function () {
+    $this->postJson('/api/whatsapp/validate', [
+        'usuarios' => [
+            ['telefone' => '5571999999999'],
+        ],
+    ])
+        ->assertSuccessful()
+        ->assertJson([
+            'status' => 'success',
+            'valid' => true,
+            'usuarios' => [
+                ['telefone' => '5571999999999'],
+            ],
+        ]);
+});
+
 it('accepts the real EditaCodigo payload aliases with numeric timestamp', function () {
     $this->postJson('/api/whatsapp/messages', [
         'telefone' => '5571999999999',
@@ -71,7 +87,7 @@ it('accepts the real EditaCodigo payload aliases with numeric timestamp', functi
     });
 });
 
-it('keeps accepting legacy aliases for whatsapp payloads', function () {
+it('keeps accepting provider aliases for whatsapp payloads', function () {
     $this->postJson('/api/whatsapp/messages', [
         'body' => 'Buscar processo 020.4487.2021.0009714-69',
         'from' => 'whatsapp:+55 (71) 98888-7777',
@@ -102,15 +118,17 @@ it('keeps accepting legacy aliases for whatsapp payloads', function () {
     });
 });
 
-it('returns jsend validation errors when the whatsapp message content is missing', function () {
+it('ignores whatsapp payloads without message content', function () {
     $this->postJson('/api/whatsapp/messages', [
         'customer_contact' => '5571999999999',
     ])
-        ->assertUnprocessable()
+        ->assertSuccessful()
         ->assertJson([
-            'status' => 'fail',
+            'status' => 'success',
             'data' => [
-                'message' => ['The message field is required.'],
+                'accepted' => false,
+                'ignored' => true,
+                'reason' => 'missing_message_content',
             ],
         ]);
 

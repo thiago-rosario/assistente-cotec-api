@@ -5,7 +5,6 @@ use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
-use App\Core\Application\Interfaces\Mapper\PythonMessagePayloadMapperInterface;
 use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
 use App\Core\Application\Interfaces\Mapper\WhatsappWebhookPayloadMapperInterface;
 use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
@@ -38,7 +37,6 @@ use App\Core\Infra\Adapter\SearchTechnicalNotebookAdapter;
 use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
-use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
@@ -61,7 +59,6 @@ it('resolves application bindings from the container', function (
     [ProcessIncomingWhatsappWebhookUsecaseInterface::class, ProcessIncomingWhatsappWebhookUsecase::class],
     [TechnicalNotebookSheetMapperInterface::class, TechnicalNotebookSheetMapper::class],
     [WhatsappWebhookPayloadMapperInterface::class, WhatsappWebhookPayloadMapper::class],
-    [PythonMessagePayloadMapperInterface::class, PythonMessagePayloadMapper::class],
     [GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
     [GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class],

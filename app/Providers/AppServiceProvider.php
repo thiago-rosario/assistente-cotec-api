@@ -2,18 +2,14 @@
 
 namespace App\Providers;
 
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\ReadGoogleSpreadsheetAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
-use App\Core\Application\Interfaces\Mapper\PythonMessagePayloadMapperInterface;
 use App\Core\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
 use App\Core\Application\Interfaces\Mapper\WhatsappWebhookPayloadMapperInterface;
-use App\Core\Application\Interfaces\Parser\PythonBridgeEventParserInterface;
-use App\Core\Application\Interfaces\Parser\PythonMessageOutputParserInterface;
 use App\Core\Application\Interfaces\Parser\WhatsappMessageInterpretationParserInterface;
 use App\Core\Application\Interfaces\Rule\SeiProcessWhatsappMessageInterpretationRuleInterface;
 use App\Core\Application\Interfaces\Rule\WhatsappMessageInterpretationRuleInterface;
@@ -46,7 +42,6 @@ use App\Core\Application\Usecase\SearchGoogleSheetUsecase;
 use App\Core\Application\Usecase\SearchTechnicalNotebookUsecase;
 use App\Core\Domain\Repository\GoogleSheetRepositoryInterface;
 use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;
-use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\SearchTechnicalNotebookAdapter;
@@ -54,11 +49,8 @@ use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
-use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Mapper\TechnicalNotebookSheetMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
-use App\Core\Infra\Parser\PythonBridgeEventParser;
-use App\Core\Infra\Parser\PythonMessageOutputParser;
 use App\Core\Infra\Parser\WhatsappMessageInterpretationParser;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
 use App\Core\Infra\Repository\Gateway\TechnicalNotebookGoogleSheetGatewayRepository;
@@ -99,11 +91,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);
         $this->app->bind(TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class);
         $this->app->bind(WhatsappWebhookPayloadAdapterInterface::class, WhatsappWebhookPayloadAdapter::class);
-        $this->app->bind(PythonMessagePayloadAdapterInterface::class, PythonMessagePayloadAdapter::class);
-        $this->app->bind(PythonBridgeEventParserInterface::class, PythonBridgeEventParser::class);
         $this->app->bind(WhatsappWebhookPayloadMapperInterface::class, WhatsappWebhookPayloadMapper::class);
-        $this->app->bind(PythonMessagePayloadMapperInterface::class, PythonMessagePayloadMapper::class);
-        $this->app->bind(PythonMessageOutputParserInterface::class, PythonMessageOutputParser::class);
     }
 
     /**

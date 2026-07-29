@@ -9,10 +9,10 @@ O assistente recebe mensagens de usuários, identifica a consulta solicitada, bu
 Principais capacidades:
 
 - Receber payloads de mensagens pela rota `POST /api/whatsapp/messages`.
-- Normalizar webhooks da EditaCódigo e aliases legados para `ReceivedMessageInputDTO`.
+- Validar a integração pela rota `POST /api/whatsapp/validate`.
+- Normalizar webhooks da EditaCódigo e aliases aceitos de provedores para `ReceivedMessageInputDTO`.
 - Enfileirar o processamento e retornar `202 Accepted` rapidamente.
 - Enviar respostas ao WhatsApp via `POST {EDITACODIGO_BOT_WEBHOOK_URL}`.
-- Manter o bot Python/Selenium apenas como fallback legado com `WHATSAPP_TRANSPORT=python_bridge`.
 - Interpretar mensagens com regras diretas e OpenAI.
 - Consultar Google Sheets por caderno técnico.
 - Expor endpoints REST para buscas em planilhas.
@@ -26,7 +26,6 @@ Principais capacidades:
 - Laravel Pint
 - OpenAI PHP Laravel
 - Revolution Laravel Google Sheets
-- Python 3 com Selenium apenas para fallback legado da ponte WhatsApp Web
 - PostgreSQL
 - Docker, Nginx e PHP-FPM
 - Vite e Tailwind CSS 4
@@ -37,9 +36,8 @@ O projeto separa a aplicação em camadas dentro de `src/Core`:
 
 - `Domain`: entidades, contratos de repositório, enums e resolvedores de domínio.
 - `Application`: DTOs, interfaces, casos de uso, regras e serviços de aplicação.
-- `Infra`: adapters, parsers, mappers, gateways para Google Sheets, integração OpenAI, sender HTTP da EditaCódigo e ponte Python legada.
+- `Infra`: adapters, parsers, mappers, gateways para Google Sheets, integração OpenAI e sender HTTP da EditaCódigo.
 - `app/Http`: controllers, requests e helpers HTTP da aplicação Laravel.
-- `src/Core/Infra/External/Python`: bot Python legado, fora do caminho padrão de produção.
 
 O container de dependências é configurado em `app/Providers/AppServiceProvider.php`, ligando interfaces da camada de aplicação às implementações de infraestrutura.
 
@@ -89,6 +87,7 @@ flowchart TD
 | `GET` | `/api/google-sheets/{sheetId}/search` | Busca genérica por planilha. |
 | `GET` | `/api/technical-notebooks/search` | Busca cadernos técnicos. |
 | `POST` | `/api/whatsapp/messages` | Aceita uma mensagem recebida pelo WhatsApp, normaliza e despacha o processamento assíncrono. |
+| `POST` | `/api/whatsapp/validate` | Valida a conectividade da integração externa e devolve os usuários recebidos no payload. |
 
 ## Configuração
 
@@ -105,7 +104,6 @@ Variáveis importantes:
 - `OPENAI_API_KEY`: chave usada para interpretar intenções de mensagens.
 - `OPENAI_ORGANIZATION` e `OPENAI_PROJECT`: opcionais, conforme configuração da conta OpenAI.
 - `GOOGLE_SHEETS_COTEC_SPREADSHEET_ID`: ID da planilha principal da COTEC.
-- `WHATSAPP_TRANSPORT`: transporte de WhatsApp. O padrão é `editacodigo_http`; `python_bridge` é fallback legado.
 - `EDITACODIGO_BOT_WEBHOOK_URL`: endpoint local do bot EditaCódigo para envio de respostas, padrão `https://host.docker.internal:8443/`.
 - `EDITACODIGO_BOT_USER`: usuário configurado no bot EditaCódigo.
 - `EDITACODIGO_BOT_TOKEN`: token configurado no bot EditaCódigo.
@@ -113,7 +111,6 @@ Variáveis importantes:
 - `EDITACODIGO_BOT_RETRY_TIMES`: tentativas da chamada HTTP de envio.
 - `EDITACODIGO_BOT_VERIFY_TLS`: validação TLS do endpoint de envio. Use `false` quando a EditaCódigo local usar certificado self-signed em `host.docker.internal`.
 - `EDITACODIGO_API_URL` e `EDITACODIGO_API_KEY`: API de licenciamento/carregamento da EditaCódigo. Não confunda com `EDITACODIGO_BOT_WEBHOOK_URL`.
-- `WHATSAPP_URL` e `WHATSAPP_SESSION_FOLDER`: usados apenas pelo fallback Python/Selenium legado.
 
 As abas conhecidas da planilha COTEC estão configuradas em `config/google_sheets.php`.
 
@@ -213,23 +210,6 @@ Payload enviado pelo Laravel para a EditaCódigo:
   }
 }
 ```
-
-## Ponte Python Legada
-
-O comando abaixo não deve ser usado no fluxo novo da VPS. Ele só inicia o fallback Python/Selenium quando `WHATSAPP_TRANSPORT=python_bridge`:
-
-```bash
-php artisan whatsapp:bridge
-```
-
-Quando o transporte está em `editacodigo_http`, o comando retorna sem iniciar `src/Core/Infra/External/Python/main.py`, Chrome ou Selenium.
-
-Antes de usar o fallback legado, garanta que:
-
-- O ambiente Python tenha as dependências necessárias para Selenium.
-- O Chrome/driver esteja disponível no ambiente.
-- A variável `EDITACODIGO_API_KEY` esteja configurada.
-- A sessão do WhatsApp Web esteja autenticada ou possa ser autenticada no navegador.
 
 ## Testes e qualidade
 
