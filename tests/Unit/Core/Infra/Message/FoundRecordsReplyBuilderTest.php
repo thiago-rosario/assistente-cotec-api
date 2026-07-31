@@ -1,8 +1,8 @@
 <?php
 
-use App\Core\Infra\Message\FoundRecordsReplyBuilder;
-use App\Core\Infra\Message\TechnicalNotebookReplyBuilder;
-use App\Core\Infra\Message\WhatsappRecordValueFormatter;
+use App\BuildPanel\Infra\Message\FoundRecordsReplyBuilder;
+use App\BuildPanel\Infra\Message\TechnicalNotebookReplyBuilder;
+use App\BuildPanel\Infra\Message\WhatsappRecordValueFormatter;
 
 it('builds found records replies using the technical notebook format', function () {
     $reply = (new FoundRecordsReplyBuilder(

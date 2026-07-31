@@ -63,7 +63,7 @@ it('disables TLS verification when configured for the local EditaCodigo certific
 
     $request->shouldReceive('connectTimeout')
         ->once()
-        ->with(5)
+        ->with(3)
         ->andReturnSelf();
     $request->shouldReceive('retry')
         ->once()

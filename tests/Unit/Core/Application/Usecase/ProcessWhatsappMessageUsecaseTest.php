@@ -1,11 +1,12 @@
 <?php
 
+use App\BuildPanel\Application\DTO\WhatsappMessageInterpretationDTO;
+use App\BuildPanel\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
+use App\BuildPanel\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
+use App\BuildPanel\Application\Service\BuildPanelWhatsappMessageService;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
-use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
-use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
 use Google\Service\Exception as GoogleServiceException;
@@ -42,7 +43,7 @@ it('answers greeting messages without resolving interpretation or searching reco
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -100,7 +101,7 @@ it('searches and formats resolved whatsapp message interpretations', function ()
             'filters' => ['municipality' => 'Antas'],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -144,7 +145,7 @@ it('returns unknown response when interpretation stays unknown', function () {
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -185,7 +186,7 @@ it('does not search technical notebooks without municipality or sei process filt
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -221,7 +222,7 @@ it('handles messages without text content in php without resolving interpretatio
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -263,7 +264,7 @@ it('returns rate limited response without reporting when openai limit is exceede
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -311,7 +312,7 @@ it('returns data source unavailable response when external search cannot connect
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -370,7 +371,7 @@ it('returns data source unavailable response and reports when google sheets reje
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -414,7 +415,7 @@ it('returns error response when processing fails', function () {
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -424,6 +425,25 @@ it('returns error response when processing fails', function () {
 
     expect($result['intent'])->toBe('error');
 });
+
+function processWhatsappMessageUsecase(
+    GreetingMessageMatcherServiceInterface $greetingMatcher,
+    ResolveWhatsappMessageInterpretationServiceInterface $resolveInterpretation,
+    WhatsappMessageSearchAdapterInterface $searchAdapter,
+    WhatsappMessageResponseFormatterInterface $responseFormatter,
+    AcceptedWhatsappMessageInterpretationServiceInterface $service,
+): ProcessWhatsappMessageUsecase {
+    return new ProcessWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        buildPanel: new BuildPanelWhatsappMessageService(
+            resolveInterpretation: $resolveInterpretation,
+            searchAdapter: $searchAdapter,
+            responseFormatter: $responseFormatter,
+            acceptedInterpretation: $service,
+        ),
+        responseFormatter: $responseFormatter,
+    );
+}
 
 /**
  * @param  array<string, mixed>|null  $filters

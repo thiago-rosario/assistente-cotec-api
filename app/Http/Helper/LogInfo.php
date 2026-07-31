@@ -11,6 +11,7 @@ class LogInfo
     public int $code;
 
     public string $message;
+
     public string $fileName;
 
     public int $lineNumber;

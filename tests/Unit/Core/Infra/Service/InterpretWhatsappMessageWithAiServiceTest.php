@@ -1,7 +1,7 @@
 <?php
 
+use App\BuildPanel\Infra\Service\InterpretWhatsappMessageWithAiService;
 use App\Core\Exception\OpenAIEmptyResponseException;
-use App\Core\Infra\Service\InterpretWhatsappMessageWithAiService;
 use OpenAI\Laravel\Facades\OpenAI;
 use OpenAI\Responses\Responses\CreateResponse;
 use OpenAI\Testing\Enums\OverrideStrategy;

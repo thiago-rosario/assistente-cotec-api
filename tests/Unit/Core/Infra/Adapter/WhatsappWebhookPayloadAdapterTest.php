@@ -1,16 +1,11 @@
 <?php
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\Interfaces\Adapter\PythonMessagePayloadAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
 use App\Core\Domain\Resolver\PhoneNormalizerResolver;
 use App\Core\Exception\MessageNotContentException;
-use App\Core\Infra\Adapter\PythonMessagePayloadAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
-use App\Core\Infra\Mapper\PythonMessagePayloadMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
-use App\Core\Infra\Parser\PythonBridgeEventParser;
-use App\Core\Infra\Parser\PythonMessageOutputParser;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -19,17 +14,6 @@ function whatsappWebhookPayloadAdapter(): WhatsappWebhookPayloadAdapter
 {
     return new WhatsappWebhookPayloadAdapter(
         mapper: new WhatsappWebhookPayloadMapper,
-        resolver: new PhoneNormalizerResolver,
-    );
-}
-
-function pythonMessagePayloadAdapter(): PythonMessagePayloadAdapter
-{
-    return new PythonMessagePayloadAdapter(
-        mapper: new PythonMessagePayloadMapper,
-        parser: new PythonMessageOutputParser(
-            bridgeEventParser: new PythonBridgeEventParser,
-        ),
         resolver: new PhoneNormalizerResolver,
     );
 }
@@ -94,32 +78,7 @@ it('resolves the webhook adapter interface from the container', function () {
     expect($adapter)->toBeInstanceOf(WhatsappWebhookPayloadAdapter::class);
 });
 
-it('keeps the legacy python adapter interface available for fallback', function () {
-    $adapter = app(PythonMessagePayloadAdapterInterface::class);
-
-    expect($adapter)->toBeInstanceOf(PythonMessagePayloadAdapter::class);
-});
-
 it('rejects payload without message content', function () {
     expect(fn () => whatsappWebhookPayloadAdapter()->fromArray(['customer_contact' => '+5511912345678']))
         ->toThrow(MessageNotContentException::class, 'Payload de mensagem recebido sem conteúdo.');
-});
-
-it('keeps mapping python bridge json events for the legacy fallback', function () {
-    $messages = pythonMessagePayloadAdapter()->fromPythonOutput(<<<'OUTPUT'
-        Aguardando login no WhatsApp Web...
-        {"type": "received_message", "payload": {"customer_contact": "Gpairiito", "content": "Ou nem ?", "source": "python-whatsapp", "external_id": "msg-456", "timestamp": "15/06/2026, 15:01:37"}}
-        {"type": "received_message", "payload": {"customer_contact": "+5511999999999", "content": "Oi", "source": "python-whatsapp"}}
-        OUTPUT);
-
-    expect($messages)->toHaveCount(2)
-        ->and($messages[0]->senderName)->toBe('Gpairiito')
-        ->and($messages[0]->phone)->toBeNull()
-        ->and($messages[0]->message)->toBe('Ou nem ?')
-        ->and($messages[0]->source)->toBe('python-whatsapp')
-        ->and($messages[0]->externalId)->toBe('msg-456')
-        ->and($messages[0]->receivedAt)->toBe('15/06/2026, 15:01:37')
-        ->and($messages[1]->senderName)->toBeNull()
-        ->and($messages[1]->phone)->toBe('+5511999999999')
-        ->and($messages[1]->message)->toBe('Oi');
 });

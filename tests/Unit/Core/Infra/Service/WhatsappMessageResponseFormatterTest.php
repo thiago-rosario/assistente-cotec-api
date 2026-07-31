@@ -1,11 +1,11 @@
 <?php
 
-use App\Core\Infra\Message\FoundRecordsReplyBuilder;
-use App\Core\Infra\Message\TechnicalNotebookReplyBuilder;
-use App\Core\Infra\Message\WhatsappDefaultReplies;
-use App\Core\Infra\Message\WhatsappRecordValueFormatter;
-use App\Core\Infra\Message\WhatsappResponsePayloadFactory;
-use App\Core\Infra\Service\WhatsappMessageResponseFormatter;
+use App\BuildPanel\Infra\Message\FoundRecordsReplyBuilder;
+use App\BuildPanel\Infra\Message\TechnicalNotebookReplyBuilder;
+use App\BuildPanel\Infra\Message\WhatsappDefaultReplies;
+use App\BuildPanel\Infra\Message\WhatsappRecordValueFormatter;
+use App\BuildPanel\Infra\Message\WhatsappResponsePayloadFactory;
+use App\BuildPanel\Infra\Service\WhatsappMessageResponseFormatter;
 
 it('returns every technical notebook field for all municipality records', function () {
     $result = whatsappMessageResponseFormatter()->format(

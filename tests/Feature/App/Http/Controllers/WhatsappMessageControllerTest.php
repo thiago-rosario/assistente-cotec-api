@@ -106,11 +106,13 @@ it('returns jsend validation errors when the whatsapp message content is missing
     $this->postJson('/api/whatsapp/messages', [
         'customer_contact' => '5571999999999',
     ])
-        ->assertUnprocessable()
+        ->assertOk()
         ->assertJson([
-            'status' => 'fail',
+            'status' => 'success',
             'data' => [
-                'message' => ['The message field is required.'],
+                'accepted' => false,
+                'ignored' => true,
+                'reason' => 'missing_message_content',
             ],
         ]);
 

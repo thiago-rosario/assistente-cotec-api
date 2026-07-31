@@ -1,9 +1,9 @@
 <?php
 
-use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
-use App\Core\Application\Service\ResolveWhatsappMessageInterpretationService;
-use App\Core\Domain\Resolver\WhatsappMessageIntentResolver;
+use App\BuildPanel\Application\DTO\WhatsappMessageInterpretationDTO;
+use App\BuildPanel\Application\Interfaces\Service\DirectWhatsappMessageInterpreterServiceInterface;
+use App\BuildPanel\Application\Service\ResolveWhatsappMessageInterpretationService;
+use App\BuildPanel\Domain\Resolver\WhatsappMessageIntentResolver;
 
 it('uses direct interpretation without ai interpretation', function () {
     $directInterpreter = Mockery::mock(DirectWhatsappMessageInterpreterServiceInterface::class);

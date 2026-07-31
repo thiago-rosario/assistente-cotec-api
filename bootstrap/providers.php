@@ -1,7 +1,9 @@
 <?php
 
-use App\Providers\AppServiceProvider;
+use App\BuildPanel\Infra\Providers\BuildPanelServiceProvider;
+use App\Core\Infra\Provider\CoreServiceProvider;
 
 return [
-    AppServiceProvider::class,
+    CoreServiceProvider::class,
+    BuildPanelServiceProvider::class,
 ];

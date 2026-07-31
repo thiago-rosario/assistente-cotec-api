@@ -43,7 +43,7 @@ it('is true', function () {
 
 Use specific assertions (`assertSuccessful()`, `assertNotFound()`) instead of `assertStatus()`:
 
-<!-- Pest Message Assertion -->
+<!-- Pest MessageEntity Assertion -->
 ```php
 it('returns all', function () {
     $this->postJson('/api/docs', [])->assertSuccessful();

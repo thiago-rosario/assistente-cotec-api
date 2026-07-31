@@ -7,7 +7,7 @@ namespace App\Core\Application\Service;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use Illuminate\Support\Str;
 
-final class GreetingMessageMatcherService implements GreetingMessageMatcherServiceInterface
+class GreetingMessageMatcherService implements GreetingMessageMatcherServiceInterface
 {
     private const array Greetings = [
         'oi',
