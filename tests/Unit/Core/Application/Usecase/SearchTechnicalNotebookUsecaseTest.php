@@ -1,9 +1,9 @@
 <?php
 
-use App\Core\Application\DTO\SearchTechnicalNotebookInputDTO;
-use App\Core\Application\Usecase\SearchTechnicalNotebookUsecase;
-use App\Core\Domain\Entity\TechnicalNotebookEntity;
-use App\Core\Domain\Repository\TechnicalNotebookRepositoryInterface;
+use App\BuildPanel\Application\DTO\SearchTechnicalNotebookInputDTO;
+use App\BuildPanel\Application\Usecase\SearchTechnicalNotebookUsecase;
+use App\BuildPanel\Domain\Entity\TechnicalNotebookEntity;
+use App\BuildPanel\Domain\Repository\TechnicalNotebookRepositoryInterface;
 
 it('searches technical notebooks by the first filled filter and maps results', function () {
     $repository = new class implements TechnicalNotebookRepositoryInterface

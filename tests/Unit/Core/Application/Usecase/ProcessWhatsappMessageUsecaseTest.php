@@ -1,24 +1,57 @@
 <?php
 
+use App\BuildPanel\Application\DTO\WhatsappMessageInterpretationDTO;
+use App\BuildPanel\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
+use App\BuildPanel\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
+use App\BuildPanel\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
+use App\BuildPanel\Application\Service\BuildPanelWhatsappMessageService;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\DTO\WhatsappMessageInterpretationDTO;
-use App\Core\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
-use App\Core\Application\Interfaces\Service\AcceptedWhatsappMessageInterpretationServiceInterface;
+use App\Core\Application\Factory\MessageFactory;
+use App\Core\Application\Handler\BuildPanelFallbackWhatsappConversationFlowHandler;
+use App\Core\Application\Handler\BuildPanelStateWhatsappConversationFlowHandler;
+use App\Core\Application\Handler\MainMenuOptionWhatsappConversationFlowHandler;
+use App\Core\Application\Handler\MainMenuRequestWhatsappConversationFlowHandler;
+use App\Core\Application\Handler\UnsupportedWhatsappMessageContentHandler;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
-use App\Core\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
-use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
+use App\Core\Application\Service\WhatsappBuildPanelFlowService;
+use App\Core\Application\Service\WhatsappConversationFlowService;
+use App\Core\Application\Service\WhatsappMainMenuService;
+use App\Core\Application\Service\WhatsappMessageProcessorService;
 use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
+use App\Core\Domain\Resolver\MessageIntentResolver;
+use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
+use App\Core\Infra\Repository\EloquentRepository\CacheWhatsappConversationStateRepository;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\Cache;
 use OpenAI\Exceptions\RateLimitException;
 use Psr\Http\Message\ResponseInterface;
 use Tests\TestCase;
 
 uses(TestCase::class);
 
-it('answers greeting messages without resolving interpretation or searching records', function () {
+beforeEach(function () {
+    config(['cache.default' => 'array']);
+
+    Cache::flush();
+});
+
+it('keeps the whatsapp message use case as an execution-only orchestrator', function () {
+    $reflection = new ReflectionClass(ProcessWhatsappMessageUsecase::class);
+    $publicExecutionMethods = collect($reflection->getMethods(ReflectionMethod::IS_PUBLIC))
+        ->reject(fn (ReflectionMethod $method): bool => $method->isConstructor())
+        ->map(fn (ReflectionMethod $method): string => $method->getName())
+        ->values()
+        ->all();
+
+    expect($reflection->getMethods(ReflectionMethod::IS_PRIVATE))->toBeEmpty()
+        ->and($publicExecutionMethods)->toBe(['__invoke']);
+});
+
+it('answers greeting messages with the main menu without resolving interpretation or searching records', function () {
     $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
     $greetingMatcher->shouldReceive('matches')
         ->once()
@@ -32,25 +65,118 @@ it('answers greeting messages without resolving interpretation or searching reco
     $searchAdapter->shouldReceive('search')->never();
 
     $responseFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+
+    $result = (processWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
+    ))(new ReceivedMessageInputDTO(
+        message: 'Olá!',
+        phone: '5571999999999',
+    ));
+
+    expect($result['intent'])->toBe('main_menu')
+        ->and($result['reply'])->toContain('1 - Consultar o Painel de Obras')
+        ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBe('main_menu');
+});
+
+it('starts the build panel flow from the main menu option', function () {
+    $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
+    $greetingMatcher->shouldReceive('matches')->never();
+
+    $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
+    $resolveInterpretation->shouldReceive('__invoke')->never();
+
+    $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
+    $searchAdapter->shouldReceive('search')->never();
+
+    $responseFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
     $responseFormatter->shouldReceive('greeting')
         ->once()
         ->andReturn([
-            'reply' => 'Oi! Posso ajudar com consultas por número do processo, município, força, região ou situação.',
+            'reply' => 'Envie o nome do município ou o número do processo.',
             'intent' => 'greeting',
             'total' => 0,
             'data' => [],
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
         responseFormatter: $responseFormatter,
         service: acceptedWhatsappMessageInterpretationServiceMock(),
-    ))(new ReceivedMessageInputDTO(message: 'Olá!'));
+    ))(new ReceivedMessageInputDTO(
+        message: '1',
+        phone: '5571999999999',
+    ));
 
-    expect($result['intent'])->toBe('greeting');
+    expect($result['intent'])->toBe('greeting')
+        ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBe('build_panel');
+});
+
+it('routes build panel flow messages without reinterpreting them as main menu greetings', function () {
+    Cache::put('whatsapp:conversation:5571999999999', 'build_panel');
+
+    $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
+    $greetingMatcher->shouldReceive('matches')->never();
+
+    $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
+    $resolveInterpretation->shouldReceive('__invoke')
+        ->once()
+        ->with('ANDARAÍ')
+        ->andReturn(new WhatsappMessageInterpretationDTO(
+            intent: 'search_technical_notebook',
+            filters: ['municipality' => 'ANDARAÍ'],
+        ));
+
+    $searchResult = [
+        'term' => null,
+        'total' => 1,
+        'data' => [
+            [
+                'municipality' => 'ANDARAÍ',
+            ],
+        ],
+    ];
+
+    $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
+    $searchAdapter->shouldReceive('search')
+        ->once()
+        ->with('search_technical_notebook', ['municipality' => 'ANDARAÍ'])
+        ->andReturn($searchResult);
+
+    $responseFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+    $responseFormatter->shouldReceive('format')
+        ->once()
+        ->with('search_technical_notebook', ['municipality' => 'ANDARAÍ'], $searchResult)
+        ->andReturn([
+            'reply' => 'Encontrei 1 registro para o município ANDARAÍ.',
+            'intent' => 'search_technical_notebook',
+            'total' => 1,
+            'data' => $searchResult['data'],
+            'filters' => ['municipality' => 'ANDARAÍ'],
+        ]);
+
+    $result = (processWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(
+            accepts: true,
+            intent: 'search_technical_notebook',
+            filters: ['municipality' => 'ANDARAÍ'],
+        ),
+    ))(new ReceivedMessageInputDTO(
+        message: 'ANDARAÍ',
+        phone: '5571999999999',
+    ));
+
+    expect($result['intent'])->toBe('search_technical_notebook');
 });
 
 it('searches and formats resolved whatsapp message interpretations', function () {
@@ -100,7 +226,7 @@ it('searches and formats resolved whatsapp message interpretations', function ()
             'filters' => ['municipality' => 'Antas'],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -144,7 +270,7 @@ it('returns unknown response when interpretation stays unknown', function () {
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -185,7 +311,7 @@ it('does not search technical notebooks without municipality or sei process filt
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -221,7 +347,7 @@ it('handles messages without text content in php without resolving interpretatio
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -263,7 +389,7 @@ it('returns rate limited response without reporting when openai limit is exceede
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -311,7 +437,7 @@ it('returns data source unavailable response when external search cannot connect
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -370,7 +496,7 @@ it('returns data source unavailable response and reports when google sheets reje
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -414,7 +540,7 @@ it('returns error response when processing fails', function () {
             'filters' => [],
         ]);
 
-    $result = (new ProcessWhatsappMessageUsecase(
+    $result = (processWhatsappMessageUsecase(
         greetingMatcher: $greetingMatcher,
         resolveInterpretation: $resolveInterpretation,
         searchAdapter: $searchAdapter,
@@ -450,4 +576,47 @@ function acceptedWhatsappMessageInterpretationServiceMock(
     $expectation->andReturn($accepts);
 
     return $service;
+}
+
+function processWhatsappMessageUsecase(
+    GreetingMessageMatcherServiceInterface $greetingMatcher,
+    ResolveWhatsappMessageInterpretationServiceInterface $resolveInterpretation,
+    WhatsappMessageSearchAdapterInterface $searchAdapter,
+    WhatsappMessageResponseFormatterInterface $responseFormatter,
+    AcceptedWhatsappMessageInterpretationServiceInterface $service,
+): ProcessWhatsappMessageUsecase {
+    $conversationStates = new CacheWhatsappConversationStateRepository(Cache::store());
+    $intentResolver = new MessageIntentResolver;
+    $buildPanelMessages = new BuildPanelWhatsappMessageService(
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        acceptedInterpretation: $service,
+    );
+    $mainMenu = new WhatsappMainMenuService(
+        conversationStates: $conversationStates,
+        responseFormatter: $responseFormatter,
+        messages: new WhatsappMainMenuMessageBuilder,
+    );
+    $buildPanelFlow = new WhatsappBuildPanelFlowService(
+        mainMenu: $mainMenu,
+        buildPanelMessages: $buildPanelMessages,
+        intentResolver: $intentResolver,
+    );
+
+    return new ProcessWhatsappMessageUsecase(
+        messages: new MessageFactory,
+        processor: new WhatsappMessageProcessorService(
+            flow: new WhatsappConversationFlowService(
+                handlers: [
+                    new UnsupportedWhatsappMessageContentHandler($responseFormatter),
+                    new BuildPanelStateWhatsappConversationFlowHandler($conversationStates, $buildPanelFlow),
+                    new MainMenuOptionWhatsappConversationFlowHandler($intentResolver, $mainMenu),
+                    new MainMenuRequestWhatsappConversationFlowHandler($intentResolver, $greetingMatcher, $mainMenu),
+                    new BuildPanelFallbackWhatsappConversationFlowHandler($buildPanelMessages),
+                ],
+            ),
+            responseFormatter: $responseFormatter,
+        ),
+    );
 }

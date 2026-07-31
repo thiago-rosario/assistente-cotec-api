@@ -1,6 +1,6 @@
 <?php
 
-use App\Core\Application\Service\MunicipalityExtractorService;
+use App\BuildPanel\Application\Service\MunicipalityExtractorService;
 
 it('extracts standalone municipality names without using ai', function (string $message, string $expectedMunicipality) {
     expect((new MunicipalityExtractorService)->extract($message))->toBe($expectedMunicipality);

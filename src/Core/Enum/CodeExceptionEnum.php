@@ -16,8 +16,5 @@ enum CodeExceptionEnum: int
     case GoogleSheetNameRequired = 1006;
     case GoogleSheetNotConfigured = 1007;
 
-    case SearchTechnicalNotebookError = 1008;
-    case SearchConstructionDemandError = 1009;
-
     case WhatsappMessageError = 1010;
 }

@@ -35,6 +35,13 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'sender' => env(
+            'WHATSAPP_MESSAGE_SENDER',
+            env('WHATSAPP_TRANSPORT', env('APP_ENV') === 'production' ? 'editacodigo' : 'log'),
+        ),
+    ],
+
     'editacodigo_bot' => [
         'webhook_url' => env('EDITACODIGO_BOT_WEBHOOK_URL', 'https://host.docker.internal:8443/'),
         'user' => env('EDITACODIGO_BOT_USER', 'editacodigo_user'),

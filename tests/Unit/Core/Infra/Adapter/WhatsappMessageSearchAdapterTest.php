@@ -1,10 +1,10 @@
 <?php
 
-use App\Core\Application\DTO\SearchTechnicalNotebookInputDTO;
-use App\Core\Application\DTO\SearchTechnicalNotebookOutputDTO;
-use App\Core\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
-use App\Core\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
-use App\Core\Infra\Adapter\WhatsappMessageSearchAdapter;
+use App\BuildPanel\Application\DTO\SearchTechnicalNotebookInputDTO;
+use App\BuildPanel\Application\DTO\SearchTechnicalNotebookOutputDTO;
+use App\BuildPanel\Application\Interfaces\Adapter\SearchTechnicalNotebookAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Usecase\SearchTechnicalNotebookUsecaseInterface;
+use App\BuildPanel\Infra\Adapter\WhatsappMessageSearchAdapter;
 
 it('searches technical notebooks from whatsapp filters', function () {
     $filters = ['municipality' => 'Antas'];
