@@ -74,8 +74,18 @@ use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\Core\Infra\Repository\EloquentRepository\CacheWhatsappConversationStateRepository;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\TechnicalInspectionReport\Application\Factory\RegisterTechnicalInspectionReportCatalogInputDTOFactory;
 use App\TechnicalInspectionReport\Application\Factory\TechnicalInspectionReportGoogleSheetFactory;
+use App\TechnicalInspectionReport\Application\Interfaces\Factory\RegisterTechnicalInspectionReportCatalogInputDTOFactoryInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Factory\TechnicalInspectionReportGoogleSheetFactoryInterface;
+use App\TechnicalInspectionReport\Application\Interfaces\Storage\TechnicalInspectionReportFileStorageInterface;
+use App\TechnicalInspectionReport\Application\Interfaces\Usecase\FindTechnicalInspectionReportUsecaseInterface;
+use App\TechnicalInspectionReport\Application\Usecase\FindTechnicalInspectionReportUsecase;
+use App\TechnicalInspectionReport\Domain\Repository\TechnicalInspectionReportDriveRepositoryInterface;
+use App\TechnicalInspectionReport\Domain\Repository\TechnicalInspectionReportSheetRepositoryInterface;
+use App\TechnicalInspectionReport\Infra\External\GoogleDriveTechnicalInspectionReportFileStorage;
+use App\TechnicalInspectionReport\Infra\Repository\Gateway\TechnicalInspectionReportGoogleDriveGatewayRepository;
+use App\TechnicalInspectionReport\Infra\Repository\Gateway\TechnicalInspectionReportGoogleSheetGatewayRepository;
 
 it('resolves application bindings from the container', function (
     string $abstract,
@@ -120,6 +130,11 @@ it('resolves application bindings from the container', function (
     [WhatsappMainMenuServiceInterface::class, WhatsappMainMenuService::class],
     [WhatsappMainMenuMessageBuilderInterface::class, WhatsappMainMenuMessageBuilder::class],
     [TechnicalInspectionReportGoogleSheetFactoryInterface::class, TechnicalInspectionReportGoogleSheetFactory::class],
+    [RegisterTechnicalInspectionReportCatalogInputDTOFactoryInterface::class, RegisterTechnicalInspectionReportCatalogInputDTOFactory::class],
+    [FindTechnicalInspectionReportUsecaseInterface::class, FindTechnicalInspectionReportUsecase::class],
+    [TechnicalInspectionReportFileStorageInterface::class, GoogleDriveTechnicalInspectionReportFileStorage::class],
+    [TechnicalInspectionReportSheetRepositoryInterface::class, TechnicalInspectionReportGoogleSheetGatewayRepository::class],
+    [TechnicalInspectionReportDriveRepositoryInterface::class, TechnicalInspectionReportGoogleDriveGatewayRepository::class],
 ]);
 
 it('resolves the log whatsapp sender when the local sender is configured', function () {
