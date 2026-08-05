@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Core\Application\DTO\ReceivedMessageDocumentInputDTO;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\Interfaces\Usecase\ProcessIncomingWhatsappWebhookUsecaseInterface;
 use App\Core\Application\Support\WhatsappLogContext;
@@ -64,13 +65,15 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
     private function input(): ReceivedMessageInputDTO
     {
         return new ReceivedMessageInputDTO(
-            message: (string) ($this->payload['message'] ?? ''),
+            message: $this->nullableString($this->payload['message'] ?? null),
             phone: $this->nullableString($this->payload['phone'] ?? null),
             senderName: $this->nullableString($this->payload['sender_name'] ?? null),
             receivedAt: $this->nullableString($this->payload['received_at'] ?? null),
             source: $this->nullableString($this->payload['source'] ?? null),
             externalId: $this->nullableString($this->payload['external_id'] ?? null),
             metadata: $this->metadata(),
+            document: $this->document(),
+            caption: $this->nullableString($this->payload['caption'] ?? null),
         );
     }
 
@@ -93,6 +96,34 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
         $metadata = $this->payload['metadata'] ?? [];
 
         return is_array($metadata) ? $metadata : [];
+    }
+
+    private function document(): ?ReceivedMessageDocumentInputDTO
+    {
+        $document = $this->payload['document'] ?? null;
+
+        if (! is_array($document)) {
+            return null;
+        }
+
+        return new ReceivedMessageDocumentInputDTO(
+            originalFileName: $this->nullableString($document['original_file_name'] ?? null) ?? '',
+            mimeType: $this->nullableString($document['mime_type'] ?? null) ?? '',
+            sizeBytes: $this->integerValue($document['size_bytes'] ?? null),
+            caption: $this->nullableString($document['caption'] ?? null),
+            contentBase64: $this->nullableString($document['content_base64'] ?? null),
+            temporaryPath: $this->nullableString($document['temporary_path'] ?? null),
+            metadata: is_array($document['metadata'] ?? null) ? $document['metadata'] : [],
+        );
+    }
+
+    private function integerValue(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /**

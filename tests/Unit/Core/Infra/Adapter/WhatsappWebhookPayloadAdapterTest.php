@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Application\DTO\ReceivedMessageDocumentInputDTO;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
 use App\Core\Domain\Resolver\PhoneNormalizerResolver;
@@ -70,6 +71,83 @@ it('maps accepted aliases into the application dto', function () {
         ->and($dto->receivedAt)->toBe('2026-07-27T15:00:00-03:00')
         ->and($dto->source)->toBe('whatsapp-webhook')
         ->and($dto->externalId)->toBe('alias-123');
+});
+
+it('maps a document-only webhook payload without requiring text', function () {
+    $base64 = 'JVBERi0xLjQK';
+
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'external_id' => 'message-document-001',
+        'phone' => '5571999999999',
+        'type' => 'document',
+        'text' => null,
+        'media' => [
+            'type' => 'document',
+            'mimetype' => 'application/pdf',
+            'filename' => 'relatorio-vistoria.pdf',
+            'size' => 1024,
+            'data' => $base64,
+        ],
+    ]);
+
+    expect($dto->message)->toBeNull()
+        ->and($dto->externalId)->toBe('message-document-001')
+        ->and($dto->document)->toBeInstanceOf(ReceivedMessageDocumentInputDTO::class)
+        ->and($dto->document?->mimeType)->toBe('application/pdf')
+        ->and($dto->document?->originalFileName)->toBe('relatorio-vistoria.pdf')
+        ->and($dto->document?->contentBase64)->toBe($base64)
+        ->and($dto->document?->sizeBytes)->toBe(1024)
+        ->and($dto->document?->caption)->toBeNull();
+});
+
+it('preserves text and document caption together', function () {
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'external_id' => 'message-document-caption-001',
+        'phone' => '5571999999999',
+        'type' => 'document',
+        'text' => 'Confira o relatório',
+        'media' => [
+            'type' => 'document',
+            'mimetype' => 'application/pdf',
+            'filename' => 'relatorio-vistoria.pdf',
+            'size' => 1024,
+            'data' => 'JVBERi0xLjQK',
+            'caption' => 'Relatório de vistoria técnica',
+        ],
+    ]);
+
+    expect($dto->message)->toBe('Confira o relatório')
+        ->and($dto->caption)->toBe('Relatório de vistoria técnica')
+        ->and($dto->document?->caption)->toBe('Relatório de vistoria técnica')
+        ->and($dto->document?->originalFileName)->toBe('relatorio-vistoria.pdf');
+});
+
+it('maps a nested whatsapp document payload', function () {
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'entry' => [[
+            'changes' => [[
+                'value' => [
+                    'messages' => [[
+                        'id' => 'nested-document-001',
+                        'from' => '5571999999999',
+                        'type' => 'document',
+                        'document' => [
+                            'mime_type' => 'application/pdf',
+                            'filename' => 'relatorio.pdf',
+                            'size' => '2048',
+                            'data' => 'JVBERi0xLjQK',
+                        ],
+                    ]],
+                ],
+            ]],
+        ]],
+    ]);
+
+    expect($dto->message)->toBeNull()
+        ->and($dto->externalId)->toBe('nested-document-001')
+        ->and($dto->phone)->toBe('5571999999999')
+        ->and($dto->document?->mimeType)->toBe('application/pdf')
+        ->and($dto->document?->sizeBytes)->toBe(2048);
 });
 
 it('resolves the webhook adapter interface from the container', function () {

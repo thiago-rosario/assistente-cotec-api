@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidExternalMessageIdException extends InvalidTechnicalInspectionReportValueException
+class InvalidExternalMessageIdException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O identificador externo da mensagem é obrigatório.',

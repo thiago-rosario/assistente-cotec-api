@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidTechnicalInspectionReportIdException extends InvalidTechnicalInspectionReportValueException
+class InvalidTechnicalInspectionReportIdException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O identificador do relatório de vistoria técnica é obrigatório.',

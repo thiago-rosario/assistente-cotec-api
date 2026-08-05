@@ -27,7 +27,11 @@ class WhatsappMessageRequest extends FormRequest
             'user_agent' => $this->userAgent(),
             'content_type' => $this->headers->get('content-type'),
             'content_length' => $this->headers->get('content-length'),
-            'raw_body' => $this->getContent(),
+            'message_type' => $this->input('type'),
+            'media_type' => $this->input('media.type'),
+            'media_filename' => $this->input('media.filename'),
+            'media_mime_type' => $this->input('media.mimetype'),
+            'media_size' => $this->input('media.size'),
         ]);
     }
 
@@ -92,6 +96,11 @@ class WhatsappMessageRequest extends FormRequest
             'text' => ['nullable'],
             'text.body' => ['nullable', 'string'],
             'texto' => ['nullable', 'string'],
+            'caption' => ['nullable', 'string'],
+            'media' => ['nullable', 'array'],
+            'media.*' => ['nullable'],
+            'document' => ['nullable', 'array'],
+            'document.*' => ['nullable'],
             'phone' => ['nullable', 'string'],
             'from' => ['nullable', 'string'],
             'sender_phone' => ['nullable', 'string'],
@@ -126,6 +135,11 @@ class WhatsappMessageRequest extends FormRequest
             'object' => ['nullable', 'string'],
             'messages' => ['nullable', 'array'],
             'messages.*' => ['nullable', 'array'],
+            'messages.*.caption' => ['nullable', 'string'],
+            'messages.*.document' => ['nullable', 'array'],
+            'messages.*.document.*' => ['nullable'],
+            'messages.*.media' => ['nullable', 'array'],
+            'messages.*.media.*' => ['nullable'],
             'statuses' => ['nullable', 'array'],
             'statuses.*' => ['nullable', 'array'],
             'entry' => ['nullable', 'array'],
@@ -134,6 +148,11 @@ class WhatsappMessageRequest extends FormRequest
             'entry.*.changes.*' => ['nullable', 'array'],
             'entry.*.changes.*.field' => ['nullable', 'string'],
             'entry.*.changes.*.value' => ['nullable', 'array'],
+            'entry.*.changes.*.value.messages.*.caption' => ['nullable', 'string'],
+            'entry.*.changes.*.value.messages.*.document' => ['nullable', 'array'],
+            'entry.*.changes.*.value.messages.*.document.*' => ['nullable'],
+            'entry.*.changes.*.value.messages.*.media' => ['nullable', 'array'],
+            'entry.*.changes.*.value.messages.*.media.*' => ['nullable'],
             'webhook_event_type' => ['nullable', 'string'],
             'webhook_ignored_reason' => ['nullable', 'string'],
         ];
@@ -143,7 +162,6 @@ class WhatsappMessageRequest extends FormRequest
     {
         Log::warning('whatsapp_webhook_validation_failed', [
             'errors' => $validator->errors()->toArray(),
-            'raw_body' => $this->getContent(),
         ]);
 
         $response = new ResponseJsend(

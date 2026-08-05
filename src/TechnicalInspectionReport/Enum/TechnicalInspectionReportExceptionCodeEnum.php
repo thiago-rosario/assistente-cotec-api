@@ -27,4 +27,6 @@ enum TechnicalInspectionReportExceptionCodeEnum: int
     case IncompleteReport = 2009;
 
     case InvalidStateTransition = 2010;
+
+    case InvalidReportForCataloging = 2011;
 }

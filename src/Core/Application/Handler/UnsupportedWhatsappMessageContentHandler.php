@@ -16,7 +16,7 @@ class UnsupportedWhatsappMessageContentHandler implements WhatsappConversationFl
 
     public function supports(MessageEntity $message): bool
     {
-        return ! $message->hasTextContent();
+        return ! $message->hasSupportedContent();
     }
 
     /**

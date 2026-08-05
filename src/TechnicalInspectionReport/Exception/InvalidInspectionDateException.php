@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidInspectionDateException extends InvalidTechnicalInspectionReportValueException
+class InvalidInspectionDateException extends \RuntimeException
 {
     public function __construct(
         string $message = 'A data da vistoria técnica deve ser uma data válida no formato dd/mm/aaaa.',

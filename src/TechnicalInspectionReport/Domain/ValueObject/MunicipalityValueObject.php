@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidMunicipalityException;
 
-class MunicipalityValueObject
+readonly class MunicipalityValueObject
 {
     private string $value;
 

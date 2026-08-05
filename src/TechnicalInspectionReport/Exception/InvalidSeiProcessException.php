@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidSeiProcessException extends InvalidTechnicalInspectionReportValueException
+class InvalidSeiProcessException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O processo SEI informado possui formato inválido.',

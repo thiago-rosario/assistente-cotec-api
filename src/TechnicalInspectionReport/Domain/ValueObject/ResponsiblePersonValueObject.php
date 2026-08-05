@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidResponsiblePersonException;
 
-class ResponsiblePersonValueObject
+readonly class ResponsiblePersonValueObject
 {
     private string $value;
 
