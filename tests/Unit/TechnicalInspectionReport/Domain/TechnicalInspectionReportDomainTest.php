@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
-use App\TechnicalInspectionReport\Domain\Repository\TechnicalInspectionReportRepositoryInterface;
+use App\TechnicalInspectionReport\Domain\Repository\TechnicalInspectionReportDriveRepositoryInterface;
 use App\TechnicalInspectionReport\Domain\ValueObject\ExternalMessageIdValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\InspectionDateValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\MunicipalityValueObject;
@@ -196,19 +196,46 @@ it('normalizes value objects and compares them by value', function () {
         ->and($file->sizeBytes())->toBe(2048);
 });
 
-it('rejects invalid value objects', function (callable $factory) {
-    $factory();
+it('rejects invalid value objects', function (callable $factory, string $exceptionClass) {
+    expect(fn () => $factory())->toThrow($exceptionClass);
 })->with([
-    'report id' => fn (): TechnicalInspectionReportIdValueObject => new TechnicalInspectionReportIdValueObject(' '),
-    'external message id' => fn (): ExternalMessageIdValueObject => new ExternalMessageIdValueObject(' '),
-    'municipality' => fn (): MunicipalityValueObject => new MunicipalityValueObject(' '),
-    'responsible person' => fn (): ResponsiblePersonValueObject => new ResponsiblePersonValueObject(' '),
-    'SEI process' => fn (): SeiProcessValueObject => new SeiProcessValueObject('invalid'),
-    'inspection date' => fn (): InspectionDateValueObject => InspectionDateValueObject::fromBrazilianFormat('31/02/2026'),
-    'document name' => fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('', 'application/pdf', 1),
-    'document MIME type' => fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('report.pdf', 'text/plain', 1),
-    'document size' => fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('report.pdf', 'application/pdf', 0),
-])->throws(InvalidTechnicalInspectionReportValueException::class);
+    'report id' => [
+        fn (): TechnicalInspectionReportIdValueObject => new TechnicalInspectionReportIdValueObject(' '),
+        InvalidTechnicalInspectionReportIdException::class,
+    ],
+    'external message id' => [
+        fn (): ExternalMessageIdValueObject => new ExternalMessageIdValueObject(' '),
+        InvalidExternalMessageIdException::class,
+    ],
+    'municipality' => [
+        fn (): MunicipalityValueObject => new MunicipalityValueObject(' '),
+        InvalidMunicipalityException::class,
+    ],
+    'responsible person' => [
+        fn (): ResponsiblePersonValueObject => new ResponsiblePersonValueObject(' '),
+        InvalidResponsiblePersonException::class,
+    ],
+    'SEI process' => [
+        fn (): SeiProcessValueObject => new SeiProcessValueObject('invalid'),
+        InvalidSeiProcessException::class,
+    ],
+    'inspection date' => [
+        fn (): InspectionDateValueObject => InspectionDateValueObject::fromBrazilianFormat('31/02/2026'),
+        InvalidInspectionDateException::class,
+    ],
+    'document name' => [
+        fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('', 'application/pdf', 1),
+        InvalidTechnicalInspectionReportFileException::class,
+    ],
+    'document MIME type' => [
+        fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('report.pdf', 'text/plain', 1),
+        InvalidTechnicalInspectionReportFileException::class,
+    ],
+    'document size' => [
+        fn (): TechnicalInspectionReportFileValueObject => new TechnicalInspectionReportFileValueObject('report.pdf', 'application/pdf', 0),
+        InvalidTechnicalInspectionReportFileException::class,
+    ],
+]);
 
 it('assigns a dedicated code to every technical inspection report exception', function (callable $factory, int $expectedCode) {
     $exception = $factory();
@@ -258,7 +285,7 @@ it('uses immutable domain values and does not expose mutable aggregate propertie
 });
 
 it('exposes technology-free persistence operations', function () {
-    $methods = get_class_methods(TechnicalInspectionReportRepositoryInterface::class);
+    $methods = get_class_methods(TechnicalInspectionReportDriveRepositoryInterface::class);
 
     expect($methods)
         ->toContain('save')

@@ -74,6 +74,8 @@ use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\Core\Infra\Repository\EloquentRepository\CacheWhatsappConversationStateRepository;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\TechnicalInspectionReport\Application\Factory\TechnicalInspectionReportGoogleSheetFactory;
+use App\TechnicalInspectionReport\Application\Interfaces\Factory\TechnicalInspectionReportGoogleSheetFactoryInterface;
 
 it('resolves application bindings from the container', function (
     string $abstract,
@@ -117,6 +119,7 @@ it('resolves application bindings from the container', function (
     [WhatsappConversationFlowServiceInterface::class, WhatsappConversationFlowService::class],
     [WhatsappMainMenuServiceInterface::class, WhatsappMainMenuService::class],
     [WhatsappMainMenuMessageBuilderInterface::class, WhatsappMainMenuMessageBuilder::class],
+    [TechnicalInspectionReportGoogleSheetFactoryInterface::class, TechnicalInspectionReportGoogleSheetFactory::class],
 ]);
 
 it('resolves the log whatsapp sender when the local sender is configured', function () {
