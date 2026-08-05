@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidTechnicalInspectionReportIdException;
 
-class TechnicalInspectionReportIdValueObject
+readonly class TechnicalInspectionReportIdValueObject
 {
     private string $value;
 

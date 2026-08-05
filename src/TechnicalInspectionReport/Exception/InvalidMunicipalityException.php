@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidMunicipalityException extends InvalidTechnicalInspectionReportValueException
+class InvalidMunicipalityException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O município da vistoria técnica é obrigatório.',

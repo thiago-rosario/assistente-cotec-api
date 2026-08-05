@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidResponsiblePersonException extends InvalidTechnicalInspectionReportValueException
+class InvalidResponsiblePersonException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O responsável pelo relatório é obrigatório.',

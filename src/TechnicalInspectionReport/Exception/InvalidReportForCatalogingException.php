@@ -7,11 +7,11 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidSeiProcessException extends \RuntimeException
+class InvalidReportForCatalogingException extends \RuntimeException
 {
     public function __construct(
-        string $message = 'O processo SEI informado possui formato inválido.',
-        int $code = TechnicalInspectionReportExceptionCodeEnum::InvalidSeiProcess->value,
+        string $message = 'O relatório precisa possuir um documento para ser catalogado.',
+        int $code = TechnicalInspectionReportExceptionCodeEnum::InvalidReportForCataloging->value,
         ?Throwable $previous = null,
     ) {
         parent::__construct($message, $code, $previous);

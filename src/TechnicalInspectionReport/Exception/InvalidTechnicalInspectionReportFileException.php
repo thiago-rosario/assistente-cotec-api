@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class InvalidTechnicalInspectionReportFileException extends InvalidTechnicalInspectionReportValueException
+class InvalidTechnicalInspectionReportFileException extends \RuntimeException
 {
     public function __construct(
         string $message = 'Os metadados do documento do relatório de vistoria técnica são inválidos.',

@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidTechnicalInspectionReportFileException;
 
-class TechnicalInspectionReportFileValueObject
+readonly class TechnicalInspectionReportFileValueObject
 {
     public const string PdfMimeType = 'application/pdf';
 

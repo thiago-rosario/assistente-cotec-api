@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidExternalMessageIdException;
 
-class ExternalMessageIdValueObject
+readonly class ExternalMessageIdValueObject
 {
     private string $value;
 

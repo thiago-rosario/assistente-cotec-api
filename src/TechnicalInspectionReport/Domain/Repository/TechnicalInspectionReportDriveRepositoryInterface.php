@@ -8,7 +8,7 @@ use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
 use App\TechnicalInspectionReport\Domain\ValueObject\ExternalMessageIdValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\TechnicalInspectionReportIdValueObject;
 
-interface TechnicalInspectionReportRepositoryInterface
+interface TechnicalInspectionReportDriveRepositoryInterface
 {
     public function save(TechnicalInspectionReportEntity $report): void;
 

@@ -9,13 +9,59 @@ use Illuminate\Support\Str;
 class MessageEntity
 {
     public function __construct(
-        private readonly string $content,
+        private readonly ?string $content,
         private readonly ?string $phone = null,
+        private readonly ?MessageDocumentEntity $document = null,
+        private readonly ?string $externalId = null,
+        private readonly ?string $caption = null,
+        private readonly ?string $receivedAt = null,
+        /**
+         * @var array<string, mixed>
+         */
+        private readonly array $metadata = [],
     ) {}
 
     public function content(): string
     {
-        return $this->content;
+        return $this->content ?? '';
+    }
+
+    public function externalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function caption(): ?string
+    {
+        return $this->caption;
+    }
+
+    public function receivedAt(): ?string
+    {
+        return $this->receivedAt;
+    }
+
+    public function document(): ?MessageDocumentEntity
+    {
+        return $this->document;
+    }
+
+    public function hasDocument(): bool
+    {
+        return $this->document !== null;
+    }
+
+    public function hasSupportedContent(): bool
+    {
+        return $this->hasTextContent() || $this->hasDocument();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function metadata(): array
+    {
+        return $this->metadata;
     }
 
     public function normalizedPhone(): ?string

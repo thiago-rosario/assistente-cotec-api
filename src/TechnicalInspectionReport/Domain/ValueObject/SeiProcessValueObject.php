@@ -6,7 +6,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 
 use App\TechnicalInspectionReport\Exception\InvalidSeiProcessException;
 
-class SeiProcessValueObject
+readonly class SeiProcessValueObject
 {
     private string $value;
 

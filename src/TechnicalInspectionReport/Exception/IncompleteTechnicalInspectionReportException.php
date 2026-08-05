@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Exception;
 use App\TechnicalInspectionReport\Enum\TechnicalInspectionReportExceptionCodeEnum;
 use Throwable;
 
-class IncompleteTechnicalInspectionReportException extends TechnicalInspectionReportDomainException
+class IncompleteTechnicalInspectionReportException extends \RuntimeException
 {
     public function __construct(
         string $message = 'O relatório de vistoria técnica não possui todos os dados obrigatórios.',

@@ -7,7 +7,7 @@ namespace App\TechnicalInspectionReport\Domain\ValueObject;
 use App\TechnicalInspectionReport\Exception\InvalidInspectionDateException;
 use DateTimeImmutable;
 
-class InspectionDateValueObject
+readonly class InspectionDateValueObject
 {
     public function __construct(private DateTimeImmutable $value) {}
 
