@@ -118,6 +118,90 @@ it('keeps accepting provider aliases for whatsapp payloads', function () {
     });
 });
 
+it('accepts a document-only whatsapp payload and dispatches its document', function () {
+    $base64 = 'JVBERi0xLjQK';
+
+    $this->postJson('/api/whatsapp/messages', [
+        'external_id' => 'message-document-001',
+        'phone' => '5571999999999',
+        'type' => 'document',
+        'text' => null,
+        'media' => [
+            'type' => 'document',
+            'mimetype' => 'application/pdf',
+            'filename' => 'relatorio-vistoria.pdf',
+            'size' => 1024,
+            'data' => $base64,
+        ],
+    ])
+        ->assertStatus(202)
+        ->assertJsonPath('data.accepted', true);
+
+    Bus::assertDispatched(ProcessIncomingWhatsappMessageJob::class, function (ProcessIncomingWhatsappMessageJob $job) use ($base64): bool {
+        $payload = $job->payload();
+
+        return $payload['message'] === null
+            && $payload['document']['original_file_name'] === 'relatorio-vistoria.pdf'
+            && $payload['document']['mime_type'] === 'application/pdf'
+            && $payload['document']['size_bytes'] === 1024
+            && $payload['document']['content_base64'] === $base64;
+    });
+});
+
+it('accepts text and document caption together', function () {
+    $this->postJson('/api/whatsapp/messages', [
+        'external_id' => 'message-document-caption-001',
+        'phone' => '5571999999999',
+        'type' => 'document',
+        'text' => 'Confira o relatório',
+        'media' => [
+            'type' => 'document',
+            'mimetype' => 'application/pdf',
+            'filename' => 'relatorio-vistoria.pdf',
+            'size' => 1024,
+            'data' => 'JVBERi0xLjQK',
+            'caption' => 'Relatório de vistoria técnica',
+        ],
+    ])
+        ->assertStatus(202)
+        ->assertJsonPath('data.accepted', true);
+
+    Bus::assertDispatched(ProcessIncomingWhatsappMessageJob::class, function (ProcessIncomingWhatsappMessageJob $job): bool {
+        $payload = $job->payload();
+
+        return $payload['message'] === 'Confira o relatório'
+            && $payload['caption'] === 'Relatório de vistoria técnica'
+            && $payload['document']['caption'] === 'Relatório de vistoria técnica';
+    });
+});
+
+it('does not write document base64 to the webhook logs', function () {
+    $base64 = 'JVBERi0xLjQK';
+
+    $this->postJson('/api/whatsapp/messages', [
+        'external_id' => 'message-document-log-001',
+        'phone' => '5571999999999',
+        'type' => 'document',
+        'text' => null,
+        'media' => [
+            'type' => 'document',
+            'mimetype' => 'application/pdf',
+            'filename' => 'relatorio-vistoria.pdf',
+            'size' => 1024,
+            'data' => $base64,
+        ],
+    ])->assertStatus(202);
+
+    Log::shouldHaveReceived('info')
+        ->with('whatsapp_webhook_payload_received', Mockery::on(
+            fn (array $context): bool => $context['media_filename'] === 'relatorio-vistoria.pdf'
+                && $context['media_mime_type'] === 'application/pdf'
+                && $context['media_size'] === 1024
+                && ! str_contains((string) json_encode($context), $base64)
+        ))
+        ->once();
+});
+
 it('ignores whatsapp payloads without message content', function () {
     $this->postJson('/api/whatsapp/messages', [
         'customer_contact' => '5571999999999',

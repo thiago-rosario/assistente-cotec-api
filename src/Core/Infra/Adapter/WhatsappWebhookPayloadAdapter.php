@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Infra\Adapter;
 
+use App\Core\Application\DTO\ReceivedMessageDocumentInputDTO;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
 use App\Core\Application\Interfaces\Mapper\WhatsappWebhookPayloadMapperInterface;
@@ -32,6 +33,8 @@ class WhatsappWebhookPayloadAdapter implements WhatsappWebhookPayloadAdapterInte
             source: $mappedPayload['source'],
             externalId: $mappedPayload['external_id'],
             metadata: $mappedPayload['metadata'],
+            document: $this->document($mappedPayload['document']),
+            caption: $mappedPayload['caption'],
         );
     }
 
@@ -48,6 +51,42 @@ class WhatsappWebhookPayloadAdapter implements WhatsappWebhookPayloadAdapterInte
             'source' => $dto->source,
             'external_id' => $dto->externalId,
             'metadata' => $dto->metadata,
+            'document' => $dto->document === null ? null : [
+                'original_file_name' => $dto->document->originalFileName,
+                'mime_type' => $dto->document->mimeType,
+                'size_bytes' => $dto->document->sizeBytes,
+                'caption' => $dto->document->caption,
+                'content_base64' => $dto->document->contentBase64,
+                'temporary_path' => $dto->document->temporaryPath,
+                'metadata' => $dto->document->metadata,
+            ],
+            'caption' => $dto->caption,
         ];
+    }
+
+    /**
+     * @param  array{
+     *     original_file_name: string,
+     *     mime_type: string,
+     *     size_bytes: int,
+     *     caption: string|null,
+     *     content_base64: string|null,
+     *     metadata: array<string, mixed>
+     * }|null  $document
+     */
+    private function document(?array $document): ?ReceivedMessageDocumentInputDTO
+    {
+        if ($document === null) {
+            return null;
+        }
+
+        return new ReceivedMessageDocumentInputDTO(
+            originalFileName: $document['original_file_name'],
+            mimeType: $document['mime_type'],
+            sizeBytes: $document['size_bytes'],
+            caption: $document['caption'],
+            contentBase64: $document['content_base64'],
+            metadata: $document['metadata'],
+        );
     }
 }

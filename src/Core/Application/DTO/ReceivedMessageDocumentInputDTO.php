@@ -13,6 +13,7 @@ readonly class ReceivedMessageDocumentInputDTO
         public string $originalFileName,
         public string $mimeType,
         public int $sizeBytes,
+        public ?string $caption = null,
         public ?string $contentBase64 = null,
         public ?string $temporaryPath = null,
         public array $metadata = [],
