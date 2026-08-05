@@ -22,7 +22,11 @@ return [
     'client_id' => env('GOOGLE_CLIENT_ID', ''),
     'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
     'redirect_uri' => env('GOOGLE_REDIRECT', ''),
-    'scopes' => [Sheets::DRIVE, Sheets::SPREADSHEETS],
+    'scopes' => array_values(array_unique(array_filter([
+        Sheets::DRIVE,
+        Sheets::SPREADSHEETS,
+        env('GOOGLE_DRIVE_SCOPE'),
+    ]))),
     'access_type' => 'offline',
     'prompt' => 'consent select_account',
 
@@ -56,8 +60,8 @@ return [
          * Path to service account json file. You can also pass the credentials as an array
          * instead of a file path.
          */
-        'file' => env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION')
-            ? base_path(env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION'))
+        'file' => env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION', env('GOOGLE_DRIVE_CREDENTIALS_PATH'))
+            ? base_path((string) env('GOOGLE_SERVICE_ACCOUNT_JSON_LOCATION', env('GOOGLE_DRIVE_CREDENTIALS_PATH')))
             : null,
     ],
 
