@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\TechnicalInspectionReport\Application\Interfaces\Factory;
+
+use App\TechnicalInspectionReport\Application\DTO\RegisterTechnicalInspectionReportCatalogInputDTO;
+use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
+use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
+
+interface RegisterTechnicalInspectionReportCatalogInputDTOFactoryInterface
+{
+    public static function fromReportAndStoredFile(TechnicalInspectionReportEntity $report, StoredTechnicalInspectionReportFileDTO $storedFile): RegisterTechnicalInspectionReportCatalogInputDTO;
+}
