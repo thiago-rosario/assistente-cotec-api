@@ -27,13 +27,23 @@ class StoreTechnicalInspectionReportUsecase implements StoreTechnicalInspectionR
             $input->documentPath,
         );
 
-        $catalogEntry = $this->factory->create($input->report, $storedFile);
+        try {
+            $catalogEntry = $this->factory->create($input->report, $storedFile);
 
-        $this->sheetRepository->register(
-            new RegisterTechnicalInspectionReportCatalogInputDTO(
-                sheet: $catalogEntry,
-            ),
-        );
+            $this->sheetRepository->register(
+                new RegisterTechnicalInspectionReportCatalogInputDTO(
+                    sheet: $catalogEntry,
+                ),
+            );
+        } catch (\Throwable $exception) {
+            try {
+                $this->fileStorage->delete($storedFile);
+            } catch (\Throwable $cleanupException) {
+                throw $exception;
+            }
+
+            throw $exception;
+        }
 
         return new StoreTechnicalInspectionReportOutputDTO(
             report: $input->report,

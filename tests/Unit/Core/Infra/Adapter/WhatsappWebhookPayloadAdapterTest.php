@@ -87,6 +87,7 @@ it('maps a document-only webhook payload without requiring text', function () {
             'filename' => 'relatorio-vistoria.pdf',
             'size' => 1024,
             'data' => $base64,
+            'temporary_path' => '/tmp/relatorio-vistoria.pdf',
         ],
     ]);
 
@@ -96,8 +97,26 @@ it('maps a document-only webhook payload without requiring text', function () {
         ->and($dto->document?->mimeType)->toBe('application/pdf')
         ->and($dto->document?->originalFileName)->toBe('relatorio-vistoria.pdf')
         ->and($dto->document?->contentBase64)->toBe($base64)
+        ->and($dto->document?->temporaryPath)->toBe('/tmp/relatorio-vistoria.pdf')
         ->and($dto->document?->sizeBytes)->toBe(1024)
         ->and($dto->document?->caption)->toBeNull();
+});
+
+it('maps the normalized document filename alias', function () {
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'external_id' => 'message-document-normalized-001',
+        'phone' => '5571999999999',
+        'document' => [
+            'original_file_name' => 'relatorio-vistoria.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 1024,
+            'content_base64' => 'JVBERi0xLjQK',
+        ],
+    ]);
+
+    expect($dto->document?->originalFileName)->toBe('relatorio-vistoria.pdf')
+        ->and($dto->document?->mimeType)->toBe('application/pdf')
+        ->and($dto->document?->sizeBytes)->toBe(1024);
 });
 
 it('preserves text and document caption together', function () {

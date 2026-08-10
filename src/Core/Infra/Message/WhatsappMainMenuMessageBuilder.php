@@ -8,20 +8,20 @@ use App\Core\Application\Interfaces\Message\WhatsappMainMenuMessageBuilderInterf
 
 class WhatsappMainMenuMessageBuilder implements WhatsappMainMenuMessageBuilderInterface
 {
-    private const string MainMenuMessage = "Olá! Eu sou o Assistente da CEIRF.\n\n"
+    private const string MainMenuMessage = "👋 Olá! Eu sou o Assistente da COTEC.\n\n"
         ."Como posso ajudar?\n\n"
-        ."1 - Consultar o Painel de Obras\n"
-        ."2 - Consultar Relatório de Vistoria Técnica\n"
-        ."3 - Informações sobre o assistente\n"
-        .'0 - Encerrar atendimento';
+        ."1️⃣  Consultar o Painel de Obras\n"
+        ."2️⃣  Relatórios de Vistoria Técnica\n"
+        ."3️⃣  Informações sobre o assistente\n"
+        .'0️⃣  Encerrar atendimento';
 
-    private const string TechnicalInspectionReportSoonMessage = 'A consulta ao Relatório de Vistoria Técnica estará disponível em breve.';
+    private const string TechnicalInspectionReportSoonMessage = '📋 A consulta ao Relatório de Vistoria Técnica estará disponível em breve.';
 
-    private const string AssistantInfoMessage = 'Sou o Assistente da CEIRF. Neste momento, posso encaminhar consultas ao Painel de Obras e manter o atendimento organizado pelo menu principal.';
+    private const string AssistantInfoMessage = 'ℹ️ Sou o Assistente da COTEC. Posso consultar o Painel de Obras, cadastrar relatórios de vistoria técnica e localizar relatórios por município.';
 
-    private const string EndMessage = 'Atendimento encerrado. Quando precisar, envie uma nova mensagem para ver o menu.';
+    private const string EndMessage = '👋 Atendimento encerrado. Quando precisar, envie uma nova mensagem para ver o menu.';
 
-    private const string InvalidMenuOptionMessage = "Não encontrei essa opção no menu.\n\n".self::MainMenuMessage;
+    private const string InvalidMenuOptionMessage = "⚠️ Não encontrei essa opção no menu.\n\n".self::MainMenuMessage;
 
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}

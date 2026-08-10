@@ -14,6 +14,8 @@ enum WhatsappConversationState: string
 
     case TechnicalInspectionReportAwaitingMunicipality = 'technical_inspection_report_awaiting_municipality';
 
+    case TechnicalInspectionReportAwaitingSearchMunicipality = 'technical_inspection_report_awaiting_search_municipality';
+
     case TechnicalInspectionReportAwaitingSeiDecision = 'technical_inspection_report_awaiting_sei_decision';
 
     case TechnicalInspectionReportAwaitingSeiProcess = 'technical_inspection_report_awaiting_sei_process';

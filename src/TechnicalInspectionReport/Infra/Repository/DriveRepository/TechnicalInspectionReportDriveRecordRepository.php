@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\Repository\DriveRepository;
 
+use App\Core\Infra\External\GoogleAuthenticationService;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
 use App\TechnicalInspectionReport\Domain\ValueObject\ExternalMessageIdValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\InspectionDateValueObject;
@@ -214,6 +215,8 @@ final class TechnicalInspectionReportDriveRecordRepository
 
     private function createDrive(): object
     {
+        app(GoogleAuthenticationService::class)->authenticate();
+
         $drive = Google::make('drive');
 
         if (! is_object($drive)) {

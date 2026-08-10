@@ -75,7 +75,7 @@ class MessageEntity
 
     public function hasTextContent(): bool
     {
-        return trim($this->content) !== '';
+        return $this->content !== null && trim($this->content) !== '';
     }
 
     public function normalizedContent(): string

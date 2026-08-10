@@ -17,13 +17,12 @@ final class TechnicalInspectionReportGoogleSheetFactory implements TechnicalInsp
     ): TechnicalInspectionReportGoogleSheetEntity {
         return new TechnicalInspectionReportGoogleSheetEntity(
             reportId: $entity->id()->value(),
-            externalMessageId: $entity->externalMessageId()->value(),
+            documentName: $entity->document()?->originalFileName() ?? '',
             municipality: $entity->municipality()?->value() ?? '',
             seiProcess: $entity->seiProcess()?->value(),
+            hasSeiProcess: $entity->hasSeiProcess(),
             inspectionDate: $entity->inspectionDate()?->formatted() ?? '',
             responsiblePerson: $entity->responsiblePerson()?->value() ?? '',
-            documentName: $entity->document()?->originalFileName() ?? '',
-            documentId: $storedFile->id,
             documentLink: $storedFile->webViewLink,
         );
     }

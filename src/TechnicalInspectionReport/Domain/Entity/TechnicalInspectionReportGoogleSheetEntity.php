@@ -10,43 +10,39 @@ class TechnicalInspectionReportGoogleSheetEntity
 {
     public const string ReportIdColumn = 'ID DO RELATÓRIO';
 
-    public const string ExternalMessageIdColumn = 'ID DA MENSAGEM';
+    public const string ReportNameColumn = 'NOME DO RELATÓRIO';
 
     public const string MunicipalityColumn = 'MUNICÍPIO';
 
     public const string SeiProcessColumn = 'PROCESSO SEI';
 
-    public const string InspectionDateColumn = 'DATA DA VISTORIA';
+    public const string HasSeiProcessColumn = 'POSSUI PROCESSO SEI';
+
+    public const string InspectionDateColumn = 'DATA DA VIAGEM';
 
     public const string ResponsiblePersonColumn = 'RESPONSÁVEL';
 
-    public const string DocumentNameColumn = 'NOME DO DOCUMENTO';
-
-    public const string DocumentIdColumn = 'ID DO DOCUMENTO';
-
-    public const string DocumentLinkColumn = 'LINK DO DOCUMENTO';
+    public const string DocumentLinkColumn = 'LINK DO RELATÓRIO';
 
     public function __construct(
         string $reportId,
-        string $externalMessageId,
+        string $documentName,
         string $municipality,
         ?string $seiProcess,
+        bool $hasSeiProcess,
         string $inspectionDate,
         string $responsiblePerson,
-        string $documentName,
-        string $documentId,
         string $documentLink,
         ?int $rowNumber = null,
     ) {
         $this->reportId = self::required($reportId, 'O identificador do relatório é obrigatório.');
-        $this->externalMessageId = self::required($externalMessageId, 'O identificador da mensagem é obrigatório.');
+        $this->documentName = self::required($documentName, 'O nome do relatório é obrigatório.');
         $this->municipality = self::required($municipality, 'O município do relatório é obrigatório.');
         $this->seiProcess = self::optional($seiProcess);
-        $this->inspectionDate = self::required($inspectionDate, 'A data da vistoria é obrigatória.');
+        $this->hasSeiProcess = $hasSeiProcess;
+        $this->inspectionDate = self::required($inspectionDate, 'A data da viagem é obrigatória.');
         $this->responsiblePerson = self::required($responsiblePerson, 'O responsável pelo relatório é obrigatório.');
-        $this->documentName = self::required($documentName, 'O nome do documento é obrigatório.');
-        $this->documentId = self::required($documentId, 'O identificador do documento é obrigatório.');
-        $this->documentLink = self::required($documentLink, 'O link do documento é obrigatório.');
+        $this->documentLink = self::required($documentLink, 'O link do relatório é obrigatório.');
         $this->rowNumber = $rowNumber;
 
         if ($rowNumber !== null && $rowNumber < 2) {
@@ -56,19 +52,17 @@ class TechnicalInspectionReportGoogleSheetEntity
 
     public readonly string $reportId;
 
-    public readonly string $externalMessageId;
+    public readonly string $documentName;
 
     public readonly string $municipality;
 
     public readonly ?string $seiProcess;
 
+    public readonly bool $hasSeiProcess;
+
     public readonly string $inspectionDate;
 
     public readonly string $responsiblePerson;
-
-    public readonly string $documentName;
-
-    public readonly string $documentId;
 
     public readonly string $documentLink;
 
@@ -83,13 +77,12 @@ class TechnicalInspectionReportGoogleSheetEntity
     {
         return new self(
             reportId: $this->reportId,
-            externalMessageId: $this->externalMessageId,
+            documentName: $this->documentName,
             municipality: $this->municipality,
             seiProcess: $this->seiProcess,
+            hasSeiProcess: $this->hasSeiProcess,
             inspectionDate: $this->inspectionDate,
             responsiblePerson: $this->responsiblePerson,
-            documentName: $this->documentName,
-            documentId: $this->documentId,
             documentLink: $this->documentLink,
             rowNumber: $rowNumber,
         );
@@ -102,13 +95,12 @@ class TechnicalInspectionReportGoogleSheetEntity
     {
         return [
             self::ReportIdColumn => $this->reportId,
-            self::ExternalMessageIdColumn => $this->externalMessageId,
+            self::ReportNameColumn => $this->documentName,
             self::MunicipalityColumn => $this->municipality,
             self::SeiProcessColumn => $this->seiProcess ?? '',
+            self::HasSeiProcessColumn => $this->hasSeiProcess ? 'Sim' : 'Não',
             self::InspectionDateColumn => $this->inspectionDate,
             self::ResponsiblePersonColumn => $this->responsiblePerson,
-            self::DocumentNameColumn => $this->documentName,
-            self::DocumentIdColumn => $this->documentId,
             self::DocumentLinkColumn => $this->documentLink,
         ];
     }
@@ -126,15 +118,16 @@ class TechnicalInspectionReportGoogleSheetEntity
      */
     public static function fromSheetRow(array $row, int $rowNumber): self
     {
+        $seiProcess = self::nullableString($row[self::SeiProcessColumn] ?? null);
+
         return new self(
             reportId: (string) ($row[self::ReportIdColumn] ?? ''),
-            externalMessageId: (string) ($row[self::ExternalMessageIdColumn] ?? ''),
+            documentName: (string) ($row[self::ReportNameColumn] ?? ''),
             municipality: (string) ($row[self::MunicipalityColumn] ?? ''),
-            seiProcess: self::nullableString($row[self::SeiProcessColumn] ?? null),
+            seiProcess: $seiProcess,
+            hasSeiProcess: self::parseHasSeiProcess($row[self::HasSeiProcessColumn] ?? null, $seiProcess),
             inspectionDate: (string) ($row[self::InspectionDateColumn] ?? ''),
             responsiblePerson: (string) ($row[self::ResponsiblePersonColumn] ?? ''),
-            documentName: (string) ($row[self::DocumentNameColumn] ?? ''),
-            documentId: (string) ($row[self::DocumentIdColumn] ?? ''),
             documentLink: (string) ($row[self::DocumentLinkColumn] ?? ''),
             rowNumber: $rowNumber,
         );
@@ -164,6 +157,23 @@ class TechnicalInspectionReportGoogleSheetEntity
 
     private static function nullableString(mixed $value): ?string
     {
-        return is_scalar($value) ? (string) $value : null;
+        if (! is_scalar($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+
+    private static function parseHasSeiProcess(mixed $value, ?string $seiProcess): bool
+    {
+        $normalized = is_scalar($value) ? mb_strtolower(trim((string) $value)) : '';
+
+        return match ($normalized) {
+            'sim', 's', 'yes', 'true', '1' => true,
+            'não', 'nao', 'n', 'no', 'false', '0' => false,
+            default => $seiProcess !== null,
+        };
     }
 }

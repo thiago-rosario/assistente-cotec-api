@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\External;
 
+use App\Core\Infra\External\GoogleAuthenticationService;
 use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
 use App\TechnicalInspectionReport\Application\Interfaces\Storage\TechnicalInspectionReportFileStorageInterface;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
@@ -14,6 +15,10 @@ use RuntimeException;
 
 class GoogleDriveTechnicalInspectionReportFileStorage implements TechnicalInspectionReportFileStorageInterface
 {
+    public function __construct(
+        private readonly ?GoogleAuthenticationService $googleAuthentication = null,
+    ) {}
+
     public function store(
         TechnicalInspectionReportEntity $report,
         string $documentPath,
@@ -96,6 +101,8 @@ class GoogleDriveTechnicalInspectionReportFileStorage implements TechnicalInspec
 
     private function drive(): object
     {
+        ($this->googleAuthentication ?? app(GoogleAuthenticationService::class))->authenticate();
+
         $drive = Google::make('drive');
 
         if (! is_object($drive)) {

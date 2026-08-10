@@ -71,6 +71,7 @@ class WhatsappWebhookPayloadAdapter implements WhatsappWebhookPayloadAdapterInte
      *     size_bytes: int,
      *     caption: string|null,
      *     content_base64: string|null,
+     *     temporary_path: string|null,
      *     metadata: array<string, mixed>
      * }|null  $document
      */
@@ -86,6 +87,7 @@ class WhatsappWebhookPayloadAdapter implements WhatsappWebhookPayloadAdapterInte
             sizeBytes: $document['size_bytes'],
             caption: $document['caption'],
             contentBase64: $document['content_base64'],
+            temporaryPath: $document['temporary_path'],
             metadata: $document['metadata'],
         );
     }

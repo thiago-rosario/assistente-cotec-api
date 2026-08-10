@@ -54,13 +54,12 @@ function technicalInspectionReportCatalogSheet(): TechnicalInspectionReportGoogl
 {
     return new TechnicalInspectionReportGoogleSheetEntity(
         reportId: 'report-001',
-        externalMessageId: 'message-001',
+        documentName: 'relatorio-vistoria.pdf',
         municipality: 'Salvador',
         seiProcess: null,
+        hasSeiProcess: false,
         inspectionDate: '22/07/2026',
         responsiblePerson: 'João Silva',
-        documentName: 'relatorio-vistoria.pdf',
-        documentId: 'drive-file-001',
         documentLink: 'https://drive.google.com/file/d/drive-file-001/view',
     );
 }

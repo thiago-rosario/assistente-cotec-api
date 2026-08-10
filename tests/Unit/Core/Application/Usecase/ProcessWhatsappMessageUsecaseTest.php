@@ -22,6 +22,7 @@ use App\Core\Application\Usecase\ProcessWhatsappMessageUsecase;
 use App\Core\Domain\Resolver\MessageIntentResolver;
 use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\Core\Infra\Repository\EloquentRepository\CacheWhatsappConversationStateRepository;
+use App\TechnicalInspectionReport\Application\Interfaces\Service\TechnicalInspectionReportWhatsappConversationFlowServiceInterface;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Psr7\Request;
@@ -78,7 +79,7 @@ it('answers greeting messages with the main menu without resolving interpretatio
     ));
 
     expect($result['intent'])->toBe('main_menu')
-        ->and($result['reply'])->toContain('1 - Consultar o Painel de Obras')
+        ->and($result['reply'])->toContain('1️⃣ Consultar o Painel de Obras')
         ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBe('main_menu');
 });
 
@@ -597,6 +598,7 @@ function processWhatsappMessageUsecase(
         conversationStates: $conversationStates,
         responseFormatter: $responseFormatter,
         messages: new WhatsappMainMenuMessageBuilder,
+        technicalInspectionReportFlow: Mockery::mock(TechnicalInspectionReportWhatsappConversationFlowServiceInterface::class),
     );
     $buildPanelFlow = new WhatsappBuildPanelFlowService(
         mainMenu: $mainMenu,

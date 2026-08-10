@@ -158,13 +158,13 @@ it('returns the COTEC welcome message for greetings', function () {
     $result = whatsappMessageResponseFormatter()->greeting();
 
     expect($result)->toBe([
-        'reply' => "Olá! Eu sou o assistente da COTEC.\n\n"
-            ."Posso te ajudar a consultar informações do *Painel de Obras da CEIRF/SSP*.\n\n"
-            ."Para iniciar a consulta, envie uma das opções abaixo:\n\n"
+        'reply' => "Você está no módulo *Painel de Obras da CEIRF/SSP*.\n\n"
+            ."Para realizar uma consulta, envie uma das opções abaixo:\n\n"
             ."• Nome do município\n"
-            ."• Número do processo\n\n"
-            ."O processo pode ser referente à solicitação do pleito, à licitação ou ao contrato.\n\n"
-            .'Para um melhor atendimento, envie apenas uma dessas informações por vez.',
+            ."• Número do processo SEI\n\n"
+            ."O processo pode ser referente ao pleito, à licitação ou ao contrato.\n\n"
+            ."Envie apenas uma informação por vez para facilitar a identificação da consulta.\n\n"
+            .'Digite *0* para retornar ao menu principal.',
         'intent' => 'greeting',
         'total' => 0,
         'data' => [],
