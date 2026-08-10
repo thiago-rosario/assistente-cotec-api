@@ -1,9 +1,23 @@
 <?php
 
+use App\Core\Domain\Entity\MessageDocumentEntity;
 use App\Core\Domain\Entity\MessageEntity;
 
 it('identifies messages without text content', function () {
     expect((new MessageEntity('   '))->hasTextContent())->toBeFalse();
+});
+
+it('accepts a document without text content', function () {
+    $document = new MessageDocumentEntity(
+        originalFileName: 'relatorio-vistoria.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1024,
+    );
+
+    $message = new MessageEntity(content: null, document: $document);
+
+    expect($message->hasTextContent())->toBeFalse()
+        ->and($message->hasSupportedContent())->toBeTrue();
 });
 
 it('normalizes phone numbers for conversation state lookup', function () {

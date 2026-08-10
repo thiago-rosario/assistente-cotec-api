@@ -19,7 +19,7 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $timeout = 60;
+    public int $timeout = 120;
 
     /**
      * @param  array<string, mixed>  $payload

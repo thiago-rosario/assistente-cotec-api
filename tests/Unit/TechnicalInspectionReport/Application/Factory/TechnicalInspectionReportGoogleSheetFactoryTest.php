@@ -37,14 +37,13 @@ it('extracts the report data and the Drive link into a sheet entity', function (
 
     expect($sheet->toSheetRow())->toBe([
         'ID DO RELATÓRIO' => 'report-001',
-        'ID DA MENSAGEM' => 'message-001',
+        'NOME DO RELATÓRIO' => 'relatorio-original.pdf',
         'MUNICÍPIO' => 'Salvador',
         'PROCESSO SEI' => '012.3456.2026.0001234-00',
-        'DATA DA VISTORIA' => '22/07/2026',
+        'POSSUI PROCESSO SEI' => 'Sim',
+        'DATA DA VIAGEM' => '22/07/2026',
         'RESPONSÁVEL' => 'João Silva',
-        'NOME DO DOCUMENTO' => 'relatorio-original.pdf',
-        'ID DO DOCUMENTO' => 'drive-file-001',
-        'LINK DO DOCUMENTO' => 'https://drive.google.com/file/d/drive-file-001/view',
+        'LINK DO RELATÓRIO' => 'https://drive.google.com/file/d/drive-file-001/view',
     ]);
 });
 
@@ -75,5 +74,7 @@ it('leaves the SEI cell empty when the report declares there is no process', fun
     );
 
     expect($sheet->seiProcess)->toBeNull()
-        ->and($sheet->toSheetRow()['PROCESSO SEI'])->toBe('');
+        ->and($sheet->hasSeiProcess)->toBeFalse()
+        ->and($sheet->toSheetRow()['PROCESSO SEI'])->toBe('')
+        ->and($sheet->toSheetRow()['POSSUI PROCESSO SEI'])->toBe('Não');
 });

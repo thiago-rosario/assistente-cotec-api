@@ -25,27 +25,26 @@ use Revolution\Google\Sheets\Facades\Sheets;
 it('reads technical inspection report rows from the configured sheet', function () {
     config([
         'technical_inspection_report.google_sheet.spreadsheet_id' => 'spreadsheet-001',
-        'technical_inspection_report.google_sheet.sheet_name' => 'RELATÓRIOS',
+        'technical_inspection_report.google_sheet.sheet_name' => 'RELATORIOS',
     ]);
 
     Sheets::shouldReceive('spreadsheet')->once()->with('spreadsheet-001')->andReturnSelf();
-    Sheets::shouldReceive('sheet')->once()->with('RELATÓRIOS')->andReturnSelf();
+    Sheets::shouldReceive('sheet')->once()->with('RELATORIOS')->andReturnSelf();
     Sheets::shouldReceive('range')->once()->with('A:ZZ')->andReturnSelf();
     Sheets::shouldReceive('get')->once()->andReturn(collect([
         ['Título da planilha'],
         [
-            'ID DO RELATORIO',
-            TechnicalInspectionReportGoogleSheetEntity::ExternalMessageIdColumn,
-            'MUNICIPIO',
+            'ID DO RELATÓRIO',
+            'Nome do relatório',
+            'Município',
             TechnicalInspectionReportGoogleSheetEntity::SeiProcessColumn,
-            TechnicalInspectionReportGoogleSheetEntity::InspectionDateColumn,
+            'Possui processo SEI',
+            'Data da viagem',
             TechnicalInspectionReportGoogleSheetEntity::ResponsiblePersonColumn,
-            TechnicalInspectionReportGoogleSheetEntity::DocumentNameColumn,
-            TechnicalInspectionReportGoogleSheetEntity::DocumentIdColumn,
-            TechnicalInspectionReportGoogleSheetEntity::DocumentLinkColumn,
+            'Link do relatório',
         ],
-        ['report-001', 'message-001', 'Andaraí', '020.4487.2021.0009714-69', '22/07/2026', 'João Silva', 'report.pdf', 'drive-001', 'https://drive.google.com/file/d/drive-001/view'],
-        ['', '', '', '', '', '', '', '', ''],
+        ['report-001', 'report.pdf', 'Andaraí', '020.4487.2021.0009714-69', 'Sim', '22/07/2026', 'João Silva', 'https://drive.google.com/file/d/drive-001/view'],
+        ['', '', '', '', '', '', '', ''],
     ]));
 
     $reports = (new FindAllTechnicalInspectionReportGoogleSheetRepository)->findAllSheet();
@@ -78,13 +77,13 @@ it('filters technical inspection reports with the same municipality and process 
 it('registers a technical inspection report using the configured sheet columns', function () {
     config([
         'technical_inspection_report.google_sheet.spreadsheet_id' => 'spreadsheet-001',
-        'technical_inspection_report.google_sheet.sheet_name' => 'RELATÓRIOS',
+        'technical_inspection_report.google_sheet.sheet_name' => 'RELATORIOS',
     ]);
 
     $sheet = technicalInspectionReportSheet();
 
     Sheets::shouldReceive('spreadsheet')->once()->with('spreadsheet-001')->andReturnSelf();
-    Sheets::shouldReceive('sheet')->once()->with('RELATÓRIOS')->andReturnSelf();
+    Sheets::shouldReceive('sheet')->once()->with('RELATORIOS')->andReturnSelf();
     Sheets::shouldReceive('append')->once()->with([$sheet->toOrderedSheetRow()]);
 
     (new RegisterTechnicalInspectionReportGoogleSheetRepository)->register(
@@ -95,14 +94,14 @@ it('registers a technical inspection report using the configured sheet columns',
 it('updates the row number attached to a technical inspection report', function () {
     config([
         'technical_inspection_report.google_sheet.spreadsheet_id' => 'spreadsheet-001',
-        'technical_inspection_report.google_sheet.sheet_name' => 'RELATÓRIOS',
+        'technical_inspection_report.google_sheet.sheet_name' => 'RELATORIOS',
     ]);
 
     $sheet = technicalInspectionReportSheet()->withRowNumber(7);
 
     Sheets::shouldReceive('spreadsheet')->once()->with('spreadsheet-001')->andReturnSelf();
-    Sheets::shouldReceive('sheet')->once()->with('RELATÓRIOS')->andReturnSelf();
-    Sheets::shouldReceive('range')->once()->with('A7:I7')->andReturnSelf();
+    Sheets::shouldReceive('sheet')->once()->with('RELATORIOS')->andReturnSelf();
+    Sheets::shouldReceive('range')->once()->with('A7:H7')->andReturnSelf();
     Sheets::shouldReceive('update')->once()->with([$sheet->toOrderedSheetRow()]);
 
     (new UpdateTechnicalInspectionReportGoogleSheetRepository(
@@ -179,13 +178,12 @@ function technicalInspectionReportSheet(
 ): TechnicalInspectionReportGoogleSheetEntity {
     return new TechnicalInspectionReportGoogleSheetEntity(
         reportId: $reportId,
-        externalMessageId: 'message-'.$reportId,
+        documentName: 'report.pdf',
         municipality: $municipality,
         seiProcess: $seiProcess,
+        hasSeiProcess: $seiProcess !== null,
         inspectionDate: '22/07/2026',
         responsiblePerson: 'João Silva',
-        documentName: 'report.pdf',
-        documentId: 'drive-'.$reportId,
         documentLink: 'https://drive.google.com/file/d/drive-'.$reportId.'/view',
     );
 }

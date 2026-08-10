@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\Trait;
 
+use App\Core\Infra\External\GoogleAuthenticationService;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportGoogleSheetEntity;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -33,6 +34,8 @@ trait HandlesTechnicalInspectionReportGoogleSheetRows
      */
     private function readRows(): Collection
     {
+        app(GoogleAuthenticationService::class)->authenticate();
+
         $rows = Sheets::spreadsheet($this->spreadsheetId())
             ->sheet($this->sheetName())
             ->range(self::ReadRange)
@@ -114,13 +117,12 @@ trait HandlesTechnicalInspectionReportGoogleSheetRows
     {
         $columns = [
             TechnicalInspectionReportGoogleSheetEntity::ReportIdColumn,
-            TechnicalInspectionReportGoogleSheetEntity::ExternalMessageIdColumn,
+            TechnicalInspectionReportGoogleSheetEntity::ReportNameColumn,
             TechnicalInspectionReportGoogleSheetEntity::MunicipalityColumn,
             TechnicalInspectionReportGoogleSheetEntity::SeiProcessColumn,
+            TechnicalInspectionReportGoogleSheetEntity::HasSeiProcessColumn,
             TechnicalInspectionReportGoogleSheetEntity::InspectionDateColumn,
             TechnicalInspectionReportGoogleSheetEntity::ResponsiblePersonColumn,
-            TechnicalInspectionReportGoogleSheetEntity::DocumentNameColumn,
-            TechnicalInspectionReportGoogleSheetEntity::DocumentIdColumn,
             TechnicalInspectionReportGoogleSheetEntity::DocumentLinkColumn,
         ];
         $normalizedColumns = [];
@@ -146,9 +148,16 @@ trait HandlesTechnicalInspectionReportGoogleSheetRows
             $row,
         );
 
-        return in_array($this->normalize(TechnicalInspectionReportGoogleSheetEntity::ReportIdColumn), $columns, true)
-            && in_array($this->normalize(TechnicalInspectionReportGoogleSheetEntity::MunicipalityColumn), $columns, true)
-            && in_array($this->normalize(TechnicalInspectionReportGoogleSheetEntity::DocumentIdColumn), $columns, true);
+        return collect([
+            TechnicalInspectionReportGoogleSheetEntity::ReportIdColumn,
+            TechnicalInspectionReportGoogleSheetEntity::ReportNameColumn,
+            TechnicalInspectionReportGoogleSheetEntity::MunicipalityColumn,
+            TechnicalInspectionReportGoogleSheetEntity::SeiProcessColumn,
+            TechnicalInspectionReportGoogleSheetEntity::HasSeiProcessColumn,
+            TechnicalInspectionReportGoogleSheetEntity::InspectionDateColumn,
+            TechnicalInspectionReportGoogleSheetEntity::ResponsiblePersonColumn,
+            TechnicalInspectionReportGoogleSheetEntity::DocumentLinkColumn,
+        ])->every(fn (string $column): bool => in_array($this->normalize($column), $columns, true));
     }
 
     /**

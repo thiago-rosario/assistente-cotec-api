@@ -19,9 +19,13 @@ return [
     | https://developers.google.com/console
     |
     */
-    'client_id' => env('GOOGLE_CLIENT_ID', ''),
-    'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
-    'redirect_uri' => env('GOOGLE_REDIRECT', ''),
+    'auth_type' => strtolower(trim((string) env('GOOGLE_DRIVE_AUTH_TYPE', 'service'))),
+    'client_id' => env('GOOGLE_OAUTH_CLIENT_ID', env('GOOGLE_CLIENT_ID', '')),
+    'client_secret' => env('GOOGLE_OAUTH_CLIENT_SECRET', env('GOOGLE_CLIENT_SECRET', '')),
+    'redirect_uri' => filter_var(
+        trim((string) env('GOOGLE_REDIRECT', '')),
+        FILTER_VALIDATE_URL,
+    ) ?: 'http://localhost',
     'scopes' => array_values(array_unique(array_filter([
         Sheets::DRIVE,
         Sheets::SPREADSHEETS,
@@ -29,6 +33,10 @@ return [
     ]))),
     'access_type' => 'offline',
     'prompt' => 'consent select_account',
+
+    'oauth' => [
+        'refresh_token' => env('GOOGLE_OAUTH_REFRESH_TOKEN', ''),
+    ],
 
     /*
     |----------------------------------------------------------------------------
@@ -54,7 +62,8 @@ return [
         /*
         | Enable service account auth or not.
         */
-        'enable' => env('GOOGLE_SERVICE_ENABLED', false),
+        'enable' => strtolower(trim((string) env('GOOGLE_DRIVE_AUTH_TYPE', 'service'))) !== 'oauth'
+            && filter_var(env('GOOGLE_SERVICE_ENABLED', false), FILTER_VALIDATE_BOOL),
 
         /*
          * Path to service account json file. You can also pass the credentials as an array

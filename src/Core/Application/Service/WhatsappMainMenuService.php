@@ -11,6 +11,7 @@ use App\Core\Domain\Entity\MessageEntity;
 use App\Core\Domain\Repository\WhatsappConversationStateRepositoryInterface;
 use App\Core\Enum\WhatsappConversationState;
 use App\Core\Enum\WhatsappMenuOption;
+use App\TechnicalInspectionReport\Application\Interfaces\Service\TechnicalInspectionReportWhatsappConversationFlowServiceInterface;
 
 class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
 {
@@ -18,6 +19,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
         private readonly WhatsappConversationStateRepositoryInterface $conversationStates,
         private readonly WhatsappMessageResponseFormatterInterface $responseFormatter,
         private readonly WhatsappMainMenuMessageBuilderInterface $messages,
+        private readonly TechnicalInspectionReportWhatsappConversationFlowServiceInterface $technicalInspectionReportFlow,
     ) {}
 
     /**
@@ -37,7 +39,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
     {
         return match ($menuOption) {
             WhatsappMenuOption::BuildPanel => $this->startBuildPanel($message),
-            WhatsappMenuOption::TechnicalInspectionReport => $this->temporaryTechnicalInspectionReport($message),
+            WhatsappMenuOption::TechnicalInspectionReport => $this->startTechnicalInspectionReport($message),
             WhatsappMenuOption::AssistantInfo => $this->assistantInfo($message),
             WhatsappMenuOption::End => $this->endConversation($message),
             WhatsappMenuOption::Invalid => $this->invalidMenuOption($message),
@@ -67,11 +69,9 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
-    private function temporaryTechnicalInspectionReport(MessageEntity $message): array
+    private function startTechnicalInspectionReport(MessageEntity $message): array
     {
-        $this->conversationStates->put($message, WhatsappConversationState::MainMenu);
-
-        return $this->messages->technicalInspectionReportUnavailable();
+        return $this->technicalInspectionReportFlow->start($message);
     }
 
     /**

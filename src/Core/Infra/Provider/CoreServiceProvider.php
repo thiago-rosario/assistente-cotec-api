@@ -47,12 +47,14 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
+use App\Core\Infra\External\GoogleAuthenticationService;
 use App\Core\Infra\External\LogWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\Core\Infra\Repository\EloquentRepository\CacheWhatsappConversationStateRepository;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\TechnicalInspectionReport\Application\Handler\TechnicalInspectionReportWhatsappConversationFlowHandler;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
@@ -60,6 +62,7 @@ class CoreServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(GoogleAuthenticationService::class);
         $this->app->bind(ReadGoogleSpreadsheetAdapterInterface::class, ReadGoogleSpreadsheetAdapter::class);
         $this->app->bind(ReadGoogleSpreadsheetUsecaseInterface::class, ReadGoogleSpreadsheetUsecase::class);
         $this->app->bind(SearchGoogleSheetAdapterInterface::class, SearchGoogleSheetAdapter::class);
@@ -92,6 +95,7 @@ class CoreServiceProvider extends ServiceProvider
             fn (Application $app): WhatsappConversationFlowService => new WhatsappConversationFlowService([
                 $app->make(UnsupportedWhatsappMessageContentHandler::class),
                 $app->make(BuildPanelStateWhatsappConversationFlowHandler::class),
+                $app->make(TechnicalInspectionReportWhatsappConversationFlowHandler::class),
                 $app->make(MainMenuOptionWhatsappConversationFlowHandler::class),
                 $app->make(MainMenuRequestWhatsappConversationFlowHandler::class),
                 $app->make(BuildPanelFallbackWhatsappConversationFlowHandler::class),

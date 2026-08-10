@@ -41,7 +41,7 @@ services:
     command: >-
       /bin/sh -lc 'until php artisan migrate:status --no-interaction 2>/dev/null | grep -Eq
       "0001_01_01_000002_create_jobs_table.*Ran"; do sleep 2; done; exec php artisan
-      queue:work --verbose --tries=3 --timeout=90 --sleep=3 --no-interaction'
+      queue:work --verbose --tries=3 --timeout=150 --sleep=3 --no-interaction'
     env_file:
       - .env
     environment:

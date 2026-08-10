@@ -26,6 +26,7 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
      *         size_bytes: int,
      *         caption: string|null,
      *         content_base64: string|null,
+     *         temporary_path: string|null,
      *         metadata: array<string, mixed>
      *     }|null,
      *     caption: string|null,
@@ -204,6 +205,7 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
      *     size_bytes: int,
      *     caption: string|null,
      *     content_base64: string|null,
+     *     temporary_path: string|null,
      *     metadata: array<string, mixed>
      * }|null
      */
@@ -229,6 +231,7 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                         'filename',
                         'file_name',
                         'original_filename',
+                        'original_file_name',
                         'originalFileName',
                         'name',
                     ]) ?? '',
@@ -249,6 +252,12 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                         'content',
                         'content_base64',
                         'contentBase64',
+                    ]),
+                    'temporary_path' => $this->firstStringFromArray($candidate, [
+                        'temporary_path',
+                        'temporaryPath',
+                        'file_path',
+                        'filePath',
                     ]),
                     'metadata' => $this->metadataWithoutDocumentContent($candidate, true),
                 ];
@@ -297,6 +306,7 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'filename',
                 'file_name',
                 'original_filename',
+                'original_file_name',
                 'mimetype',
                 'mime_type',
                 'mimeType',
@@ -304,6 +314,10 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'base64',
                 'content_base64',
                 'contentBase64',
+                'temporary_path',
+                'temporaryPath',
+                'file_path',
+                'filePath',
             ]) !== null;
     }
 
