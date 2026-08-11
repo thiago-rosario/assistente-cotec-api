@@ -44,11 +44,15 @@ class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServi
             $interpretation->filters,
         );
 
-        return $this->responseFormatter->format(
+        $response = $this->responseFormatter->format(
             $interpretation->intent,
             $interpretation->filters,
             $result,
         );
+
+        $this->clearConversation($message);
+
+        return $response;
     }
 
     /**
@@ -61,5 +65,11 @@ class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServi
         }
 
         return $this->responseFormatter->globalUnknownIntent();
+    }
+
+    private function clearConversation(MessageEntity $message): void
+    {
+        $this->conversationStates->forgetMunicipality($message);
+        $this->conversationStates->forget($message);
     }
 }
