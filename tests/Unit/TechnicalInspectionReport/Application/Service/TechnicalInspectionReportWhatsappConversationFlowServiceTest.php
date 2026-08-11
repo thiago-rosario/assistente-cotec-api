@@ -8,6 +8,7 @@ use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
 use App\TechnicalInspectionReport\Application\DTO\StoreTechnicalInspectionReportOutputDTO;
 use App\TechnicalInspectionReport\Application\Factory\TechnicalInspectionReportDraftFactory;
+use App\TechnicalInspectionReport\Application\Interfaces\Builder\TechnicalInspectionReportDraftBuilderInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Usecase\FindTechnicalInspectionReportUsecaseInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Usecase\StoreTechnicalInspectionReportUsecaseInterface;
 use App\TechnicalInspectionReport\Application\Service\TechnicalInspectionReportWhatsappConversationFlowService;
@@ -271,6 +272,7 @@ function technicalInspectionReportWhatsappFlow(
         findReports: $findReports,
         storeReport: $storeReport,
         draftFactory: new TechnicalInspectionReportDraftFactory,
+        draftBuilder: app(TechnicalInspectionReportDraftBuilderInterface::class),
         messages: new TechnicalInspectionReportWhatsappMessageBuilder,
         mainMenu: new WhatsappMainMenuMessageBuilder,
     );

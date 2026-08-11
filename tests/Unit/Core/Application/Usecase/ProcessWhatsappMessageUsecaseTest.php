@@ -6,6 +6,7 @@ use App\BuildPanel\Application\Interfaces\Service\AcceptedWhatsappMessageInterpr
 use App\BuildPanel\Application\Interfaces\Service\ResolveWhatsappMessageInterpretationServiceInterface;
 use App\BuildPanel\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\BuildPanel\Application\Service\BuildPanelWhatsappMessageService;
+use App\BuildPanel\Application\Service\MunicipalityExtractorService;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\Factory\MessageFactory;
 use App\Core\Application\Handler\BuildPanelFallbackWhatsappConversationFlowHandler;
@@ -79,7 +80,7 @@ it('answers greeting messages with the main menu without resolving interpretatio
     ));
 
     expect($result['intent'])->toBe('main_menu')
-        ->and($result['reply'])->toContain('1️⃣ Consultar o Painel de Obras')
+        ->and($result['reply'])->toContain('1️⃣  Consultar o Painel de Obras')
         ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBe('main_menu');
 });
 
@@ -463,13 +464,13 @@ it('returns data source unavailable response and reports when google sheets reje
     $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
     $greetingMatcher->shouldReceive('matches')
         ->once()
-        ->with('ANDARAÍ')
+        ->with('Quero consultar ANDARAÍ')
         ->andReturnFalse();
 
     $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
     $resolveInterpretation->shouldReceive('__invoke')
         ->once()
-        ->with('ANDARAÍ')
+        ->with('Quero consultar ANDARAÍ')
         ->andReturn(new WhatsappMessageInterpretationDTO(
             intent: 'search_technical_notebook',
             filters: ['municipality' => 'ANDARAÍ'],
@@ -507,7 +508,7 @@ it('returns data source unavailable response and reports when google sheets reje
             intent: 'search_technical_notebook',
             filters: ['municipality' => 'ANDARAÍ'],
         ),
-    ))(new ReceivedMessageInputDTO(message: 'ANDARAÍ'));
+    ))(new ReceivedMessageInputDTO(message: 'Quero consultar ANDARAÍ'));
 
     expect($result['intent'])->toBe('data_source_unavailable');
 });
@@ -597,6 +598,7 @@ function processWhatsappMessageUsecase(
     $mainMenu = new WhatsappMainMenuService(
         conversationStates: $conversationStates,
         responseFormatter: $responseFormatter,
+        buildPanelMessages: $buildPanelMessages,
         messages: new WhatsappMainMenuMessageBuilder,
         technicalInspectionReportFlow: Mockery::mock(TechnicalInspectionReportWhatsappConversationFlowServiceInterface::class),
     );
@@ -614,7 +616,12 @@ function processWhatsappMessageUsecase(
                     new UnsupportedWhatsappMessageContentHandler($responseFormatter),
                     new BuildPanelStateWhatsappConversationFlowHandler($conversationStates, $buildPanelFlow),
                     new MainMenuOptionWhatsappConversationFlowHandler($intentResolver, $mainMenu),
-                    new MainMenuRequestWhatsappConversationFlowHandler($intentResolver, $greetingMatcher, $mainMenu),
+                    new MainMenuRequestWhatsappConversationFlowHandler(
+                        $intentResolver,
+                        $greetingMatcher,
+                        new MunicipalityExtractorService,
+                        $mainMenu,
+                    ),
                     new BuildPanelFallbackWhatsappConversationFlowHandler($buildPanelMessages),
                 ],
             ),
