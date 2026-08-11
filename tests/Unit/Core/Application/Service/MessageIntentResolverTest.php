@@ -20,5 +20,6 @@ it('does not treat arbitrary text as a menu option', function () {
 
 it('identifies main menu requests after normalization', function () {
     expect((new MessageIntentResolver)->isMainMenuRequest(new MessageEntity(' Opções! ')))->toBeTrue()
+        ->and((new MessageIntentResolver)->isMainMenuRequest(new MessageEntity('cancelar')))->toBeTrue()
         ->and((new MessageIntentResolver)->isMainMenuRequest(new MessageEntity('consultar obras')))->toBeFalse();
 });

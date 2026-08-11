@@ -82,6 +82,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
         }
 
         if ($this->isCancellation($message)) {
+            if ($message->normalizedContent() === '0') {
+                return $this->endConversation($message);
+            }
+
             return $this->cancel($message);
         }
 
@@ -121,7 +125,8 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
         return match ($message->normalizedContent()) {
             '1' => $this->startRegistration($message),
             '2' => $this->startConsultation($message),
-            '0', 'menu', 'voltar' => $this->returnToMainMenu($message),
+            '0' => $this->endConversation($message),
+            'menu', 'voltar' => $this->returnToMainMenu($message),
             default => $this->messages->invalidMenuOption(),
         };
     }
@@ -343,6 +348,14 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportMenu);
 
         return $this->messages->cancelled();
+    }
+
+    private function endConversation(MessageEntity $message): array
+    {
+        $this->clearDraft($message);
+        $this->conversationStates->forget($message);
+
+        return $this->mainMenu->conversationEnded();
     }
 
     private function returnToMainMenu(MessageEntity $message): array

@@ -11,6 +11,7 @@ class GreetingMessageMatcherService implements GreetingMessageMatcherServiceInte
 {
     private const array Greetings = [
         'oi',
+        'ol',
         'oie',
         'ola',
         'alo',

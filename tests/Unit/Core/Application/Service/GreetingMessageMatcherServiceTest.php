@@ -6,6 +6,7 @@ it('matches possible greeting messages', function (string $message) {
     expect((new GreetingMessageMatcherService)->matches($message))->toBeTrue();
 })->with([
     'oi' => 'oi',
+    'ol' => 'ol',
     'oi duplicated with whatsapp timestamps' => "Oi\nOi\n16:52\n16:52\n16:52",
     'oi prolongado' => 'Oiii',
     'ola com acento e pontuacao' => 'Olá!',

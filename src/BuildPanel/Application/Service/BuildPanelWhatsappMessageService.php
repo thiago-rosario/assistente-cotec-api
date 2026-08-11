@@ -11,6 +11,8 @@ use App\BuildPanel\Application\Interfaces\Service\ResolveWhatsappMessageInterpre
 use App\BuildPanel\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\BuildPanel\Enum\WhatsappMessageIntentEnum;
 use App\Core\Domain\Entity\MessageEntity;
+use App\Core\Domain\Repository\WhatsappConversationStateRepositoryInterface;
+use App\Core\Enum\WhatsappConversationState;
 
 class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServiceInterface
 {
@@ -19,6 +21,7 @@ class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServi
         private readonly WhatsappMessageSearchAdapterInterface $searchAdapter,
         private readonly WhatsappMessageResponseFormatterInterface $responseFormatter,
         private readonly AcceptedWhatsappMessageInterpretationServiceInterface $acceptedInterpretation,
+        private readonly WhatsappConversationStateRepositoryInterface $conversationStates,
     ) {}
 
     /**
@@ -29,11 +32,11 @@ class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServi
         $interpretation = ($this->resolveInterpretation)($message->content());
 
         if ($interpretation->intent === WhatsappMessageIntentEnum::UNKNOWN->value) {
-            return $this->responseFormatter->unknownIntent();
+            return $this->unknownResponse($message);
         }
 
         if (! $this->acceptedInterpretation->accepts($interpretation->intent, $interpretation->filters)) {
-            return $this->responseFormatter->unknownIntent();
+            return $this->unknownResponse($message);
         }
 
         $result = $this->searchAdapter->search(
@@ -46,5 +49,17 @@ class BuildPanelWhatsappMessageService implements BuildPanelWhatsappMessageServi
             $interpretation->filters,
             $result,
         );
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
+    private function unknownResponse(MessageEntity $message): array
+    {
+        if ($this->conversationStates->get($message) === WhatsappConversationState::BuildPanel) {
+            return $this->responseFormatter->unknownIntent();
+        }
+
+        return $this->responseFormatter->globalUnknownIntent();
     }
 }

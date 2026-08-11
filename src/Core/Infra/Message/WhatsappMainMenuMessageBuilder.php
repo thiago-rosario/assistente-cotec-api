@@ -8,16 +8,33 @@ use App\Core\Application\Interfaces\Message\WhatsappMainMenuMessageBuilderInterf
 
 class WhatsappMainMenuMessageBuilder implements WhatsappMainMenuMessageBuilderInterface
 {
-    private const string MainMenuMessage = "👋 Olá! Eu sou o Assistente da COTEC.\n\n"
-        ."Como posso ajudar?\n\n"
+    private const string MainMenuMessage = "👋 Olá! Sou o Assistente da COTEC.\n\n"
+        ."Posso ajudar você a:\n\n"
         ."1️⃣  Consultar o Painel de Obras\n"
-        ."2️⃣  Relatórios de Vistoria Técnica\n"
-        ."3️⃣  Informações sobre o assistente\n"
-        .'0️⃣  Encerrar atendimento';
+        ."2️⃣  Consultar ou cadastrar Relatórios de Vistoria Técnica\n"
+        ."3️⃣  Ajuda\n"
+        ."0️⃣  Encerrar atendimento\n\n"
+        .'Você também pode enviar diretamente o nome de um município ou número de processo SEI para realizar uma consulta.';
 
     private const string TechnicalInspectionReportSoonMessage = '📋 A consulta ao Relatório de Vistoria Técnica estará disponível em breve.';
 
-    private const string AssistantInfoMessage = 'ℹ️ Sou o Assistente da COTEC. Posso consultar o Painel de Obras, cadastrar relatórios de vistoria técnica e localizar relatórios por município.';
+    private const string AssistantInfoMessage = 'ℹ️ Sou o *Assistente da COTEC* e posso ajudar você a consultar informações de forma rápida pelo WhatsApp.
+
+        🏗️ *Painel de Obras*
+        Você pode realizar buscas informando:
+        • Nome do município;
+        • Número do processo SEI;
+        • Processo de licitação;
+        • Processo de contrato.
+
+        📄 *Relatórios de Vistoria Técnica*
+        Você pode:
+        • Cadastrar um novo relatório de vistoria;
+        • Consultar relatórios já cadastrados;
+        • Localizar relatórios pelo município ou processo SEI.
+
+        Para começar, basta selecionar uma opção no menu ou enviar a informação que deseja consultar.
+        .';
 
     private const string EndMessage = '👋 Atendimento encerrado. Quando precisar, envie uma nova mensagem para ver o menu.';
 
