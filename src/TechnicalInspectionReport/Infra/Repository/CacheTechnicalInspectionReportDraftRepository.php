@@ -6,6 +6,7 @@ namespace App\TechnicalInspectionReport\Infra\Repository;
 
 use App\Core\Domain\Entity\MessageEntity;
 use App\TechnicalInspectionReport\Application\DTO\TechnicalInspectionReportDraftDTO;
+use App\TechnicalInspectionReport\Application\Interfaces\Mapper\TechnicalInspectionReportDraftMapperInterface;
 use App\TechnicalInspectionReport\Domain\Repository\TechnicalInspectionReportDraftRepositoryInterface;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 
@@ -13,6 +14,7 @@ final class CacheTechnicalInspectionReportDraftRepository implements TechnicalIn
 {
     public function __construct(
         private readonly CacheRepository $cache,
+        private readonly TechnicalInspectionReportDraftMapperInterface $mapper,
     ) {}
 
     public function get(MessageEntity $message): ?TechnicalInspectionReportDraftDTO
@@ -25,7 +27,7 @@ final class CacheTechnicalInspectionReportDraftRepository implements TechnicalIn
 
         $draft = $this->cache->get($key);
 
-        return is_array($draft) ? TechnicalInspectionReportDraftDTO::fromArray($draft) : null;
+        return is_array($draft) ? $this->mapper->fromArray($draft) : null;
     }
 
     public function put(MessageEntity $message, TechnicalInspectionReportDraftDTO $draft): void
@@ -33,7 +35,7 @@ final class CacheTechnicalInspectionReportDraftRepository implements TechnicalIn
         $key = $this->keyFor($message);
 
         if ($key !== null) {
-            $this->cache->put($key, $draft->toArray(), $this->ttl());
+            $this->cache->put($key, $this->mapper->toArray($draft), $this->ttl());
         }
     }
 

@@ -12,6 +12,7 @@ use App\TechnicalInspectionReport\Application\DTO\SearchTechnicalInspectionRepor
 use App\TechnicalInspectionReport\Application\DTO\StoreTechnicalInspectionReportInputDTO;
 use App\TechnicalInspectionReport\Application\DTO\TechnicalInspectionReportDraftDTO;
 use App\TechnicalInspectionReport\Application\Factory\TechnicalInspectionReportDraftFactory;
+use App\TechnicalInspectionReport\Application\Interfaces\Builder\TechnicalInspectionReportDraftBuilderInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Service\TechnicalInspectionReportWhatsappConversationFlowServiceInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Storage\TechnicalInspectionReportDocumentTemporaryStorageInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Usecase\FindTechnicalInspectionReportUsecaseInterface;
@@ -38,6 +39,7 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
         private readonly FindTechnicalInspectionReportUsecaseInterface $findReports,
         private readonly StoreTechnicalInspectionReportUsecaseInterface $storeReport,
         private readonly TechnicalInspectionReportDraftFactory $draftFactory,
+        private readonly TechnicalInspectionReportDraftBuilderInterface $draftBuilder,
         private readonly TechnicalInspectionReportWhatsappMessageBuilder $messages,
         private readonly WhatsappMainMenuMessageBuilderInterface $mainMenu,
     ) {}
@@ -48,6 +50,23 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportMenu);
 
         return $this->messages->menu();
+    }
+
+    public function searchByMunicipality(MessageEntity $message, string $municipality): array
+    {
+        try {
+            $municipalityValue = new MunicipalityValueObject($municipality);
+        } catch (InvalidMunicipalityException) {
+            return $this->messages->invalidSearchMunicipality();
+        }
+
+        $reports = ($this->findReports)(new SearchTechnicalInspectionReportCatalogInputDTO(
+            municipality: $municipalityValue->value(),
+        ));
+
+        $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportMenu);
+
+        return $this->messages->consultationResults($municipalityValue->value(), $reports);
     }
 
     public function respondTo(MessageEntity $message): array
@@ -139,7 +158,9 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
             return $this->messages->invalidMunicipality();
         }
 
-        $draft = $draft->withMunicipality($municipality->value());
+        $draft = $this->draftBuilder->from($draft)
+            ->withMunicipality($municipality->value())
+            ->build();
         $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingSeiDecision);
 
@@ -157,7 +178,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
 
     private function askSeiProcess(MessageEntity $message, TechnicalInspectionReportDraftDTO $draft): array
     {
-        $this->drafts->put($message, $draft->awaitingSeiProcess());
+        $draft = $this->draftBuilder->from($draft)
+            ->awaitingSeiProcess()
+            ->build();
+        $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingSeiProcess);
 
         return $this->messages->seiProcess();
@@ -165,7 +189,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
 
     private function skipSeiProcess(MessageEntity $message, TechnicalInspectionReportDraftDTO $draft): array
     {
-        $this->drafts->put($message, $draft->withoutSeiProcess());
+        $draft = $this->draftBuilder->from($draft)
+            ->withoutSeiProcess()
+            ->build();
+        $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingInspectionDate);
 
         return $this->messages->inspectionDate();
@@ -179,7 +206,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
             return $this->messages->invalidSeiProcess();
         }
 
-        $this->drafts->put($message, $draft->withSeiProcess($seiProcess->value()));
+        $draft = $this->draftBuilder->from($draft)
+            ->withSeiProcess($seiProcess->value())
+            ->build();
+        $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingInspectionDate);
 
         return $this->messages->inspectionDate();
@@ -187,19 +217,7 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
 
     private function searchMunicipality(MessageEntity $message): array
     {
-        try {
-            $municipality = new MunicipalityValueObject($message->content());
-        } catch (InvalidMunicipalityException) {
-            return $this->messages->invalidSearchMunicipality();
-        }
-
-        $reports = ($this->findReports)(new SearchTechnicalInspectionReportCatalogInputDTO(
-            municipality: $municipality->value(),
-        ));
-
-        $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportMenu);
-
-        return $this->messages->consultationResults($municipality->value(), $reports);
+        return $this->searchByMunicipality($message, $message->content());
     }
 
     private function inspectionDate(MessageEntity $message, TechnicalInspectionReportDraftDTO $draft): array
@@ -210,7 +228,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
             return $this->messages->invalidInspectionDate();
         }
 
-        $this->drafts->put($message, $draft->withInspectionDate($inspectionDate->formatted()));
+        $draft = $this->draftBuilder->from($draft)
+            ->withInspectionDate($inspectionDate->formatted())
+            ->build();
+        $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingResponsible);
 
         return $this->messages->responsiblePerson();
@@ -224,7 +245,10 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
             return $this->messages->invalidResponsiblePerson();
         }
 
-        $this->drafts->put($message, $draft->withResponsiblePerson($responsiblePerson->value()));
+        $draft = $this->draftBuilder->from($draft)
+            ->withResponsiblePerson($responsiblePerson->value())
+            ->build();
+        $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingDocument);
 
         return $this->messages->document();
@@ -248,12 +272,14 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
             return $this->messages->storageFailure($draft->reportId);
         }
 
-        $draft = $draft->withDocument(
-            documentPath: $temporaryFile->path,
-            documentName: $document->originalFileName(),
-            documentMimeType: 'application/pdf',
-            documentSizeBytes: $temporaryFile->sizeBytes,
-        );
+        $draft = $this->draftBuilder->from($draft)
+            ->withDocument(
+                documentPath: $temporaryFile->path,
+                documentName: $document->originalFileName(),
+                documentMimeType: 'application/pdf',
+                documentSizeBytes: $temporaryFile->sizeBytes,
+            )
+            ->build();
         $this->drafts->put($message, $draft);
         $this->conversationStates->put($message, WhatsappConversationState::TechnicalInspectionReportAwaitingConfirmation);
 
@@ -280,7 +306,7 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
 
     private function store(MessageEntity $message, TechnicalInspectionReportDraftDTO $draft): array
     {
-        if (! $draft->isComplete() || $draft->documentPath === null) {
+        if ($draft->documentPath === null) {
             return $this->messages->expired();
         }
 
@@ -288,6 +314,11 @@ final class TechnicalInspectionReportWhatsappConversationFlowService implements 
 
         try {
             $report = $this->draftFactory->toEntity($draft);
+
+            if (! $report->isComplete()) {
+                return $this->messages->expired();
+            }
+
             $report->markReadyForStorage()->beginStorage();
             $output = ($this->storeReport)(new StoreTechnicalInspectionReportInputDTO(
                 report: $report,
