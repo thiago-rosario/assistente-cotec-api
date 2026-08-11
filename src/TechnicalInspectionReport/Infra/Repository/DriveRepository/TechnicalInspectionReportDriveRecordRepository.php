@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\Repository\DriveRepository;
 
-use App\Core\Infra\External\GoogleAuthenticationService;
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
 use App\TechnicalInspectionReport\Domain\ValueObject\ExternalMessageIdValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\InspectionDateValueObject;
@@ -19,7 +19,6 @@ use Google\Service\Drive\DriveFile;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use JsonException;
-use Revolution\Google\Client\Facades\Google;
 use RuntimeException;
 
 final class TechnicalInspectionReportDriveRecordRepository
@@ -35,6 +34,10 @@ final class TechnicalInspectionReportDriveRecordRepository
     private const string MetadataMimeType = 'application/json';
 
     private ?object $drive = null;
+
+    public function __construct(
+        private readonly ?GoogleDriveAuthenticationService $googleAuthentication = null,
+    ) {}
 
     public function save(TechnicalInspectionReportEntity $report): void
     {
@@ -215,15 +218,7 @@ final class TechnicalInspectionReportDriveRecordRepository
 
     private function createDrive(): object
     {
-        app(GoogleAuthenticationService::class)->authenticate();
-
-        $drive = Google::make('drive');
-
-        if (! is_object($drive)) {
-            throw new RuntimeException('Não foi possível criar o serviço do Google Drive.');
-        }
-
-        return $drive;
+        return ($this->googleAuthentication ?? app(GoogleDriveAuthenticationService::class))->drive();
     }
 
     /**

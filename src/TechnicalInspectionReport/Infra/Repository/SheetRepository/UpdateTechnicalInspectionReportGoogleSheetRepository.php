@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\Repository\SheetRepository;
 
-use App\Core\Infra\External\GoogleAuthenticationService;
 use App\TechnicalInspectionReport\Application\DTO\RegisterTechnicalInspectionReportCatalogInputDTO;
 use App\TechnicalInspectionReport\Infra\Trait\HandlesTechnicalInspectionReportGoogleSheetRows;
 use Revolution\Google\Sheets\Facades\Sheets;
@@ -16,13 +15,10 @@ class UpdateTechnicalInspectionReportGoogleSheetRepository
 
     public function __construct(
         private readonly FindAllTechnicalInspectionReportGoogleSheetRepository $findAllRepository,
-        private readonly ?GoogleAuthenticationService $googleAuthentication = null,
     ) {}
 
     public function update(RegisterTechnicalInspectionReportCatalogInputDTO $input): void
     {
-        ($this->googleAuthentication ?? app(GoogleAuthenticationService::class))->authenticate();
-
         $rowNumber = $input->sheet->rowNumber() ?? $this->findRowNumber($input->sheet->reportId);
 
         if ($rowNumber === null) {

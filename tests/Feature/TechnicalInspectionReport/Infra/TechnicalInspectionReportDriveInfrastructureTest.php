@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
 use App\TechnicalInspectionReport\Domain\ValueObject\ExternalMessageIdValueObject;
 use App\TechnicalInspectionReport\Domain\ValueObject\MunicipalityValueObject;
@@ -14,7 +15,7 @@ use App\TechnicalInspectionReport\Infra\Repository\DriveRepository\TechnicalInsp
 use App\TechnicalInspectionReport\Infra\Repository\Gateway\TechnicalInspectionReportGoogleDriveGatewayRepository;
 use Google\Service\Drive\DriveFile;
 use Google\Service\Drive\FileList;
-use Revolution\Google\Client\Facades\Google;
+use Revolution\Google\Client\GoogleApiClient;
 
 it('persists and hydrates a technical inspection report as a Drive metadata record', function () {
     config(['technical_inspection_report.google_drive.folder_id' => 'folder-001']);
@@ -41,10 +42,10 @@ it('persists and hydrates a technical inspection report as a Drive metadata reco
     $drive = new stdClass;
     $drive->files = $files;
 
-    Google::shouldReceive('make')->once()->with('drive')->andReturn($drive);
+    $googleDriveAuthentication = technicalInspectionReportDriveAuthenticationForDriveInfrastructureTest($drive);
 
     (new SaveTechnicalInspectionReportDriveRepository(
-        new TechnicalInspectionReportDriveRecordRepository,
+        new TechnicalInspectionReportDriveRecordRepository($googleDriveAuthentication),
     ))->save($report);
 
     $hydrateFiles = Mockery::mock();
@@ -70,10 +71,10 @@ it('persists and hydrates a technical inspection report as a Drive metadata reco
     $hydrateDrive = new stdClass;
     $hydrateDrive->files = $hydrateFiles;
 
-    Google::shouldReceive('make')->once()->with('drive')->andReturn($hydrateDrive);
+    $hydrateGoogleDriveAuthentication = technicalInspectionReportDriveAuthenticationForDriveInfrastructureTest($hydrateDrive);
 
     $hydrated = (new FindAllTechnicalInspectionReportDriveRepository(
-        new TechnicalInspectionReportDriveRecordRepository,
+        new TechnicalInspectionReportDriveRecordRepository($hydrateGoogleDriveAuthentication),
     ))->findAll();
 
     expect($hydrated)->toHaveCount(1)
@@ -215,4 +216,12 @@ function technicalInspectionReportDriveEntity(
         id: new TechnicalInspectionReportIdValueObject($reportId),
         externalMessageId: new ExternalMessageIdValueObject('message-'.$reportId),
     )->provideMunicipality(new MunicipalityValueObject($municipality));
+}
+
+function technicalInspectionReportDriveAuthenticationForDriveInfrastructureTest(object $drive): GoogleDriveAuthenticationService
+{
+    $client = Mockery::mock(GoogleApiClient::class);
+    $client->shouldReceive('make')->once()->with('drive')->andReturn($drive);
+
+    return new GoogleDriveAuthenticationService($client);
 }

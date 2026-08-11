@@ -7,7 +7,6 @@ namespace App\Core\Infra\Repository\SheetRepository;
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Domain\Entity\GoogleSheetEntity;
 use App\Core\Exception\GoogleSheetReadException;
-use App\Core\Infra\External\GoogleAuthenticationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Revolution\Google\Sheets\Facades\Sheets;
@@ -27,8 +26,6 @@ class SearchGoogleSheetRepository
     public function searchSheet(GoogleSheetEntity $sheet, string $search): array
     {
         try {
-            app(GoogleAuthenticationService::class)->authenticate();
-
             $rows = Sheets::spreadsheet($sheet->spreadsheetId)
                 ->sheet($sheet->quotedRangeName())
                 ->range(self::ReadRange)

@@ -62,8 +62,7 @@ return [
         /*
         | Enable service account auth or not.
         */
-        'enable' => strtolower(trim((string) env('GOOGLE_DRIVE_AUTH_TYPE', 'service'))) !== 'oauth'
-            && filter_var(env('GOOGLE_SERVICE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'enable' => filter_var(env('GOOGLE_SERVICE_ENABLED', false), FILTER_VALIDATE_BOOL),
 
         /*
          * Path to service account json file. You can also pass the credentials as an array
