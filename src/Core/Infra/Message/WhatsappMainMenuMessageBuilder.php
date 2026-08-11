@@ -34,6 +34,22 @@ class WhatsappMainMenuMessageBuilder implements WhatsappMainMenuMessageBuilderIn
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function municipalityModuleChoice(string $municipality): array
+    {
+        return $this->emptyResponse(
+            'municipality_module_choice',
+            '🔎 Encontrei registros relacionados ao município *'.mb_strtoupper($municipality, 'UTF-8')."*.\n\n"
+            ."Onde você deseja consultar?\n\n"
+            ."1️⃣ *Painel de Obras*\n"
+            ."2️⃣ *Relatórios de Vistoria Técnica*\n\n"
+            .'Digite *1* ou *2* para continuar.',
+            ['municipality' => $municipality],
+        );
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function technicalInspectionReportUnavailable(): array
     {
         return $this->emptyResponse(
@@ -67,16 +83,17 @@ class WhatsappMainMenuMessageBuilder implements WhatsappMainMenuMessageBuilderIn
     }
 
     /**
+     * @param  array<string, mixed>  $filters
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
-    private function emptyResponse(string $intent, string $reply): array
+    private function emptyResponse(string $intent, string $reply, array $filters = []): array
     {
         return [
             'reply' => $reply,
             'intent' => $intent,
             'total' => 0,
             'data' => [],
-            'filters' => [],
+            'filters' => $filters,
         ];
     }
 }

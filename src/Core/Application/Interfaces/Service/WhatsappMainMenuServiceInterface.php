@@ -17,6 +17,11 @@ interface WhatsappMainMenuServiceInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function showMunicipalityChoice(MessageEntity $message, string $municipality): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function handleOption(MessageEntity $message, WhatsappMenuOption $menuOption): array;
 
     /**
