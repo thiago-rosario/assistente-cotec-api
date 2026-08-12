@@ -10,5 +10,7 @@ interface TechnicalInspectionReportWhatsappConversationFlowServiceInterface
 {
     public function start(MessageEntity $message): array;
 
+    public function searchByMunicipality(MessageEntity $message, string $municipality): array;
+
     public function respondTo(MessageEntity $message): array;
 }

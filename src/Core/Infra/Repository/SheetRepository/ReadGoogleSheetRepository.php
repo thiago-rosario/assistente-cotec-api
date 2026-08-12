@@ -6,7 +6,6 @@ namespace App\Core\Infra\Repository\SheetRepository;
 
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Domain\Entity\GoogleSheetEntity;
-use App\Core\Infra\External\GoogleAuthenticationService;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 class ReadGoogleSheetRepository
@@ -19,8 +18,6 @@ class ReadGoogleSheetRepository
 
     public function readSheet(GoogleSheetEntity $sheet): array
     {
-        app(GoogleAuthenticationService::class)->authenticate();
-
         $rows = Sheets::spreadsheet($sheet->spreadsheetId)
             ->sheet($sheet->quotedRangeName())
             ->range(self::ReadRange)

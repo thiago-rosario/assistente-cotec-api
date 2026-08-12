@@ -9,14 +9,23 @@ class WhatsappDefaultReplies
     private const string NoRecordsMessage = 'Não encontrei registros para essa consulta. Tente informar o nome do município ou o número do processo.';
 
     private const string WelcomeMessage = "Você está no módulo *Painel de Obras da CEIRF/SSP*.\n\n"
-    ."Para realizar uma consulta, envie uma das opções abaixo:\n\n"
-    ."• Nome do município\n"
-    ."• Número do processo SEI\n\n"
-    ."O processo pode ser referente ao pleito, à licitação ou ao contrato.\n\n"
-    ."Envie apenas uma informação por vez para facilitar a identificação da consulta.\n\n"
-    ."Digite *0* para retornar ao menu principal.";
+        ."Para realizar uma consulta, envie uma das opções abaixo:\n\n"
+        ."• Nome do município\n"
+        ."• Número do processo SEI\n\n"
+        ."O processo pode ser referente ao pleito, à licitação ou ao contrato.\n\n"
+        ."Envie apenas uma informação por vez para facilitar a identificação da consulta.\n\n"
+        .'Digite *0* para retornar ao menu principal.';
 
-    private const string UnknownIntentMessage = 'Não consegui identificar exatamente qual consulta você deseja fazer. Envie o nome do município ou o número do processo.';
+    private const string UnknownIntentMessage = "Não consegui identificar o município ou processo informado.\n\n"
+        ."Envie apenas:\n"
+        ."• o nome do município; ou\n"
+        .'• o número do processo SEI.';
+
+    private const string GlobalUnknownIntentMessage = "🤔 Não entendi sua mensagem.\n\n"
+        ."Você pode enviar:\n"
+        ."• o nome de um município;\n"
+        ."• o número de um processo SEI;\n"
+        .'• ou digitar "menu" para ver as opções disponíveis.';
 
     private const string UnsupportedMessageContentMessage = 'Recebi sua mensagem, mas não consegui ler conteúdo em texto. Envie a consulta em texto com o nome do município ou o número do processo.';
 
@@ -39,6 +48,11 @@ class WhatsappDefaultReplies
     public function unknownIntent(): string
     {
         return self::UnknownIntentMessage;
+    }
+
+    public function globalUnknownIntent(): string
+    {
+        return self::GlobalUnknownIntentMessage;
     }
 
     public function unsupportedMessageContent(): string

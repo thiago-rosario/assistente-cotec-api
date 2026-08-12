@@ -14,6 +14,11 @@ interface WhatsappMainMenuMessageBuilderInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function municipalityModuleChoice(string $municipality): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function technicalInspectionReportUnavailable(): array;
 
     /**

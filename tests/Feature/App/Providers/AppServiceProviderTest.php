@@ -68,6 +68,7 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\Core\Infra\External\LogWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
@@ -136,6 +137,11 @@ it('resolves application bindings from the container', function (
     [TechnicalInspectionReportSheetRepositoryInterface::class, TechnicalInspectionReportGoogleSheetGatewayRepository::class],
     [TechnicalInspectionReportDriveRepositoryInterface::class, TechnicalInspectionReportGoogleDriveGatewayRepository::class],
 ]);
+
+it('resolves the isolated Google Drive authentication service from the container', function () {
+    expect(app(GoogleDriveAuthenticationService::class))
+        ->toBeInstanceOf(GoogleDriveAuthenticationService::class);
+});
 
 it('resolves the log whatsapp sender when the local sender is configured', function () {
     config(['services.whatsapp.sender' => 'log']);

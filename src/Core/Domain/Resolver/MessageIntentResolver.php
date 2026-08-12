@@ -27,6 +27,7 @@ class MessageIntentResolver implements MessageIntentResolverInterface
     {
         return in_array($message->normalizedContent(), [
             'ajuda',
+            'cancelar',
             'inicio',
             'iniciar',
             'menu',

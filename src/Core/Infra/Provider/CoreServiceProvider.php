@@ -47,7 +47,7 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
-use App\Core\Infra\External\GoogleAuthenticationService;
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\Core\Infra\External\LogWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
@@ -62,7 +62,10 @@ class CoreServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(GoogleAuthenticationService::class);
+        $this->app->singleton(
+            GoogleDriveAuthenticationService::class,
+            fn (): GoogleDriveAuthenticationService => new GoogleDriveAuthenticationService,
+        );
         $this->app->bind(ReadGoogleSpreadsheetAdapterInterface::class, ReadGoogleSpreadsheetAdapter::class);
         $this->app->bind(ReadGoogleSpreadsheetUsecaseInterface::class, ReadGoogleSpreadsheetUsecase::class);
         $this->app->bind(SearchGoogleSheetAdapterInterface::class, SearchGoogleSheetAdapter::class);

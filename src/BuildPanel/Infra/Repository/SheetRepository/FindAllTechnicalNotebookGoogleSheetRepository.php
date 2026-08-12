@@ -7,7 +7,6 @@ namespace App\BuildPanel\Infra\Repository\SheetRepository;
 use App\BuildPanel\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
 use App\BuildPanel\Domain\Entity\TechnicalNotebookEntity;
 use App\BuildPanel\Infra\Trait\HandlesGoogleSheetRows;
-use App\Core\Infra\External\GoogleAuthenticationService;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 class FindAllTechnicalNotebookGoogleSheetRepository
@@ -25,8 +24,6 @@ class FindAllTechnicalNotebookGoogleSheetRepository
      */
     public function findAllSheet(): array
     {
-        app(GoogleAuthenticationService::class)->authenticate();
-
         $rows = Sheets::spreadsheet($this->spreadsheetId())
             ->sheet($this->sheetName())
             ->range(self::ReadRange)

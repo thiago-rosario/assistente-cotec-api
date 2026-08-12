@@ -39,6 +39,41 @@ class CacheWhatsappConversationStateRepository implements WhatsappConversationSt
         $this->cache->put($key, $state->value, $this->ttl());
     }
 
+    public function getMunicipality(MessageEntity $message): ?string
+    {
+        $key = $this->municipalityKeyFor($message);
+
+        if ($key === null) {
+            return null;
+        }
+
+        $municipality = $this->cache->get($key);
+
+        return is_string($municipality) && trim($municipality) !== '' ? $municipality : null;
+    }
+
+    public function putMunicipality(MessageEntity $message, string $municipality): void
+    {
+        $key = $this->municipalityKeyFor($message);
+
+        if ($key === null) {
+            return;
+        }
+
+        $this->cache->put($key, $municipality, $this->ttl());
+    }
+
+    public function forgetMunicipality(MessageEntity $message): void
+    {
+        $key = $this->municipalityKeyFor($message);
+
+        if ($key === null) {
+            return;
+        }
+
+        $this->cache->forget($key);
+    }
+
     public function forget(MessageEntity $message): void
     {
         $key = $this->keyFor($message);
@@ -55,6 +90,13 @@ class CacheWhatsappConversationStateRepository implements WhatsappConversationSt
         $phone = $message->normalizedPhone();
 
         return $phone === null ? null : 'whatsapp:conversation:'.$phone;
+    }
+
+    private function municipalityKeyFor(MessageEntity $message): ?string
+    {
+        $key = $this->keyFor($message);
+
+        return $key === null ? null : $key.':municipality';
     }
 
     private function ttl(): int

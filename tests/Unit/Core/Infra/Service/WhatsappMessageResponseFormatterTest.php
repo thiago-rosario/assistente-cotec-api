@@ -172,6 +172,22 @@ it('returns the COTEC welcome message for greetings', function () {
     ]);
 });
 
+it('returns a global unknown message outside an active consultation', function () {
+    $result = whatsappMessageResponseFormatter()->globalUnknownIntent();
+
+    expect($result)->toBe([
+        'reply' => "🤔 Não entendi sua mensagem.\n\n"
+            ."Você pode enviar:\n"
+            ."• o nome de um município;\n"
+            ."• o número de um processo SEI;\n"
+            .'• ou digitar "menu" para ver as opções disponíveis.',
+        'intent' => 'unknown',
+        'total' => 0,
+        'data' => [],
+        'filters' => [],
+    ]);
+});
+
 function whatsappMessageResponseFormatter(): WhatsappMessageResponseFormatter
 {
     $valueFormatter = new WhatsappRecordValueFormatter;

@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\External;
 
-use App\Core\Infra\External\GoogleAuthenticationService;
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
 use App\TechnicalInspectionReport\Application\Interfaces\Storage\TechnicalInspectionReportFileStorageInterface;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
 use Google\Service\Drive\DriveFile;
 use InvalidArgumentException;
-use Revolution\Google\Client\Facades\Google;
 use RuntimeException;
 
 class GoogleDriveTechnicalInspectionReportFileStorage implements TechnicalInspectionReportFileStorageInterface
 {
     public function __construct(
-        private readonly ?GoogleAuthenticationService $googleAuthentication = null,
+        private readonly ?GoogleDriveAuthenticationService $googleAuthentication = null,
     ) {}
 
     public function store(
@@ -101,15 +100,7 @@ class GoogleDriveTechnicalInspectionReportFileStorage implements TechnicalInspec
 
     private function drive(): object
     {
-        ($this->googleAuthentication ?? app(GoogleAuthenticationService::class))->authenticate();
-
-        $drive = Google::make('drive');
-
-        if (! is_object($drive)) {
-            throw new RuntimeException('Não foi possível criar o serviço do Google Drive.');
-        }
-
-        return $drive;
+        return ($this->googleAuthentication ?? app(GoogleDriveAuthenticationService::class))->drive();
     }
 
     private function webViewLink(string $id): string

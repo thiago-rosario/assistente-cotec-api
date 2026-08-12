@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core\Application\Service;
 
+use App\BuildPanel\Application\Interfaces\Service\BuildPanelWhatsappMessageServiceInterface;
 use App\BuildPanel\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Interfaces\Message\WhatsappMainMenuMessageBuilderInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMainMenuServiceInterface;
@@ -18,6 +19,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
     public function __construct(
         private readonly WhatsappConversationStateRepositoryInterface $conversationStates,
         private readonly WhatsappMessageResponseFormatterInterface $responseFormatter,
+        private readonly BuildPanelWhatsappMessageServiceInterface $buildPanelMessages,
         private readonly WhatsappMainMenuMessageBuilderInterface $messages,
         private readonly TechnicalInspectionReportWhatsappConversationFlowServiceInterface $technicalInspectionReportFlow,
     ) {}
@@ -27,6 +29,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
      */
     public function show(MessageEntity $message): array
     {
+        $this->conversationStates->forgetMunicipality($message);
         $this->conversationStates->put($message, WhatsappConversationState::MainMenu);
 
         return $this->messages->mainMenu();
@@ -35,8 +38,31 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function showMunicipalityChoice(MessageEntity $message, string $municipality): array
+    {
+        $this->conversationStates->put($message, WhatsappConversationState::MainMenu);
+        $this->conversationStates->putMunicipality($message, $municipality);
+
+        return $this->messages->municipalityModuleChoice($municipality);
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     public function handleOption(MessageEntity $message, WhatsappMenuOption $menuOption): array
     {
+        $municipality = $this->conversationStates->getMunicipality($message);
+
+        if ($municipality !== null && $menuOption === WhatsappMenuOption::BuildPanel) {
+            return $this->searchBuildPanelByMunicipality($message, $municipality);
+        }
+
+        if ($municipality !== null && $menuOption === WhatsappMenuOption::TechnicalInspectionReport) {
+            $this->conversationStates->forgetMunicipality($message);
+
+            return $this->technicalInspectionReportFlow->searchByMunicipality($message, $municipality);
+        }
+
         return match ($menuOption) {
             WhatsappMenuOption::BuildPanel => $this->startBuildPanel($message),
             WhatsappMenuOption::TechnicalInspectionReport => $this->startTechnicalInspectionReport($message),
@@ -51,6 +77,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
      */
     public function endConversation(MessageEntity $message): array
     {
+        $this->conversationStates->forgetMunicipality($message);
         $this->conversationStates->forget($message);
 
         return $this->messages->conversationEnded();
@@ -69,6 +96,17 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    private function searchBuildPanelByMunicipality(MessageEntity $message, string $municipality): array
+    {
+        $this->conversationStates->forgetMunicipality($message);
+        $this->conversationStates->put($message, WhatsappConversationState::BuildPanel);
+
+        return $this->buildPanelMessages->process(new MessageEntity($municipality, $message->normalizedPhone()));
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     private function startTechnicalInspectionReport(MessageEntity $message): array
     {
         return $this->technicalInspectionReportFlow->start($message);
@@ -79,6 +117,7 @@ class WhatsappMainMenuService implements WhatsappMainMenuServiceInterface
      */
     private function assistantInfo(MessageEntity $message): array
     {
+        $this->conversationStates->forgetMunicipality($message);
         $this->conversationStates->put($message, WhatsappConversationState::MainMenu);
 
         return $this->messages->assistantInfo();

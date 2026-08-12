@@ -8,6 +8,7 @@ use App\Core\Infra\Message\WhatsappMainMenuMessageBuilder;
 use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
 use App\TechnicalInspectionReport\Application\DTO\StoreTechnicalInspectionReportOutputDTO;
 use App\TechnicalInspectionReport\Application\Factory\TechnicalInspectionReportDraftFactory;
+use App\TechnicalInspectionReport\Application\Interfaces\Builder\TechnicalInspectionReportDraftBuilderInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Usecase\FindTechnicalInspectionReportUsecaseInterface;
 use App\TechnicalInspectionReport\Application\Interfaces\Usecase\StoreTechnicalInspectionReportUsecaseInterface;
 use App\TechnicalInspectionReport\Application\Service\TechnicalInspectionReportWhatsappConversationFlowService;
@@ -84,6 +85,23 @@ it('collects, confirms and stores a technical inspection report without SEI proc
         ->toBe(WhatsappConversationState::TechnicalInspectionReportMenu);
     expect(app(TechnicalInspectionReportDraftRepositoryInterface::class)
         ->get(new MessageEntity(null, $phone)))->toBeNull();
+});
+
+it('fully resets a report registration when the user sends 0', function () {
+    $flow = technicalInspectionReportWhatsappFlow(
+        Mockery::mock(StoreTechnicalInspectionReportUsecaseInterface::class),
+    );
+    $phone = '5511999999999';
+
+    $flow->start(new MessageEntity('2', $phone));
+    $flow->respondTo(new MessageEntity('1', $phone));
+
+    $response = $flow->respondTo(new MessageEntity('0', $phone));
+
+    expect($response['intent'])->toBe('conversation_ended')
+        ->and($this->flowState->get(new MessageEntity(null, $phone)))->toBeNull()
+        ->and(app(TechnicalInspectionReportDraftRepositoryInterface::class)
+            ->get(new MessageEntity(null, $phone)))->toBeNull();
 });
 
 it('rejects a non-PDF and keeps the conversation waiting for the document', function () {
@@ -271,6 +289,7 @@ function technicalInspectionReportWhatsappFlow(
         findReports: $findReports,
         storeReport: $storeReport,
         draftFactory: new TechnicalInspectionReportDraftFactory,
+        draftBuilder: app(TechnicalInspectionReportDraftBuilderInterface::class),
         messages: new TechnicalInspectionReportWhatsappMessageBuilder,
         mainMenu: new WhatsappMainMenuMessageBuilder,
     );

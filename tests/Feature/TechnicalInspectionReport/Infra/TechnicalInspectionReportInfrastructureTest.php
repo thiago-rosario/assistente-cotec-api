@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Infra\External\GoogleDriveAuthenticationService;
 use App\TechnicalInspectionReport\Application\DTO\RegisterTechnicalInspectionReportCatalogInputDTO;
 use App\TechnicalInspectionReport\Application\DTO\StoredTechnicalInspectionReportFileDTO;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportEntity;
@@ -19,7 +20,7 @@ use App\TechnicalInspectionReport\Infra\Repository\SheetRepository\FindTechnical
 use App\TechnicalInspectionReport\Infra\Repository\SheetRepository\RegisterTechnicalInspectionReportGoogleSheetRepository;
 use App\TechnicalInspectionReport\Infra\Repository\SheetRepository\UpdateTechnicalInspectionReportGoogleSheetRepository;
 use Google\Service\Drive\DriveFile;
-use Revolution\Google\Client\Facades\Google;
+use Revolution\Google\Client\GoogleApiClient;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 it('reads technical inspection report rows from the configured sheet', function () {
@@ -137,9 +138,9 @@ it('stores a PDF in the configured Google Drive folder', function () {
     $drive = new stdClass;
     $drive->files = $files;
 
-    Google::shouldReceive('make')->once()->with('drive')->andReturn($drive);
+    $googleDriveAuthentication = technicalInspectionReportDriveAuthenticationForTest($drive);
 
-    $storedFile = (new GoogleDriveTechnicalInspectionReportFileStorage)->store(
+    $storedFile = (new GoogleDriveTechnicalInspectionReportFileStorage($googleDriveAuthentication))->store(
         technicalInspectionReportWithDocument(),
         __FILE__,
     );
@@ -156,9 +157,9 @@ it('deletes a stored technical inspection report document from Google Drive', fu
     $drive = new stdClass;
     $drive->files = $files;
 
-    Google::shouldReceive('make')->once()->with('drive')->andReturn($drive);
+    $googleDriveAuthentication = technicalInspectionReportDriveAuthenticationForTest($drive);
 
-    (new GoogleDriveTechnicalInspectionReportFileStorage)->delete(
+    (new GoogleDriveTechnicalInspectionReportFileStorage($googleDriveAuthentication))->delete(
         new StoredTechnicalInspectionReportFileDTO(
             id: 'drive-001',
             name: 'report.pdf',
@@ -199,4 +200,12 @@ function technicalInspectionReportWithDocument(): TechnicalInspectionReportEntit
         ->provideInspectionDate(InspectionDateValueObject::fromBrazilianFormat('22/07/2026'))
         ->provideResponsiblePerson(new ResponsiblePersonValueObject('João Silva'))
         ->attachDocument(new TechnicalInspectionReportFileValueObject('report.pdf', 'application/pdf', 123));
+}
+
+function technicalInspectionReportDriveAuthenticationForTest(object $drive): GoogleDriveAuthenticationService
+{
+    $client = Mockery::mock(GoogleApiClient::class);
+    $client->shouldReceive('make')->once()->with('drive')->andReturn($drive);
+
+    return new GoogleDriveAuthenticationService($client);
 }

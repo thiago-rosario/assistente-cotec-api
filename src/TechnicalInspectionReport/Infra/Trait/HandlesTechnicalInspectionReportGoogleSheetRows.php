@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\TechnicalInspectionReport\Infra\Trait;
 
-use App\Core\Infra\External\GoogleAuthenticationService;
 use App\TechnicalInspectionReport\Domain\Entity\TechnicalInspectionReportGoogleSheetEntity;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -34,8 +33,6 @@ trait HandlesTechnicalInspectionReportGoogleSheetRows
      */
     private function readRows(): Collection
     {
-        app(GoogleAuthenticationService::class)->authenticate();
-
         $rows = Sheets::spreadsheet($this->spreadsheetId())
             ->sheet($this->sheetName())
             ->range(self::ReadRange)
