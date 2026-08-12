@@ -163,11 +163,14 @@ it('starts the build panel flow from the main menu option', function () {
         ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBe('build_panel');
 });
 
-it('routes build panel flow messages without reinterpreting them as main menu greetings', function () {
+it('ends the build panel conversation after returning search results', function () {
     Cache::put('whatsapp:conversation:5571999999999', 'build_panel');
 
     $greetingMatcher = Mockery::mock(GreetingMessageMatcherServiceInterface::class);
-    $greetingMatcher->shouldReceive('matches')->never();
+    $greetingMatcher->shouldReceive('matches')
+        ->once()
+        ->with('Olá!')
+        ->andReturnTrue();
 
     $resolveInterpretation = Mockery::mock(ResolveWhatsappMessageInterpretationServiceInterface::class);
     $resolveInterpretation->shouldReceive('__invoke')
@@ -221,7 +224,21 @@ it('routes build panel flow messages without reinterpreting them as main menu gr
         phone: '5571999999999',
     ));
 
-    expect($result['intent'])->toBe('search_technical_notebook');
+    expect($result['intent'])->toBe('search_technical_notebook')
+        ->and(Cache::get('whatsapp:conversation:5571999999999'))->toBeNull();
+
+    $nextResult = (processWhatsappMessageUsecase(
+        greetingMatcher: $greetingMatcher,
+        resolveInterpretation: $resolveInterpretation,
+        searchAdapter: $searchAdapter,
+        responseFormatter: $responseFormatter,
+        service: acceptedWhatsappMessageInterpretationServiceMock(),
+    ))(new ReceivedMessageInputDTO(
+        message: 'Olá!',
+        phone: '5571999999999',
+    ));
+
+    expect($nextResult['intent'])->toBe('main_menu');
 });
 
 it('keeps the consultation-specific unknown response inside the build panel flow', function () {
