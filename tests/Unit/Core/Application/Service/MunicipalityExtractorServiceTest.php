@@ -14,7 +14,9 @@ it('extracts standalone municipality names without using ai', function (string $
     'lowercase without accent' => ['andarai', 'andarai'],
     'minor typo with accent' => ['andarí', 'andarí'],
     'title case without accent' => ['Andarai', 'Andarai'],
+    'compound municipality beginning with bom' => ['Bom Jesus da Lapa', 'Bom Jesus da Lapa'],
     'consult query' => ['Quero consultar Antas', 'Antas'],
+    'consult compound municipality query' => ['Quero consultar o município de Bom Jesus da Lapa', 'Bom Jesus da Lapa'],
     'consult municipality query' => ['Quero consultar o município de Antas', 'Antas'],
     'technical notebook query' => ['Caderno técnico de São Francisco do Conde', 'São Francisco do Conde'],
 ]);
