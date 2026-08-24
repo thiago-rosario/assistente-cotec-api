@@ -1,28 +1,23 @@
 <?php
 
 use App\Contract\Application\DTO\MunicipalityContractReferenceDTO;
-use App\Contract\Domain\Entity\ValueAdditiveEntity;
-use App\Contract\Domain\Repository\ValueAdditiveRepositoryInterface;
-use App\Contract\Domain\Resolver\MunicipalityContractResolver;
+use App\Contract\Application\Resolver\MunicipalityContractResolver;
+use App\Contract\Domain\Entity\ContractEntity;
+use App\Contract\Domain\Repository\ContractRepositoryInterface;
 use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 
 it('returns an empty collection when a municipality has no contracts', function () {
-    $repository = contractValueAddendumRepository([]);
-
-    $references = (new MunicipalityContractResolver($repository))
+    $references = (new MunicipalityContractResolver(contractRegisterRepository([])))
         ->resolve(new MunicipalityValueObject('IBOTIRAMA'));
 
     expect($references)->toBe([]);
 });
 
 it('returns one contract reference and preserves its company', function () {
-    $repository = contractValueAddendumRepository([
-        valueAdditiveEntity('08/2023', company: '800D'),
-    ]);
-
-    $references = (new MunicipalityContractResolver($repository))
-        ->resolve(new MunicipalityValueObject('IBOTIRAMA'));
+    $references = (new MunicipalityContractResolver(contractRegisterRepository([
+        resolverContractEntity('08/2023', '800D'),
+    ])))->resolve(new MunicipalityValueObject('IBOTIRAMA'));
 
     expect($references)->toHaveCount(1)
         ->and($references[0])->toBeInstanceOf(MunicipalityContractReferenceDTO::class)
@@ -31,28 +26,22 @@ it('returns one contract reference and preserves its company', function () {
 });
 
 it('deduplicates repeated contracts and fills a company from a later row', function () {
-    $repository = contractValueAddendumRepository([
-        valueAdditiveEntity('08 / 2023'),
-        valueAdditiveEntity('08/2023', company: '800D'),
-        valueAdditiveEntity('08/2023', company: 'Outra empresa'),
-    ]);
-
-    $references = (new MunicipalityContractResolver($repository))
-        ->resolve(new MunicipalityValueObject('IBOTIRAMA'));
+    $references = (new MunicipalityContractResolver(contractRegisterRepository([
+        resolverContractEntity('08 / 2023', null),
+        resolverContractEntity('08/2023', '800D'),
+        resolverContractEntity('08/2023', 'Outra empresa'),
+    ])))->resolve(new MunicipalityValueObject('IBOTIRAMA'));
 
     expect($references)->toHaveCount(1)
         ->and($references[0]->contractNumber->value)->toBe('08/2023')
         ->and($references[0]->company)->toBe('800D');
 });
 
-it('returns every distinct contract associated with a municipality', function () {
-    $repository = contractValueAddendumRepository([
-        valueAdditiveEntity('08/2023', company: '800D'),
-        valueAdditiveEntity('47/2025', company: 'Empresa X'),
-    ]);
-
-    $references = (new MunicipalityContractResolver($repository))
-        ->resolve(new MunicipalityValueObject('FEIRA DE SANTANA'));
+it('returns every distinct contract from the official contract register', function () {
+    $references = (new MunicipalityContractResolver(contractRegisterRepository([
+        resolverContractEntity('08/2023', '800D'),
+        resolverContractEntity('47/2025', 'Empresa X'),
+    ])))->resolve(new MunicipalityValueObject('FEIRA DE SANTANA'));
 
     expect($references)->toHaveCount(2)
         ->and(array_map(
@@ -62,64 +51,50 @@ it('returns every distinct contract associated with a municipality', function ()
 });
 
 /**
- * @param  list<ValueAdditiveEntity>  $valueAdditives
+ * @param  list<ContractEntity>  $contracts
  */
-function contractValueAddendumRepository(array $valueAdditives): ValueAdditiveRepositoryInterface
+function contractRegisterRepository(array $contracts): ContractRepositoryInterface
 {
-    return new class($valueAdditives) implements ValueAdditiveRepositoryInterface
+    return new class($contracts) implements ContractRepositoryInterface
     {
         /**
-         * @param  list<ValueAdditiveEntity>  $valueAdditives
+         * @param  list<ContractEntity>  $contracts
          */
-        public function __construct(private array $valueAdditives) {}
+        public function __construct(private array $contracts) {}
+
+        public function findByContractNumber(ContractNumberValueObject $contractNumber): ?ContractEntity
+        {
+            return null;
+        }
+
+        public function findBySeiProcess(string $seiProcess): ?ContractEntity
+        {
+            return null;
+        }
 
         /**
-         * @return list<ValueAdditiveEntity>
+         * @return list<ContractEntity>
          */
         public function findByMunicipality(MunicipalityValueObject $municipality): array
         {
-            return $this->valueAdditives;
+            return $this->contracts;
         }
 
         /**
-         * @return list<ValueAdditiveEntity>
+         * @return list<ContractEntity>
          */
-        public function findByContractNumber(ContractNumberValueObject $contractNumber): array
+        public function findByCompany(string $company): array
         {
-            throw new LogicException('The resolver must not search by contract number.');
-        }
-
-        /**
-         * @return list<ValueAdditiveEntity>
-         */
-        public function findByMunicipalityAndContractNumber(
-            MunicipalityValueObject   $municipality,
-            ContractNumberValueObject $contractNumber,
-        ): array {
-            throw new LogicException('The resolver must not combine municipality and contract searches.');
+            return [];
         }
     };
 }
 
-function valueAdditiveEntity(
-    string $contractNumber,
-    ?string $company = null,
-): ValueAdditiveEntity {
-    return new ValueAdditiveEntity(
+function resolverContractEntity(string $contractNumber, ?string $company): ContractEntity
+{
+    return new ContractEntity(
         contractNumber: $contractNumber,
-        municipality: 'IBOTIRAMA',
         company: $company,
         seiProcess: null,
-        stage: null,
-        unit: null,
-        type: null,
-        value: null,
-        status: null,
-        currentLocation: null,
-        situation: null,
-        publicationDate: null,
-        publishedValue: null,
-        additiveNumber: null,
-        observation: null,
     );
 }
