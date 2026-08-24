@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Contract\Domain\Entity;
 
+use DateTimeImmutable;
+
 class ContractEntity
 {
     /**
@@ -20,6 +22,13 @@ class ContractEntity
         public array $valueAdditives = [],
         public array $readjustments = [],
         public array $executionDeadlines = [],
+        public ?string $object = null,
+        public ?float $initialValue = null,
+        public ?float $updatedValue = null,
+        public ?DateTimeImmutable $validityStartDate = null,
+        public ?DateTimeImmutable $validityEndDate = null,
+        public int|string|null $executionDeadline = null,
+        public ?string $currentSituation = null,
     ) {}
 
     public function hasCompany(): bool

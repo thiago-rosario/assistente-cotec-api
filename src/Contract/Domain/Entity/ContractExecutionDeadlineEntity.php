@@ -20,6 +20,10 @@ class ContractExecutionDeadlineEntity
         public ?string $location,
         public ?DateTimeImmutable $publicationDate,
         public ?string $observation,
+        public ?DateTimeImmutable $entryDate = null,
+        public ?int $processingTimeDays = null,
+        public ?int $publicationTimeDays = null,
+        public ?string $unit = null,
     ) {}
 
     public function hasValidityEndDate(): bool
