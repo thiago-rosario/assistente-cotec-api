@@ -41,4 +41,38 @@ return [
             ],
         ],
     ],
+
+    'contract_spreadsheet' => [
+        'spreadsheet_id' => env(
+            'GOOGLE_SHEETS_CONTRACT_SPREADSHEET_ID',
+            '1sBia2FTJW2dQWOqVGUsj_pm_C2t-2v1eEjfuJeTXV60',
+        ),
+
+        'sheets' => [
+            'contracts' => [
+                'gid' => 539442641,
+                'name' => ' GERENCIADORA',
+                'range' => 'A:Z',
+                'header_row' => 1,
+            ],
+            'value-additives' => [
+                'gid' => 866864035,
+                'name' => 'ADITIVO DE VALOR  -OBRAS',
+                'range' => 'A:Z',
+                'header_row' => 1,
+            ],
+            'readjustments' => [
+                'gid' => 432939090,
+                'name' => 'REAJUSTES E REEQUILÍBRIO',
+                'range' => 'A:Z',
+                'header_row' => 1,
+            ],
+            'execution-deadlines' => [
+                'gid' => 1217858042,
+                'name' => 'CONTROLE PRAZOS DE EXECUÇÃO -  ',
+                'range' => 'A:Z',
+                'header_row' => 1,
+            ],
+        ],
+    ],
 ];
