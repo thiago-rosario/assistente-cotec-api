@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Contract\Application\DTO;
+
+use App\Contract\Enum\ContractSearchTypeEnum;
+
+readonly class SearchContractInputDTO
+{
+    public function __construct(
+        public string                 $searchTerm,
+        public ContractSearchTypeEnum $searchType,
+    ) {}
+}

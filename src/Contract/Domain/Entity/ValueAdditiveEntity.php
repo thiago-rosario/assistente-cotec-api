@@ -22,6 +22,9 @@ class ValueAdditiveEntity
         public ?float $publishedValue,
         public ?string $additiveNumber,
         public ?string $observation,
+        public ?string $entryDate = null,
+        public ?int $processingTimeDays = null,
+        public ?int $publicationTimeDays = null,
     ) {}
 
     public function isIncrease(): bool

@@ -24,7 +24,7 @@ interface ValueAdditiveRepositoryInterface
      * @return list<ValueAdditiveEntity>
      */
     public function findByMunicipalityAndContractNumber(
-        MunicipalityValueObject   $municipality,
+        MunicipalityValueObject $municipality,
         ContractNumberValueObject $contractNumber,
     ): array;
 }

@@ -2,17 +2,24 @@
 
 declare(strict_types=1);
 
-namespace App\Contract\Domain\Resolver;
+namespace App\Contract\Application\Resolver;
 
 use App\Contract\Application\DTO\MunicipalityContractReferenceDTO;
-use App\Contract\Domain\Repository\ValueAdditiveRepositoryInterface;
+use App\Contract\Application\Interfaces\Resolver\MunicipalityContractResolverInterface;
+use App\Contract\Domain\Repository\ContractRepositoryInterface;
 use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 
-class MunicipalityContractResolver
+/**
+ * Resolves municipality contracts from the official contract register.
+ *
+ * The contract repository is the canonical source for municipality-to-contract
+ * discovery. Detail repositories remain responsible for their own records.
+ */
+class MunicipalityContractResolver implements MunicipalityContractResolverInterface
 {
     public function __construct(
-        private readonly ValueAdditiveRepositoryInterface $repository,
+        private readonly ContractRepositoryInterface $repository,
     ) {}
 
     /**
@@ -23,9 +30,9 @@ class MunicipalityContractResolver
         /** @var array<string, MunicipalityContractReferenceDTO> $referencesByContractNumber */
         $referencesByContractNumber = [];
 
-        foreach ($this->repository->findByMunicipality($municipality) as $valueAdditive) {
-            $contractNumber = new ContractNumberValueObject($valueAdditive->contractNumber);
-            $company = $valueAdditive->company === null ? null : trim($valueAdditive->company);
+        foreach ($this->repository->findByMunicipality($municipality) as $contract) {
+            $contractNumber = new ContractNumberValueObject($contract->contractNumber);
+            $company = $contract->company === null ? null : trim($contract->company);
             $company = $company === '' ? null : $company;
 
             if (! isset($referencesByContractNumber[$contractNumber->value])) {
