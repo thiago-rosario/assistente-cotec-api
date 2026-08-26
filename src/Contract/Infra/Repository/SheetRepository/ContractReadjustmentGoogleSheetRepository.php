@@ -22,10 +22,7 @@ final class ContractReadjustmentGoogleSheetRepository implements ContractReadjus
      */
     public function findByContractNumber(ContractNumberValueObject $contractNumber): array
     {
-        $readjustments = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('readjustments'),
-        );
+        $readjustments = $this->adapter->map('readjustments', $this->mapper->map(...));
 
         return array_values(array_filter(
             $readjustments,

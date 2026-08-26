@@ -72,6 +72,25 @@ it('maps accepted aliases into the application dto', function () {
         ->and($dto->externalId)->toBe('alias-123');
 });
 
+it('keeps only technical metadata instead of duplicating the raw webhook payload', function () {
+    $dto = whatsappWebhookPayloadAdapter()->fromArray([
+        'content' => 'mensagem confidencial',
+        'customer_contact' => '5571999999999',
+        'external_id' => 'metadata-001',
+        'source' => 'editacodigo',
+        'type' => 'text',
+        'token' => 'secret-token',
+    ]);
+
+    expect($dto->metadata)->toBe([
+        'source' => 'editacodigo',
+        'type' => 'text',
+    ])
+        ->and($dto->metadata)->not->toHaveKey('content')
+        ->and($dto->metadata)->not->toHaveKey('customer_contact')
+        ->and($dto->metadata)->not->toHaveKey('token');
+});
+
 it('resolves the webhook adapter interface from the container', function () {
     $adapter = app(WhatsappWebhookPayloadAdapterInterface::class);
 

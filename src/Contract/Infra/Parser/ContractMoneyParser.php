@@ -28,6 +28,7 @@ class ContractMoneyParser implements ContractMoneyParserInterface
         }
 
         $value = str_replace(['R$', ' '], '', $value);
+        $value = preg_replace('/(?<=\d)[,.]+$/u', '', $value) ?? $value;
 
         if (str_contains($value, ',')) {
             $value = str_replace('.', '', $value);

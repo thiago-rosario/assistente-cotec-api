@@ -27,10 +27,7 @@ final class FindValueAdditivesByMunicipalityAndContractNumberGoogleSheetReposito
         ContractNumberValueObject $contractNumber,
     ): array {
         $normalizedMunicipality = $this->searchValueParser->parse($municipality->value);
-        $valueAdditives = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('value-additives'),
-        );
+        $valueAdditives = $this->adapter->map('value-additives', $this->mapper->map(...));
 
         return array_values(array_filter(
             $valueAdditives,

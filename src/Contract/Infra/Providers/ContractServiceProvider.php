@@ -18,15 +18,19 @@ use App\Contract\Application\Interfaces\Parser\ContractNullableStringParserInter
 use App\Contract\Application\Interfaces\Parser\ContractNumberParserInterface;
 use App\Contract\Application\Interfaces\Parser\ContractRequiredStringParserInterface;
 use App\Contract\Application\Interfaces\Parser\ContractSearchValueParserInterface;
+use App\Contract\Application\Interfaces\Resolver\ContractSearchTypeResolverInterface;
 use App\Contract\Application\Interfaces\Resolver\MunicipalityContractResolverInterface;
 use App\Contract\Application\Interfaces\Service\ContractRemainingDaysCalculatorServiceInterface;
+use App\Contract\Application\Interfaces\Service\ContractWhatsappMessageServiceInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractAdjustmentsUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractExecutionDeadlineUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractSummaryUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractValueAdditivesUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\SearchContractUsecaseInterface;
+use App\Contract\Application\Resolver\ContractSearchTypeResolver;
 use App\Contract\Application\Resolver\MunicipalityContractResolver;
 use App\Contract\Application\Service\ContractRemainingDaysCalculatorService;
+use App\Contract\Application\Service\ContractWhatsappMessageService;
 use App\Contract\Application\Usecase\FindContractAdjustmentsUsecase;
 use App\Contract\Application\Usecase\FindContractExecutionDeadlineUsecase;
 use App\Contract\Application\Usecase\FindContractSummaryUsecase;
@@ -66,6 +70,7 @@ class ContractServiceProvider extends ServiceProvider
         $this->app->bind(ContractNumberParserInterface::class, ContractNumberParser::class);
         $this->app->bind(ContractRequiredStringParserInterface::class, ContractRequiredStringParser::class);
         $this->app->bind(ContractSearchValueParserInterface::class, ContractSearchValueParser::class);
+        $this->app->bind(ContractSearchTypeResolverInterface::class, ContractSearchTypeResolver::class);
         $this->app->bind(ContractExecutionDeadlineSheetMapperInterface::class, ContractExecutionDeadlineSheetMapper::class);
         $this->app->bind(ContractReadjustmentSheetMapperInterface::class, ContractReadjustmentSheetMapper::class);
         $this->app->bind(ContractSheetMapperInterface::class, ContractSheetMapper::class);
@@ -78,6 +83,7 @@ class ContractServiceProvider extends ServiceProvider
         $this->app->bind(FindContractSummaryUsecaseInterface::class, FindContractSummaryUsecase::class);
         $this->app->bind(FindContractValueAdditivesUsecaseInterface::class, FindContractValueAdditivesUsecase::class);
         $this->app->bind(SearchContractUsecaseInterface::class, SearchContractUsecase::class);
+        $this->app->bind(ContractWhatsappMessageServiceInterface::class, ContractWhatsappMessageService::class);
         $this->app->bind(ContractRepositoryInterface::class, ContractGoogleSheetGatewayRepository::class);
         $this->app->bind(ValueAdditiveRepositoryInterface::class, ValueAdditiveGoogleSheetGatewayRepository::class);
         $this->app->bind(ContractReadjustmentRepositoryInterface::class, ContractReadjustmentGoogleSheetRepository::class);

@@ -22,10 +22,7 @@ final class ContractExecutionDeadlineGoogleSheetRepository implements ContractEx
      */
     public function findByContractNumber(ContractNumberValueObject $contractNumber): array
     {
-        $deadlines = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('execution-deadlines'),
-        );
+        $deadlines = $this->adapter->map('execution-deadlines', $this->mapper->map(...));
 
         return array_values(array_filter(
             $deadlines,

@@ -18,10 +18,7 @@ final class FindContractByContractNumberGoogleSheetRepository
 
     public function findByContractNumber(ContractNumberValueObject $contractNumber): ?ContractEntity
     {
-        $contracts = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('contracts'),
-        );
+        $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
 
         foreach ($contracts as $contract) {
             if ($contract->contractNumber === $contractNumber->value) {

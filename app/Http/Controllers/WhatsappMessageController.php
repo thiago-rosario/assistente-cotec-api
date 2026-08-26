@@ -88,7 +88,12 @@ class WhatsappMessageController extends Controller
 
             return response()
                 ->json($response->toArray(), 500);
-        } catch (\Throwable) {
+        } catch (\Throwable $throwable) {
+            Log::error('whatsapp_webhook_processing_failed', [
+                'exception' => $throwable::class,
+                'exception_message' => $throwable->getMessage(),
+            ]);
+
             $response = new ResponseJsend(
                 status: ResponseJsend::STATUS_ERROR,
                 message: 'An unexpected error occurred',

@@ -42,6 +42,22 @@ it('accepts the canonical EditaCodigo payload and dispatches processing', functi
     });
 });
 
+it('does not write the raw webhook payload to logs', function () {
+    $this->postJson('/api/whatsapp/messages', [
+        'customer_contact' => '5571999999999',
+        'content' => 'mensagem potencialmente sensível',
+        'external_id' => 'log-safety-001',
+    ])->assertStatus(202);
+
+    Log::shouldHaveReceived('info')
+        ->with('whatsapp_webhook_payload_received', Mockery::on(
+            static fn (array $context): bool => ! array_key_exists('raw_body', $context)
+                && isset($context['payload_hash'])
+                && strlen($context['payload_hash']) === 64,
+        ))
+        ->once();
+});
+
 it('accepts the real EditaCodigo payload aliases with numeric timestamp', function () {
     $this->postJson('/api/whatsapp/messages', [
         'telefone' => '5571999999999',

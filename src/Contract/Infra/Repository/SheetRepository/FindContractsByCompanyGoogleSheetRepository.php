@@ -23,10 +23,7 @@ final class FindContractsByCompanyGoogleSheetRepository
     public function findByCompany(string $company): array
     {
         $normalizedCompany = $this->searchValueParser->parse($company);
-        $contracts = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('contracts'),
-        );
+        $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
 
         return array_values(array_filter(
             $contracts,
