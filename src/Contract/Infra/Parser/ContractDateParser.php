@@ -7,6 +7,7 @@ namespace App\Contract\Infra\Parser;
 use App\Contract\Application\Interfaces\Parser\ContractDateParserInterface;
 use App\Contract\Infra\Exception\ContractSheetRowMappingException;
 use DateTimeImmutable;
+use Illuminate\Support\Str;
 use Throwable;
 
 class ContractDateParser implements ContractDateParserInterface
@@ -25,7 +26,7 @@ class ContractDateParser implements ContractDateParserInterface
 
         $value = trim((string) $value);
 
-        if ($value === '' || in_array($value, ['-', '/'], true)) {
+        if ($this->isEmptyValue($value)) {
             return null;
         }
 
@@ -58,5 +59,17 @@ class ContractDateParser implements ContractDateParserInterface
                 previous: $throwable,
             );
         }
+    }
+
+    private function isEmptyValue(string $value): bool
+    {
+        $normalizedValue = Str::of($value)
+            ->ascii()
+            ->lower()
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->toString();
+
+        return in_array($normalizedValue, ['', '-', '/', 'sem execucao/obra ja concluida'], true);
     }
 }

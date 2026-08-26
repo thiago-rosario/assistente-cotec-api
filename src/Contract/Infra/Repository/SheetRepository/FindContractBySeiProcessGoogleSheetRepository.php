@@ -20,10 +20,7 @@ final class FindContractBySeiProcessGoogleSheetRepository
     public function findBySeiProcess(string $seiProcess): ?ContractEntity
     {
         $normalizedSeiProcess = $this->searchValueParser->parse($seiProcess);
-        $contracts = array_map(
-            $this->mapper->map(...),
-            $this->adapter->read('contracts'),
-        );
+        $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
 
         foreach ($contracts as $contract) {
             if ($contract->seiProcess !== null

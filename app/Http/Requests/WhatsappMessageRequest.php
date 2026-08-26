@@ -27,7 +27,7 @@ class WhatsappMessageRequest extends FormRequest
             'user_agent' => $this->userAgent(),
             'content_type' => $this->headers->get('content-type'),
             'content_length' => $this->headers->get('content-length'),
-            'raw_body' => $this->getContent(),
+            'payload_hash' => hash('sha256', $this->getContent()),
         ]);
     }
 
@@ -143,7 +143,7 @@ class WhatsappMessageRequest extends FormRequest
     {
         Log::warning('whatsapp_webhook_validation_failed', [
             'errors' => $validator->errors()->toArray(),
-            'raw_body' => $this->getContent(),
+            'payload_hash' => hash('sha256', $this->getContent()),
         ]);
 
         $response = new ResponseJsend(

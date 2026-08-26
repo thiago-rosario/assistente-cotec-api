@@ -9,6 +9,8 @@ use App\Core\Application\Interfaces\Adapter\SearchGoogleSheetAdapterInterface;
 use App\Core\Application\Interfaces\Adapter\WhatsappWebhookPayloadAdapterInterface;
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Application\Interfaces\Mapper\WhatsappWebhookPayloadMapperInterface;
+use App\Core\Application\Interfaces\Repository\WhatsappConversationStateStoreInterface;
+use App\Core\Application\Interfaces\Service\CoreWhatsappResponseFormatterInterface;
 use App\Core\Application\Interfaces\Service\GreetingMessageMatcherServiceInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageSenderInterface;
 use App\Core\Application\Interfaces\Usecase\AcceptIncomingWhatsappWebhookUsecaseInterface;
@@ -30,6 +32,8 @@ use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+use App\Core\Infra\Repository\WhatsappConversationStateStore;
+use App\Core\Infra\Service\WhatsappCoreResponseFormatter;
 use Illuminate\Support\ServiceProvider;
 
 class CoreServiceProvider extends ServiceProvider
@@ -43,7 +47,9 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->bind(ProcessWhatsappMessageUsecaseInterface::class, ProcessWhatsappMessageUsecase::class);
         $this->app->bind(AcceptIncomingWhatsappWebhookUsecaseInterface::class, AcceptIncomingWhatsappWebhookUsecase::class);
         $this->app->bind(ProcessIncomingWhatsappWebhookUsecaseInterface::class, ProcessIncomingWhatsappWebhookUsecase::class);
+        $this->app->bind(CoreWhatsappResponseFormatterInterface::class, WhatsappCoreResponseFormatter::class);
         $this->app->bind(GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class);
+        $this->app->bind(WhatsappConversationStateStoreInterface::class, WhatsappConversationStateStore::class);
         $this->app->bind(WhatsappMessageSenderInterface::class, EditaCodigoWhatsappMessageSender::class);
         $this->app->bind(GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class);
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);

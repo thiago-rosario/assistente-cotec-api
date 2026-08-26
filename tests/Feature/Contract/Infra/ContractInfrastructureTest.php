@@ -151,6 +151,16 @@ it('maps every value additive field, including brazilian money and optional dash
         ->and($additive->observation)->toBeNull();
 });
 
+it('accepts a trailing separator in brazilian money values from the sheet', function () {
+    expect(app(ContractMoneyParserInterface::class)->parse('R$ 416.858,80,'))
+        ->toBe(416858.8);
+});
+
+it('treats completed execution text as an empty date', function () {
+    expect(app(ContractDateParserInterface::class)->parse('SEM EXECUÇÃO/OBRA JÁ CONCLUÍDA'))
+        ->toBeNull();
+});
+
 it('maps all readjustment and deadline fields with typed dates', function () {
     $readjustment = app(ContractReadjustmentSheetMapperInterface::class)->map(array_combine(
         readjustmentInfrastructureHeader(),
@@ -361,6 +371,24 @@ it('returns an empty collection when a contract sheet has no data rows', functio
     expect(app(ContractReadjustmentRepositoryInterface::class)->findByContractNumber(
         new ContractNumberValueObject('08/2023'),
     ))->toBe([]);
+});
+
+it('skips one invalid readjustment row without interrupting valid records', function () {
+    $invalidRow = readjustmentInfrastructureRow(apostilleNumber: '2');
+    $invalidRow[7] = 'valor inválido';
+
+    mockContractInfrastructureSheet('readjustments', [
+        readjustmentInfrastructureHeader(),
+        readjustmentInfrastructureRow(apostilleNumber: '1'),
+        $invalidRow,
+    ]);
+
+    $records = app(ContractReadjustmentRepositoryInterface::class)->findByContractNumber(
+        new ContractNumberValueObject('08/2023'),
+    );
+
+    expect($records)->toHaveCount(1)
+        ->and($records[0]->apostilleNumber)->toBe('1');
 });
 
 it('translates a google sheet access failure and preserves the original cause', function () {

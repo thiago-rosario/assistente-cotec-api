@@ -98,13 +98,38 @@ class WhatsappWebhookPayloadMapper implements WhatsappWebhookPayloadMapperInterf
                 'messages.*.id',
                 'entry.*.changes.*.value.messages.*.id',
             ]),
-            'metadata' => $payload,
+            'metadata' => $this->metadata($payload),
         ];
     }
 
     protected function defaultSource(): string
     {
         return 'whatsapp-webhook';
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, string>
+     */
+    private function metadata(array $payload): array
+    {
+        $metadata = [];
+
+        foreach (['source', 'channel', 'provider', 'object', 'type'] as $key) {
+            $value = Arr::get($payload, $key);
+
+            if (! is_scalar($value)) {
+                continue;
+            }
+
+            $value = trim((string) $value);
+
+            if ($value !== '') {
+                $metadata[$key] = $value;
+            }
+        }
+
+        return $metadata;
     }
 
     /**

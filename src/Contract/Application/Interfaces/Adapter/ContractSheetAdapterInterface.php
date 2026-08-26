@@ -10,4 +10,12 @@ interface ContractSheetAdapterInterface
      * @return list<array<string, mixed>>
      */
     public function read(string $sheetKey): array;
+
+    /**
+     * @template T
+     *
+     * @param  callable(array<string, mixed>): T  $mapper
+     * @return list<T>
+     */
+    public function map(string $sheetKey, callable $mapper): array;
 }

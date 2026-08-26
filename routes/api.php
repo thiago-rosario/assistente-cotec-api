@@ -11,15 +11,17 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/google-sheet', GoogleSheetController::class);
-Route::get('/google-sheets/{sheetId}/search', SearchGoogleSheetController::class);
-Route::get('/technical-notebooks/search', SearchTechnicalNotebookController::class);
-Route::post('/whatsapp/messages', WhatsappMessageController::class);
+Route::middleware('throttle:120,1')->group(function (): void {
+    Route::get('/google-sheet', GoogleSheetController::class);
+    Route::get('/google-sheets/{sheetId}/search', SearchGoogleSheetController::class);
+    Route::get('/technical-notebooks/search', SearchTechnicalNotebookController::class);
+    Route::post('/whatsapp/messages', WhatsappMessageController::class);
 
-Route::post('/whatsapp/validate', function (Request $request) {
-    return response()->json([
-        'status' => 'success',
-        'valid' => true,
-        'usuarios' => $request->input('usuarios', []),
-    ]);
+    Route::post('/whatsapp/validate', function (Request $request) {
+        return response()->json([
+            'status' => 'success',
+            'valid' => true,
+            'usuarios' => $request->input('usuarios', []),
+        ]);
+    });
 });

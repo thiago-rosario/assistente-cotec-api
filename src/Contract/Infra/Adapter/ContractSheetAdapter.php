@@ -117,4 +117,34 @@ class ContractSheetAdapter implements ContractSheetAdapterInterface
 
         return $data;
     }
+
+    /**
+     * @template T
+     *
+     * @param  callable(array<string, mixed>): T  $mapper
+     * @return list<T>
+     */
+    public function map(string $sheetKey, callable $mapper): array
+    {
+        $rows = $this->read($sheetKey);
+        $mappedRows = [];
+        $sheet = config("google_sheets.contract_spreadsheet.sheets.{$sheetKey}");
+        $headerRow = max(1, (int) (is_array($sheet) ? ($sheet['header_row'] ?? 1) : 1));
+
+        foreach ($rows as $index => $row) {
+            try {
+                $mappedRows[] = $mapper($row);
+            } catch (ContractSheetRowMappingException $exception) {
+                Log::warning('contract_sheet_row_skipped', [
+                    'sheet_key' => $sheetKey,
+                    'sheet' => is_array($sheet) ? ($sheet['name'] ?? null) : null,
+                    'row' => $headerRow + $index + 1,
+                    'exception' => $exception::class,
+                    'exception_message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return $mappedRows;
+    }
 }
