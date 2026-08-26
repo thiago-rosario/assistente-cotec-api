@@ -53,9 +53,14 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
+use App\Core\Infra\External\LogWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
+
+beforeEach(function () {
+    config(['whatsapp.message_sender' => 'editacodigo']);
+});
 
 it('resolves core and build panel bindings from their module providers', function (
     string $abstract,
@@ -92,6 +97,13 @@ it('resolves core and build panel bindings from their module providers', functio
     [AcceptedWhatsappMessageInterpretationServiceInterface::class, AcceptedWhatsappMessageInterpretationService::class],
     [TechnicalNotebookRepositoryInterface::class, TechnicalNotebookGoogleSheetGatewayRepository::class],
 ]);
+
+it('resolves the log whatsapp sender when configured', function () {
+    config(['whatsapp.message_sender' => 'log']);
+
+    expect(app(WhatsappMessageSenderInterface::class))
+        ->toBeInstanceOf(LogWhatsappMessageSender::class);
+});
 
 it('resolves direct whatsapp interpreter with bound interpretation rules', function () {
     $interpretation = app(DirectWhatsappMessageInterpreterServiceInterface::class)->interpret(

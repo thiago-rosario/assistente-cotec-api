@@ -29,12 +29,15 @@ use App\Core\Infra\Adapter\ReadGoogleSpreadsheetAdapter;
 use App\Core\Infra\Adapter\SearchGoogleSheetAdapter;
 use App\Core\Infra\Adapter\WhatsappWebhookPayloadAdapter;
 use App\Core\Infra\External\EditaCodigoWhatsappMessageSender;
+use App\Core\Infra\External\LogWhatsappMessageSender;
 use App\Core\Infra\Mapper\GoogleSheetRowMapper;
 use App\Core\Infra\Mapper\WhatsappWebhookPayloadMapper;
 use App\Core\Infra\Repository\Gateway\GoogleSheetGateway;
 use App\Core\Infra\Repository\WhatsappConversationStateStore;
 use App\Core\Infra\Service\WhatsappCoreResponseFormatter;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 
 class CoreServiceProvider extends ServiceProvider
 {
@@ -50,7 +53,13 @@ class CoreServiceProvider extends ServiceProvider
         $this->app->bind(CoreWhatsappResponseFormatterInterface::class, WhatsappCoreResponseFormatter::class);
         $this->app->bind(GreetingMessageMatcherServiceInterface::class, GreetingMessageMatcherService::class);
         $this->app->bind(WhatsappConversationStateStoreInterface::class, WhatsappConversationStateStore::class);
-        $this->app->bind(WhatsappMessageSenderInterface::class, EditaCodigoWhatsappMessageSender::class);
+        $this->app->bind(WhatsappMessageSenderInterface::class, function (Application $app): WhatsappMessageSenderInterface {
+            return match (strtolower((string) config('whatsapp.message_sender', 'editacodigo'))) {
+                'log' => $app->make(LogWhatsappMessageSender::class),
+                'editacodigo' => $app->make(EditaCodigoWhatsappMessageSender::class),
+                default => throw new InvalidArgumentException('WHATSAPP_MESSAGE_SENDER deve ser "log" ou "editacodigo".'),
+            };
+        });
         $this->app->bind(GoogleSheetRowMapperInterface::class, GoogleSheetRowMapper::class);
         $this->app->bind(GoogleSheetRepositoryInterface::class, GoogleSheetGateway::class);
         $this->app->bind(WhatsappWebhookPayloadAdapterInterface::class, WhatsappWebhookPayloadAdapter::class);
