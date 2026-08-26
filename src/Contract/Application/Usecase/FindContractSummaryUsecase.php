@@ -15,7 +15,8 @@ use App\Contract\Application\Interfaces\Usecase\FindContractAdjustmentsUsecaseIn
 use App\Contract\Application\Interfaces\Usecase\FindContractExecutionDeadlineUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractSummaryUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractValueAdditivesUsecaseInterface;
-use App\Contract\Domain\Entity\ContractEntity;
+use App\Contract\Application\Trait\CreatesContractEntityTrait;
+use App\Contract\Application\Trait\GroupsContractSummaryDataTrait;
 use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 use App\Contract\Enum\ContractSearchTypeEnum;
@@ -23,6 +24,9 @@ use InvalidArgumentException;
 
 class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
 {
+    use CreatesContractEntityTrait;
+    use GroupsContractSummaryDataTrait;
+
     public function __construct(
         private readonly FindContractValueAdditivesUsecaseInterface $valueAdditivesUsecase,
         private readonly FindContractAdjustmentsUsecaseInterface $adjustmentsUsecase,
@@ -50,7 +54,6 @@ class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
          *     company: ?string,
          *     seiProcess: ?string,
          *     municipalities: list<string>,
-         *     currentSituation: ?string,
          *     valueAdditives: list<ValueAdditiveOutputDTO>,
          *     readjustments: list<ContractReadjustmentOutputDTO>,
          *     executionDeadlines: list<ContractExecutionDeadlineOutputDTO>
@@ -65,18 +68,14 @@ class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
                 $contractNumber,
                 $valueAdditive->company,
             );
-            $contractsByNumber[$contractNumber->value]['valueAdditives'][] = $valueAdditive;
+            $contractsByNumber[$this->contractKey($contractNumber->value)]['valueAdditives'][] = $valueAdditive;
             $this->addMunicipality(
-                $contractsByNumber[$contractNumber->value]['municipalities'],
+                $contractsByNumber[$this->contractKey($contractNumber->value)]['municipalities'],
                 $valueAdditive->municipality,
             );
             $this->addSeiProcess(
-                $contractsByNumber[$contractNumber->value]['seiProcess'],
+                $contractsByNumber[$this->contractKey($contractNumber->value)]['seiProcess'],
                 $valueAdditive->seiProcess,
-            );
-            $this->addCurrentSituation(
-                $contractsByNumber[$contractNumber->value]['currentSituation'],
-                $valueAdditive->situation ?? $valueAdditive->status,
             );
         }
 
@@ -89,14 +88,10 @@ class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
             );
 
             foreach ($adjustmentGroup->data as $adjustment) {
-                $contractsByNumber[$contractNumber->value]['readjustments'][] = $adjustment;
+                $contractsByNumber[$this->contractKey($contractNumber->value)]['readjustments'][] = $adjustment;
                 $this->addSeiProcess(
-                    $contractsByNumber[$contractNumber->value]['seiProcess'],
+                    $contractsByNumber[$this->contractKey($contractNumber->value)]['seiProcess'],
                     $adjustment->seiProcess,
-                );
-                $this->addCurrentSituation(
-                    $contractsByNumber[$contractNumber->value]['currentSituation'],
-                    $adjustment->status,
                 );
             }
         }
@@ -108,17 +103,15 @@ class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
                 $contractNumber,
                 $executionDeadline->company,
             );
-            $contractsByNumber[$contractNumber->value]['executionDeadlines'][] = $executionDeadline;
+            $contractsByNumber[$this->contractKey($contractNumber->value)]['executionDeadlines'][] = $executionDeadline;
             $this->addMunicipality(
-                $contractsByNumber[$contractNumber->value]['municipalities'],
+                $contractsByNumber[$this->contractKey($contractNumber->value)]['municipalities'],
                 $executionDeadline->municipality,
             );
             $this->addSeiProcess(
-                $contractsByNumber[$contractNumber->value]['seiProcess'],
+                $contractsByNumber[$this->contractKey($contractNumber->value)]['seiProcess'],
                 $executionDeadline->seiProcess,
             );
-            $contractsByNumber[$contractNumber->value]['currentSituation'] = $executionDeadline->contractSituation
-                ?? $contractsByNumber[$contractNumber->value]['currentSituation'];
         }
 
         $summaries = [];
@@ -145,100 +138,5 @@ class FindContractSummaryUsecase implements FindContractSummaryUsecaseInterface
             total: count($summaries),
             data: $summaries,
         );
-    }
-
-    /**
-     * @param  array<string, array{
-     *     contractNumber: ContractNumberValueObject,
-     *     company: ?string,
-     *     seiProcess: ?string,
-     *     municipalities: list<string>,
-     *     currentSituation: ?string,
-     *     valueAdditives: list<ValueAdditiveOutputDTO>,
-     *     readjustments: list<ContractReadjustmentOutputDTO>,
-     *     executionDeadlines: list<ContractExecutionDeadlineOutputDTO>
-     * }>  $contractsByNumber
-     */
-    private function ensureContractGroup(
-        array &$contractsByNumber,
-        ContractNumberValueObject $contractNumber,
-        ?string $company,
-    ): void {
-        if (! isset($contractsByNumber[$contractNumber->value])) {
-            $contractsByNumber[$contractNumber->value] = [
-                'contractNumber' => $contractNumber,
-                'company' => $this->nullableValue($company),
-                'seiProcess' => null,
-                'municipalities' => [],
-                'currentSituation' => null,
-                'valueAdditives' => [],
-                'readjustments' => [],
-                'executionDeadlines' => [],
-            ];
-
-            return;
-        }
-
-        if ($contractsByNumber[$contractNumber->value]['company'] === null) {
-            $contractsByNumber[$contractNumber->value]['company'] = $this->nullableValue($company);
-        }
-    }
-
-    /**
-     * @param  array{
-     *     contractNumber: ContractNumberValueObject,
-     *     company: ?string,
-     *     seiProcess: ?string,
-     *     municipalities: list<string>,
-     *     currentSituation: ?string,
-     *     valueAdditives: list<ValueAdditiveOutputDTO>,
-     *     readjustments: list<ContractReadjustmentOutputDTO>,
-     *     executionDeadlines: list<ContractExecutionDeadlineOutputDTO>
-     * }  $contractData
-     */
-    private function contractEntity(array $contractData, ?MunicipalityValueObject $municipality): ContractEntity
-    {
-        $deadline = $contractData['executionDeadlines'][0] ?? null;
-
-        return new ContractEntity(
-            contractNumber: $contractData['contractNumber']->value,
-            company: $contractData['company'],
-            seiProcess: $contractData['seiProcess'],
-            municipalities: $municipality === null
-                ? $contractData['municipalities']
-                : [$municipality->value],
-            validityEndDate: $deadline?->validityEndDate,
-            executionDeadline: $deadline?->executionEndDate?->format('d/m/Y'),
-            currentSituation: $contractData['currentSituation'],
-        );
-    }
-
-    private function nullableValue(?string $value): ?string
-    {
-        $value = $value === null ? null : trim($value);
-
-        return $value === '' || $value === '-' ? null : $value;
-    }
-
-    /**
-     * @param  list<string>  $municipalities
-     */
-    private function addMunicipality(array &$municipalities, ?string $municipality): void
-    {
-        $municipality = $this->nullableValue($municipality);
-
-        if ($municipality !== null && ! in_array($municipality, $municipalities, true)) {
-            $municipalities[] = $municipality;
-        }
-    }
-
-    private function addSeiProcess(?string &$currentSeiProcess, ?string $seiProcess): void
-    {
-        $currentSeiProcess ??= $this->nullableValue($seiProcess);
-    }
-
-    private function addCurrentSituation(?string &$currentSituation, ?string $situation): void
-    {
-        $currentSituation ??= $this->nullableValue($situation);
     }
 }
