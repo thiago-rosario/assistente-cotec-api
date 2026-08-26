@@ -30,6 +30,8 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
 
     private const string ContractSearchRoute = 'contract_search';
 
+    private const string PostQueryActionRoute = 'post_query_action';
+
     public function __construct(
         private readonly GreetingMessageMatcherServiceInterface $greetingMatcher,
         private readonly BuildPanelWhatsappMessageServiceInterface $buildPanel,
@@ -47,13 +49,22 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
     public function __invoke(ReceivedMessageInputDTO $input): array
     {
         try {
+            $hasConversationIntegration = $this->hasConversationIntegration();
+            $state = $hasConversationIntegration
+                ? $this->conversationState->get($input->phone)
+                : null;
+
+            if ($state?->route === self::PostQueryActionRoute) {
+                return $this->processState($input, $state);
+            }
+
             if (trim($input->message) === '') {
                 return $this->coreResponseFormatter?->unsupportedMessageContent()
                     ?? $this->responseFormatter->unsupportedMessageContent();
             }
 
             if ($this->greetingMatcher->matches($input->message)) {
-                if (! $this->hasConversationIntegration()) {
+                if (! $hasConversationIntegration) {
                     return $this->responseFormatter->greeting();
                 }
 
@@ -62,11 +73,9 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
                 return $this->coreResponseFormatter->mainMenu();
             }
 
-            if (! $this->hasConversationIntegration()) {
+            if (! $hasConversationIntegration) {
                 return $this->buildPanel->process($input->message);
             }
-
-            $state = $this->conversationState->get($input->phone);
 
             if ($state !== null) {
                 if ($state->route !== self::BuildPanelRoute
@@ -142,6 +151,7 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
             self::BuildPanelRoute => $this->processBuildPanel($input),
             self::ContractMenuRoute => $this->processContractMenu($input),
             self::ContractSearchRoute => $this->processContractSearch($input, $state),
+            self::PostQueryActionRoute => $this->processPostQueryAction($input, $state),
             default => $this->mainMenu($input->phone),
         };
     }
@@ -159,18 +169,22 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
 
         if ($this->isOption($input->message, '1') && $state->municipality !== null) {
             $result = $this->buildPanel->process($state->municipality);
-            $this->conversationState->forget($input->phone);
 
-            return $result;
+            return $this->finishQuery($input, $result);
         }
 
         if ($this->isOption($input->message, '2') && $state->municipality !== null) {
             $result = $this->contract->search(4, $state->municipality);
-            $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
-                route: self::ContractMenuRoute,
-            ));
 
-            return $result;
+            if (! $this->isCompletedQuery($result)) {
+                $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
+                    route: self::ContractMenuRoute,
+                ));
+
+                return $result;
+            }
+
+            return $this->finishQuery($input, $result, 4);
         }
 
         return $this->coreResponseFormatter->municipalityDisambiguation((string) $state->municipality);
@@ -186,9 +200,8 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
         }
 
         $result = $this->buildPanel->process($input->message);
-        $this->conversationState->forget($input->phone);
 
-        return $result;
+        return $this->finishQuery($input, $result);
     }
 
     /**
@@ -234,11 +247,83 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
         }
 
         $result = $this->contract->search($state->contractOption, $input->message);
+
+        if ($this->isCompletedQuery($result)) {
+            return $this->finishQuery($input, $result, $state->contractOption);
+        }
+
         $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
             route: self::ContractMenuRoute,
         ));
 
         return $result;
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
+     */
+    private function processPostQueryAction(
+        ReceivedMessageInputDTO $input,
+        WhatsappConversationStateDTO $state,
+    ): array {
+        if ($this->isOption($input->message, '0')) {
+            return $this->mainMenu($input->phone);
+        }
+
+        if ($this->isOption($input->message, '1')) {
+            if ($state->contractOption !== null) {
+                $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
+                    route: self::ContractSearchRoute,
+                    contractOption: $state->contractOption,
+                ));
+
+                return $this->contract->searchPrompt($state->contractOption);
+            }
+
+            $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
+                route: self::BuildPanelRoute,
+            ));
+
+            return $this->responseFormatter->greeting();
+        }
+
+        return $this->coreResponseFormatter->invalidPostQueryAction();
+    }
+
+    /**
+     * @param  array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}  $result
+     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
+     */
+    private function finishQuery(
+        ReceivedMessageInputDTO $input,
+        array $result,
+        ?int $contractOption = null,
+    ): array {
+        if (! $this->isCompletedQuery($result)) {
+            $this->conversationState->forget($input->phone);
+
+            return $result;
+        }
+
+        $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
+            route: self::PostQueryActionRoute,
+            contractOption: $contractOption,
+        ));
+
+        $result['reply'] .= "\n\n".$this->coreResponseFormatter->postQueryAction()['reply'];
+
+        return $result;
+    }
+
+    private function isCompletedQuery(array $result): bool
+    {
+        return in_array($result['intent'] ?? null, [
+            'search_technical_notebook',
+            'contract_value_additives',
+            'contract_adjustments',
+            'contract_execution_deadlines',
+            'contract_summary',
+        ], true);
     }
 
     /**

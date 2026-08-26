@@ -295,15 +295,17 @@ it('builds summaries by municipality for every related contract', function () {
     expect($result['intent'])->toBe('contract_summary')
         ->and($result['total'])->toBe(2)
         ->and($result['data'])->toHaveCount(2)
-        ->and($result['data'][0]->valueAdditives)->toHaveCount(1)
-        ->and($result['data'][0]->readjustments)->toHaveCount(1)
-        ->and($result['data'][0]->executionDeadlines)->toHaveCount(1)
+        ->and($result['data'][0]->additivesCount)->toBe(1)
+        ->and($result['data'][0]->readjustmentsCount)->toBe(1)
+        ->and($result['data'][0]->executionDeadlinesStatus)->toBe('1 registro em execução')
         ->and($result['data'][1]->contractNumber)->toBe('47/2025')
-        ->and($result['reply'])->toContain('📋 RESUMO DO CONTRATO 08/2023')
-        ->and($result['reply'])->toContain('📋 RESUMO DO CONTRATO 47/2025');
+        ->and($result['reply'])->toContain('📋 EXTRATO CONTRATUAL — 08/2023')
+        ->and($result['reply'])->toContain('📋 EXTRATO CONTRATUAL — 47/2025')
+        ->and($result['reply'])->not->toContain('ADITIVOS DE VALOR')
+        ->and($result['reply'])->not->toContain('Registro 1 de');
 });
 
-it('builds a summary directly by contract number and preserves every detail list', function () {
+it('builds a compact summary directly by contract number without detail lists', function () {
     mockContractInfrastructureSheet('value-additives', [
         valueAdditiveInfrastructureHeader(),
         valueAdditiveInfrastructureRow(additiveNumber: '1'),
@@ -326,9 +328,9 @@ it('builds a summary directly by contract number and preserves every detail list
     ));
 
     expect($result->total)->toBe(1)
-        ->and($result->data[0]->valueAdditives)->toHaveCount(2)
-        ->and($result->data[0]->readjustments)->toHaveCount(2)
-        ->and($result->data[0]->executionDeadlines)->toHaveCount(2);
+        ->and($result->data[0]->additivesCount)->toBe(2)
+        ->and($result->data[0]->readjustmentsCount)->toBe(2)
+        ->and($result->data[0]->executionDeadlinesStatus)->toBe('2 registros em execução');
 });
 
 it('finds every readjustment and execution deadline for a contract number', function () {

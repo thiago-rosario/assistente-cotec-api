@@ -9,12 +9,12 @@ use App\Contract\Enum\ContractSearchTypeEnum;
 readonly class FindContractSummaryOutputDTO
 {
     /**
-     * @param  list<ContractSummaryOutputDTO>  $data
+     * @param  list<ContractExtractDTO>  $data
      */
     public function __construct(
-        public string                 $searchTerm,
+        public string $searchTerm,
         public ContractSearchTypeEnum $searchType,
-        public int                    $total,
-        public array                  $data,
+        public int $total,
+        public array $data,
     ) {}
 }

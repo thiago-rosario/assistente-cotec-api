@@ -7,18 +7,18 @@ namespace App\Core\Infra\Message;
 class WhatsappCoreDefaultReplies
 {
     private const string MainMenuMessage = "Olá! Eu sou o Assistente da COTEC. 👋\n\n"
-."Posso ajudar você a consultar informações do *Painel de Obras da CEIRF/SSP* e acompanhar contratos.\n\n"
-."Escolha uma das opções abaixo:\n\n"
-."1️⃣ *Consultar o Painel de Obras*\n"
-."Consulte informações por município ou número do processo.\n\n"
-."2️⃣ *Acompanhar contratos*\n"
-."Consulte aditivos, reajustes, prazos de execução e o resumo dos contratos.\n\n"
-."Digite apenas o número da opção desejada.";
+        ."Posso ajudar você a consultar informações do *Painel de Obras da CEIRF/SSP* e acompanhar contratos.\n\n"
+        ."Escolha uma das opções abaixo:\n\n"
+        ."1️⃣ *Consultar o Painel de Obras*\n"
+        ."Consulte informações por município ou número do processo.\n\n"
+        ."2️⃣ *Acompanhar contratos*\n"
+        ."Consulte aditivos, reajustes, prazos de execução e o resumo dos contratos.\n\n"
+        .'Digite apenas o número da opção desejada.';
 
     private const string MunicipalityDisambiguationMessage = "Encontrei duas consultas disponíveis para o município *%s*.\n\n"
         ."Escolha o que deseja consultar:\n\n"
         ."1️⃣ Extrato de obras do município\n"
-        ."2️⃣ Resumo das informações de contratos do município\n\n"
+        ."2️⃣ Extrato consolidado dos contratos do município\n\n"
         ."0️⃣ Voltar ao menu principal\n\n"
         .'Digite apenas o número da opção desejada.';
 
@@ -26,6 +26,12 @@ class WhatsappCoreDefaultReplies
         ."Escolha uma das opções do menu principal:\n\n"
         ."1️⃣ Consultar o Painel de Obras\n"
         ."2️⃣ Acompanhar contratos\n\n"
+        ."0️⃣ Voltar ao menu principal\n\n"
+        .'Digite apenas o número da opção desejada.';
+
+    private const string PostQueryActionMessage = "✅ Consulta concluída.\n\n"
+        ."Deseja realizar outra consulta?\n\n"
+        ."1️⃣ Realizar nova consulta\n"
         ."0️⃣ Voltar ao menu principal\n\n"
         .'Digite apenas o número da opção desejada.';
 
@@ -44,6 +50,16 @@ class WhatsappCoreDefaultReplies
     public function invalidMainMenuOption(): string
     {
         return self::InvalidMainMenuOptionMessage;
+    }
+
+    public function postQueryAction(): string
+    {
+        return self::PostQueryActionMessage;
+    }
+
+    public function invalidPostQueryAction(): string
+    {
+        return "Opção inválida.\n\n".self::PostQueryActionMessage;
     }
 
     public function unsupportedMessageContent(): string

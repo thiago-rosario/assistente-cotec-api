@@ -1,9 +1,7 @@
 <?php
 
 use App\Contract\Application\Assembly\ContractSummaryAssembler;
-use App\Contract\Application\DTO\ContractExecutionDeadlineOutputDTO;
-use App\Contract\Application\DTO\ContractReadjustmentOutputDTO;
-use App\Contract\Application\DTO\ContractSummaryOutputDTO;
+use App\Contract\Application\DTO\ContractExtractDTO;
 use App\Contract\Application\DTO\FindContractSummaryOutputDTO;
 use App\Contract\Application\DTO\SearchContractInputDTO;
 use App\Contract\Application\Resolver\MunicipalityContractResolver;
@@ -24,7 +22,7 @@ use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 use App\Contract\Enum\ContractSearchTypeEnum;
 
-it('builds a complete municipality summary for every contract without mixing records', function () {
+it('builds a compact municipality extract for every contract without mixing records', function () {
     $contracts = [
         summaryContractEntity('08/2023', 'Empresa A'),
         summaryContractEntity('47/2025', 'Empresa B'),
@@ -56,23 +54,24 @@ it('builds a complete municipality summary for every contract without mixing rec
         ->and($result->searchTerm)->toBe('  Feira   de Santana ')
         ->and($result->searchType)->toBe(ContractSearchTypeEnum::Municipality)
         ->and($result->total)->toBe(2)
-        ->and($result->data[0])->toBeInstanceOf(ContractSummaryOutputDTO::class)
+        ->and($result->data[0])->toBeInstanceOf(ContractExtractDTO::class)
         ->and($result->data[0]->contractNumber)->toBe('08/2023')
         ->and($result->data[0]->company)->toBe('Empresa A')
         ->and($result->data[0]->municipality)->toBe('Feira de Santana')
-        ->and($result->data[0]->valueAdditives)->toHaveCount(2)
-        ->and($result->data[0]->readjustments)->toHaveCount(1)
-        ->and($result->data[0]->executionDeadlines)->toHaveCount(2)
-        ->and($result->data[0]->processes)->toContain('001.123456/2026-10')
-        ->and($result->data[0]->statuses)->toContain('PUBLICADO')
-        ->and($result->data[0]->observations)->toContain('Prazo prorrogado')
+        ->and($result->data[0]->additivesCount)->toBe(1)
+        ->and($result->data[0]->additivesStatus)->toBe('1 registro publicado')
+        ->and($result->data[0]->readjustmentsCount)->toBe(1)
+        ->and($result->data[0]->readjustmentsStatus)->toBe('1 registro publicado e liquidado')
+        ->and($result->data[0]->executionDeadlinesStatus)->toBe('1 registro em execução')
+        ->and($result->data[0]->currentSituation)->toBe('Publicado')
         ->and($result->data[1]->contractNumber)->toBe('47/2025')
-        ->and($result->data[1]->valueAdditives)->toBe([])
-        ->and($result->data[1]->readjustments[0])->toBeInstanceOf(ContractReadjustmentOutputDTO::class)
-        ->and($result->data[1]->executionDeadlines[0])->toBeInstanceOf(ContractExecutionDeadlineOutputDTO::class);
+        ->and($result->data[1]->additivesCount)->toBe(0)
+        ->and($result->data[1]->additivesStatus)->toBeNull()
+        ->and($result->data[1]->readjustmentsCount)->toBe(1)
+        ->and($result->data[1]->executionDeadlinesStatus)->toBe('1 registro em execução');
 });
 
-it('builds the same complete summary directly by contract number', function () {
+it('builds the same compact extract directly by contract number', function () {
     $contract = summaryContractEntity('08/2023', 'Empresa A');
     $contractRepository = summaryContractRepository([$contract], failMunicipalitySearch: true);
     $usecase = summaryUsecase(
@@ -90,9 +89,9 @@ it('builds the same complete summary directly by contract number', function () {
 
     expect($result->total)->toBe(1)
         ->and($result->data[0]->contractNumber)->toBe('08/2023')
-        ->and($result->data[0]->valueAdditives)->toHaveCount(1)
-        ->and($result->data[0]->readjustments)->toHaveCount(1)
-        ->and($result->data[0]->executionDeadlines)->toHaveCount(1);
+        ->and($result->data[0]->additivesCount)->toBe(1)
+        ->and($result->data[0]->readjustmentsCount)->toBe(1)
+        ->and($result->data[0]->executionDeadlinesStatus)->toBe('1 registro em execução');
 });
 
 it('returns an empty summary when the official register has no municipality contracts', function () {
@@ -112,6 +111,72 @@ it('returns an empty summary when the official register has no municipality cont
 
     expect($result->total)->toBe(0)
         ->and($result->data)->toBe([]);
+});
+
+it('normalizes contract numbers, removes duplicates, prioritizes pending records and selects the latest movement', function () {
+    $contractRepository = summaryContractRepository([
+        summaryContractEntity('12/2026', 'Empresa A'),
+    ]);
+    $usecase = summaryUsecase(
+        contractRepository: $contractRepository,
+        resolver: new MunicipalityContractResolver($contractRepository),
+        valueAdditives: [
+            '12/2026' => [
+                summaryValueAdditive('12/2026', 'Empresa A'),
+                summaryValueAdditive('012/2026', 'Empresa A'),
+            ],
+        ],
+        adjustments: [
+            '12/2026' => [
+                summaryReadjustment(
+                    '12/2026',
+                    'Empresa A',
+                    status: 'PUBLICADO',
+                    lastMovementDate: new DateTimeImmutable('2026-05-01'),
+                ),
+                summaryReadjustment(
+                    '012/2026',
+                    'Empresa A',
+                    status: 'EM TRAMITAÇÃO',
+                    lastMovementDate: new DateTimeImmutable('2026-05-15'),
+                    location: 'SSP/GAB/DG',
+                ),
+                summaryReadjustment(
+                    '012/2026',
+                    'Empresa A',
+                    status: 'EM TRAMITAÇÃO',
+                    lastMovementDate: new DateTimeImmutable('2026-05-15'),
+                    location: 'SSP/GAB/DG',
+                ),
+            ],
+        ],
+        deadlines: [
+            '12/2026' => [
+                summaryDeadline(
+                    '012/2026',
+                    'Empresa A',
+                    entryDate: new DateTimeImmutable('2026-04-01'),
+                ),
+            ],
+        ],
+    );
+
+    $result = $usecase(new SearchContractInputDTO(
+        searchTerm: 'Feira de Santana',
+        searchType: ContractSearchTypeEnum::Municipality,
+    ));
+
+    expect($result->total)->toBe(1)
+        ->and($result->data[0]->contractNumber)->toBe('12/2026')
+        ->and($result->data[0]->additivesCount)->toBe(1)
+        ->and($result->data[0]->readjustmentsCount)->toBe(2)
+        ->and($result->data[0]->readjustmentsStatus)
+        ->toBe('1 publicado e liquidado; 1 em tramitação')
+        ->and($result->data[0]->currentSituation)->toBe('Em acompanhamento')
+        ->and($result->data[0]->currentPending)
+        ->toBe('Reajuste em tramitação na SSP/GAB/DG')
+        ->and($result->data[0]->lastMovementDate)
+        ->toEqual(new DateTimeImmutable('2026-05-15'));
 });
 
 /**
@@ -295,8 +360,11 @@ function summaryContractEntity(string $contractNumber, ?string $company): Contra
     );
 }
 
-function summaryValueAdditive(string $contractNumber, ?string $company): ValueAdditiveEntity
-{
+function summaryValueAdditive(
+    string $contractNumber,
+    ?string $company,
+    string $status = 'PUBLICADO',
+): ValueAdditiveEntity {
     return new ValueAdditiveEntity(
         contractNumber: $contractNumber,
         municipality: 'Feira de Santana',
@@ -306,7 +374,7 @@ function summaryValueAdditive(string $contractNumber, ?string $company): ValueAd
         unit: null,
         type: 'ACRÉSCIMO',
         value: 12500.0,
-        status: 'PUBLICADO',
+        status: $status,
         currentLocation: null,
         situation: null,
         publicationDate: null,
@@ -316,20 +384,25 @@ function summaryValueAdditive(string $contractNumber, ?string $company): ValueAd
     );
 }
 
-function summaryReadjustment(string $contractNumber, ?string $company): ContractReadjustmentEntity
-{
+function summaryReadjustment(
+    string $contractNumber,
+    ?string $company,
+    string $status = 'PUBLICADO',
+    ?DateTimeImmutable $lastMovementDate = null,
+    ?string $location = null,
+): ContractReadjustmentEntity {
     return new ContractReadjustmentEntity(
         entryDate: new DateTimeImmutable('2026-02-01'),
         company: $company,
         ceirfEntryDate: null,
-        ceirfLastMovementDate: null,
+        ceirfLastMovementDate: $lastMovementDate,
         contractNumber: $contractNumber,
         seiProcess: '001.123456/2026-10',
         apostilleNumber: 'AP-1',
         contemplatedValue: 5000.0,
         contemplatedIncidencePeriod: '2026',
-        status: 'PUBLICADO',
-        location: null,
+        status: $status,
+        location: $location,
         processingTimeDays: 10,
         publicationDate: new DateTimeImmutable('2026-03-01'),
         publicationTimeDays: 20,
@@ -339,8 +412,11 @@ function summaryReadjustment(string $contractNumber, ?string $company): Contract
     );
 }
 
-function summaryDeadline(string $contractNumber, ?string $company): ContractExecutionDeadlineEntity
-{
+function summaryDeadline(
+    string $contractNumber,
+    ?string $company,
+    ?DateTimeImmutable $entryDate = null,
+): ContractExecutionDeadlineEntity {
     return new ContractExecutionDeadlineEntity(
         contractNumber: $contractNumber,
         company: $company,
@@ -353,5 +429,6 @@ function summaryDeadline(string $contractNumber, ?string $company): ContractExec
         location: null,
         publicationDate: null,
         observation: 'Prazo prorrogado',
+        entryDate: $entryDate,
     );
 }

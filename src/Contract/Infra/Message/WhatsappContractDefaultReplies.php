@@ -7,14 +7,14 @@ namespace App\Contract\Infra\Message;
 class WhatsappContractDefaultReplies
 {
     private const string MenuMessage = "Olá! Seja bem-vindo ao módulo de *Acompanhamento de Contratos*. 👋\n\n"
-    . "Aqui você pode consultar aditivos de valor, reajustes e reequilíbrios, prazos de execução e o resumo completo dos contratos.\n\n"
-    . "*Selecione uma opção:*\n\n"
-    . "1️⃣ Aditivos de valor\n"
-    . "2️⃣ Reajustes e reequilíbrios\n"
-    . "3️⃣ Controle de prazos de execução\n"
-    . "4️⃣ Resumo completo do contrato\n\n"
-    . "0️⃣ Voltar ao menu principal\n\n"
-    . "Digite apenas o número da opção desejada.";
+        ."Aqui você pode consultar aditivos de valor, reajustes e reequilíbrios, prazos de execução e o extrato consolidado dos contratos.\n\n"
+        ."*Selecione uma opção:*\n\n"
+        ."1️⃣ Aditivos de valor\n"
+        ."2️⃣ Reajustes e reequilíbrios\n"
+        ."3️⃣ Controle de prazos de execução\n"
+        ."4️⃣ Extrato consolidado do contrato\n\n"
+        ."0️⃣ Voltar ao menu principal\n\n"
+        .'Digite apenas o número da opção desejada.';
 
     private const string ValueAdditiveSearchMessage = "💰 *ADITIVOS DE VALOR*\n\n"
         ."Envie o município, a empresa ou o número do contrato (uma informação por vez).\n"
@@ -31,7 +31,7 @@ class WhatsappContractDefaultReplies
         ."Ex.: SALVADOR, CONSÓRCIO INTEGRA ou 15/2022\n\n"
         .'Digite 0 para voltar.';
 
-    private const string ContractSummarySearchMessage = "📋 *RESUMO DO ACOMPANHAMENTO CONTRATUAL*\n\n"
+    private const string ContractSummarySearchMessage = "📋 *EXTRATO DO ACOMPANHAMENTO CONTRATUAL*\n\n"
         ."Envie o município ou o número do contrato.\n"
         ."Ex.: SALVADOR ou 13/2024\n\n"
         .'Digite 0 para voltar.';
@@ -53,7 +53,7 @@ class WhatsappContractDefaultReplies
         ."1️⃣ Aditivos de valor\n"
         ."2️⃣ Reajustes e reequilíbrios\n"
         ."3️⃣ Controle de prazos de execução\n"
-        ."4️⃣ Resumo completo do contrato\n"
+        ."4️⃣ Extrato consolidado do contrato\n"
         .'0️⃣ Voltar ao menu principal';
 
     private const string ContinueSearchMessage = "🔄 Deseja realizar outra consulta?\n\n"

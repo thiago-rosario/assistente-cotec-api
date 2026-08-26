@@ -1,6 +1,6 @@
 <?php
 
-use App\Contract\Application\DTO\ContractSummaryOutputDTO;
+use App\Contract\Application\DTO\ContractExtractDTO;
 use App\Contract\Application\DTO\FindContractSummaryOutputDTO;
 use App\Contract\Application\Interfaces\Usecase\FindContractAdjustmentsUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractExecutionDeadlineUsecaseInterface;
@@ -25,7 +25,7 @@ it('returns the contract menu and summary prompt through the existing replies', 
     expect($service->menu()['reply'])
         ->toContain('Acompanhamento de Contratos')
         ->and($service->searchPrompt(4)['reply'])
-        ->toContain('RESUMO DO ACOMPANHAMENTO CONTRATUAL');
+        ->toContain('EXTRATO DO ACOMPANHAMENTO CONTRATUAL');
 });
 
 it('executes the municipality contract summary and formats its existing result', function () {
@@ -40,11 +40,10 @@ it('executes the municipality contract summary and formats its existing result',
             searchTerm: 'Ibotirama',
             searchType: ContractSearchTypeEnum::Municipality,
             total: 1,
-            data: [new ContractSummaryOutputDTO(
+            data: [new ContractExtractDTO(
                 contractNumber: '08/2023',
                 company: 'Empresa X',
-                seiProcess: '020.1234.2026.0000001-10',
-                municipalities: ['Ibotirama'],
+                municipality: 'Ibotirama',
             )],
         ));
 
@@ -57,7 +56,50 @@ it('executes the municipality contract summary and formats its existing result',
             'searchTerm' => 'Ibotirama',
             'searchType' => 'municipality',
         ])
-        ->and($result['reply'])->toContain('RESUMO DO CONTRATO 08/2023');
+        ->and($result['reply'])->toContain('EXTRATO CONTRATUAL — 08/2023')
+        ->and($result['reply'])->toContain('➕ Aditivos: Sem registros')
+        ->and($result['reply'])->toContain('📅 Prazos de execução: Sem registros')
+        ->and($result['reply'])->not->toContain('Não informado');
+});
+
+it('formats the general contract result as a compact extract', function () {
+    $builder = new ContractSummaryReplyBuilder(new WhatsappContractRecordValueFormatter);
+    $reply = $builder->build(new FindContractSummaryOutputDTO(
+        searchTerm: 'Salvador',
+        searchType: ContractSearchTypeEnum::Municipality,
+        total: 1,
+        data: [new ContractExtractDTO(
+            contractNumber: '13/2024',
+            company: 'WIA Engenharia e Consultoria Ambiental Eireli',
+            municipality: 'Salvador',
+            seiProcess: '020.18069.2024.0024827-27',
+            currentSituation: 'Em acompanhamento',
+            updatedValue: 5690942.11,
+            additivesCount: 3,
+            additivesStatus: '3 registros publicados',
+            readjustmentsCount: 2,
+            readjustmentsStatus: '1 publicado e liquidado; 1 em tramitação',
+            executionDeadlinesStatus: 'Sem registros',
+            lastMovementDate: new DateTimeImmutable('2026-05-15'),
+            currentPending: 'Reajuste em tramitação na SSP/GAB/DG',
+        )],
+    ));
+
+    expect($reply)
+        ->toContain('📋 EXTRATO CONTRATUAL — 13/2024')
+        ->toContain('🏢 Empresa: WIA Engenharia e Consultoria Ambiental Eireli')
+        ->toContain('📄 Processo principal: 020.18069.2024.0024827-27')
+        ->toContain('💰 Valor atualizado: R$ 5.690.942,11')
+        ->toContain('➕ Aditivos: 3 registros publicados')
+        ->toContain('📊 Reajustes e reequilíbrios: 2 registros')
+        ->toContain('  • 1 publicado e liquidado')
+        ->toContain('  • 1 em tramitação')
+        ->toContain('📅 Prazos de execução: Sem registros')
+        ->toContain('🔄 Última movimentação: 15/05/2026')
+        ->toContain('⚠️ Pendência atual: Reajuste em tramitação na SSP/GAB/DG')
+        ->not->toContain('Registro 1 de')
+        ->not->toContain('ADITIVOS DE VALOR')
+        ->not->toContain('Não informado');
 });
 
 it('classifies the supported contract search values', function () {

@@ -4,96 +4,12 @@ declare(strict_types=1);
 
 namespace App\Contract\Infra\Message;
 
-use App\Contract\Application\DTO\ContractSummaryOutputDTO;
+use App\Contract\Application\DTO\ContractExtractDTO;
 use App\Contract\Application\DTO\FindContractSummaryOutputDTO;
 
 class ContractSummaryReplyBuilder
 {
     private const string RecordSeparator = '────────────';
-
-    /**
-     * @var array<string, string>
-     */
-    private const array ValueAdditiveFields = [
-        'entryDate' => 'Data de entrada no protocolo',
-        'stage' => 'Etapa',
-        'contractNumber' => 'Número do contrato',
-        'company' => 'Empresa',
-        'municipality' => 'Município',
-        'unit' => 'Unidade',
-        'seiProcess' => 'Processo SEI',
-        'type' => 'Tipo',
-        'value' => 'Valor',
-        'status' => 'Status',
-        'currentLocation' => 'Local atual',
-        'processingTimeDays' => 'Tempo de tramitação',
-        'situation' => 'Situação',
-        'publicationDate' => 'Data da publicação',
-        'publishedValue' => 'Valor após publicação',
-        'publicationTimeDays' => 'Tempo de publicação',
-        'additiveNumber' => 'Número do aditivo',
-        'observation' => 'Observações',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    private const array ContractAdjustmentFields = [
-        'entryDate' => 'Data de ingresso',
-        'company' => 'Empresa',
-        'ceirfEntryDate' => 'Entrada na CEIRF',
-        'ceirfLastMovementDate' => 'Última movimentação na CEIRF',
-        'contractNumber' => 'Número do contrato',
-        'seiProcess' => 'Processo SEI',
-        'apostilleNumber' => 'Número da apostila',
-        'contemplatedValue' => 'Valor contemplado',
-        'contemplatedIncidencePeriod' => 'Período de incidência contemplado',
-        'status' => 'Status',
-        'location' => 'Local',
-        'processingTimeDays' => 'Tempo de tramitação',
-        'publicationDate' => 'Data da publicação',
-        'publicationTimeDays' => 'Tempo de publicação',
-        'observation' => 'Observações',
-        'paymentSituation' => 'Situação do pagamento',
-        'paymentSei' => 'SEI de pagamento',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    private const array ExecutionDeadlineFields = [
-        'entryDate' => 'Data de entrada',
-        'company' => 'Empresa',
-        'contractNumber' => 'Contrato',
-        'validityEndDate' => 'Final da vigência',
-        'municipality' => 'Município',
-        'executionEndDate' => 'Final da execução',
-        'remainingExecutionDays' => 'Dias para vencer a execução',
-        'remainingValidityDays' => 'Dias para vencer a vigência',
-        'contractSituation' => 'Situação do contrato',
-        'seiProcess' => 'Processo SEI',
-        'location' => 'Local',
-        'deadlineAddendumStatus' => 'Status do aditivo de prazo',
-        'processingTimeDays' => 'Tempo de tramitação',
-        'publicationDate' => 'Data da publicação',
-        'publicationTimeDays' => 'Tempo de publicação',
-        'observation' => 'Observações',
-    ];
-
-    /**
-     * @var list<string>
-     */
-    private const array ValueAdditiveMonetaryFields = [
-        'value',
-        'publishedValue',
-    ];
-
-    /**
-     * @var list<string>
-     */
-    private const array ContractAdjustmentMonetaryFields = [
-        'contemplatedValue',
-    ];
 
     public function __construct(
         private readonly WhatsappContractRecordValueFormatter $valueFormatter,
@@ -114,7 +30,7 @@ class ContractSummaryReplyBuilder
                 $lines[] = '';
             }
 
-            $this->appendSummary($lines, $summary);
+            $this->appendExtract($lines, $summary);
         }
 
         return trim(implode(PHP_EOL, $lines));
@@ -123,128 +39,94 @@ class ContractSummaryReplyBuilder
     /**
      * @param  list<string>  $lines
      */
-    private function appendSummary(array &$lines, ContractSummaryOutputDTO $summary): void
+    private function appendExtract(array &$lines, ContractExtractDTO $summary): void
     {
-        $lines[] = sprintf('📋 RESUMO DO CONTRATO %s', $this->valueFormatter->value($summary->contractNumber));
+        $lines[] = sprintf('📋 EXTRATO CONTRATUAL — %s', $this->valueFormatter->value($summary->contractNumber));
         $lines[] = '';
-        $this->appendSummaryFields($lines, $summary);
 
-        $lines[] = '';
-        $lines[] = '💰 ADITIVOS DE VALOR';
-        $lines[] = '';
-        $this->appendRecordSection(
-            $lines,
-            $summary->valueAdditives,
-            self::ValueAdditiveFields,
-            self::ValueAdditiveMonetaryFields,
-            'ADITIVO DE VALOR',
+        $this->appendOptionalField($lines, '🏢 Empresa', $summary->company);
+        $this->appendOptionalField($lines, '📍 Município', $summary->municipality);
+        $this->appendOptionalField($lines, '📄 Processo principal', $summary->seiProcess);
+        $this->appendOptionalField($lines, '📌 Situação atual', $summary->currentSituation);
+        $this->appendOptionalField($lines, '💰 Valor atualizado', $summary->updatedValue, true);
+
+        $lines[] = sprintf(
+            '➕ Aditivos: %s',
+            $summary->additivesStatus
+                ?? $this->recordCount($summary->additivesCount),
+        );
+        $this->appendReadjustments($lines, $summary);
+        $lines[] = sprintf(
+            '📅 Prazos de execução: %s',
+            $summary->executionDeadlinesStatus ?? 'Sem registros',
         );
 
-        $lines[] = '';
-        $lines[] = '📊 REAJUSTES E REEQUILÍBRIOS';
-        $lines[] = '';
-        $this->appendRecordSection(
-            $lines,
-            $summary->readjustments,
-            self::ContractAdjustmentFields,
-            self::ContractAdjustmentMonetaryFields,
-            'REAJUSTE E REEQUILÍBRIO',
-        );
-
-        $lines[] = '';
-        $lines[] = '📅 PRAZOS DE EXECUÇÃO';
-        $lines[] = '';
-        $this->appendRecordSection(
-            $lines,
-            $summary->executionDeadlines,
-            self::ExecutionDeadlineFields,
-            [],
-            'CONTROLE DE PRAZO',
-        );
+        $this->appendOptionalField($lines, '🔄 Última movimentação', $summary->lastMovementDate);
+        $this->appendOptionalField($lines, '⚠️ Pendência atual', $summary->currentPending);
     }
 
     /**
      * @param  list<string>  $lines
      */
-    private function appendSummaryFields(array &$lines, ContractSummaryOutputDTO $summary): void
+    private function appendReadjustments(array &$lines, ContractExtractDTO $summary): void
     {
-        $municipalities = $summary->municipalities === []
-            ? $this->valueFormatter->value($summary->municipality)
-            : implode(', ', $summary->municipalities);
-
-        $lines[] = sprintf('• Empresa: %s', $this->valueFormatter->value($summary->company));
-        $lines[] = sprintf('• Município: %s', $municipalities);
-        $lines[] = sprintf('• Processo SEI: %s', $this->valueFormatter->value($summary->seiProcess));
-        $lines[] = sprintf('• Objeto: %s', $this->valueFormatter->value($summary->object));
-        $lines[] = sprintf('• Valor inicial: %s', $this->valueFormatter->value($summary->initialValue, true));
-        $lines[] = sprintf('• Valor atualizado: %s', $this->valueFormatter->value($summary->updatedValue, true));
-        $lines[] = sprintf('• Início da vigência: %s', $this->valueFormatter->value($summary->validityStartDate));
-        $lines[] = sprintf('• Final da vigência: %s', $this->valueFormatter->value($summary->validityEndDate));
-        $lines[] = sprintf('• Prazo de execução: %s', $this->valueFormatter->value($summary->executionDeadline));
-        $lines[] = sprintf('• Situação atual: %s', $this->valueFormatter->value($summary->currentSituation));
-        $this->appendListField($lines, 'Processos relacionados', $summary->processes);
-        $this->appendListField($lines, 'Status', $summary->statuses);
-        $this->appendListField($lines, 'Observações', $summary->observations);
-    }
-
-    /**
-     * @param  list<string>  $lines
-     * @param  list<string>  $values
-     */
-    private function appendListField(array &$lines, string $label, array $values): void
-    {
-        if ($values === []) {
-            $lines[] = sprintf('• %s: Não informado', $label);
+        if ($summary->readjustmentsStatus === null) {
+            $lines[] = sprintf(
+                '📊 Reajustes e reequilíbrios: %s',
+                $this->recordCount($summary->readjustmentsCount),
+            );
 
             return;
         }
 
-        foreach ($values as $value) {
-            $lines[] = sprintf('• %s: %s', $label, $this->valueFormatter->value($value));
+        if (! str_contains($summary->readjustmentsStatus, '; ')) {
+            $lines[] = sprintf(
+                '📊 Reajustes e reequilíbrios: %s',
+                $summary->readjustmentsStatus,
+            );
+
+            return;
+        }
+
+        $lines[] = sprintf(
+            '📊 Reajustes e reequilíbrios: %d registros',
+            $summary->readjustmentsCount,
+        );
+
+        foreach (explode('; ', $summary->readjustmentsStatus) as $status) {
+            $lines[] = '  • '.$status;
         }
     }
 
     /**
      * @param  list<string>  $lines
-     * @param  list<object>  $records
-     * @param  array<string, string>  $fields
-     * @param  list<string>  $monetaryFields
      */
-    private function appendRecordSection(
+    private function appendOptionalField(
         array &$lines,
-        array $records,
-        array $fields,
-        array $monetaryFields,
-        string $recordTitle,
+        string $label,
+        mixed $value,
+        bool $monetary = false,
     ): void {
-        if ($records === []) {
-            $lines[] = 'Nenhum registro informado.';
-
+        if ($value === null || (is_string($value) && $this->isEmptyValue($value))) {
             return;
         }
 
-        $total = count($records);
+        $lines[] = sprintf(
+            '%s: %s',
+            $label,
+            $this->valueFormatter->value($value, $monetary),
+        );
+    }
 
-        foreach ($records as $index => $record) {
-            if ($index > 0) {
-                $lines[] = '';
-                $lines[] = self::RecordSeparator;
-            }
+    private function recordCount(int $count): string
+    {
+        return $count === 0
+            ? 'Sem registros'
+            : sprintf('%d %s', $count, $count === 1 ? 'registro' : 'registros');
+    }
 
-            $lines[] = sprintf('📌 Registro %d de %d — %s', $index + 1, $total, $recordTitle);
-            $lines[] = '';
-
-            foreach ($fields as $key => $label) {
-                $lines[] = sprintf(
-                    '• %s: %s',
-                    $label,
-                    $this->valueFormatter->contractValue(
-                        $record,
-                        $key,
-                        in_array($key, $monetaryFields, true),
-                    ),
-                );
-            }
-        }
+    private function isEmptyValue(string $value): bool
+    {
+        return in_array(trim($value), ['', '-', '/'], true);
     }
 }
