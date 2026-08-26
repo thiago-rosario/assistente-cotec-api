@@ -8,13 +8,13 @@ class WhatsappDefaultReplies
 {
     private const string NoRecordsMessage = 'Não encontrei registros para essa consulta. Tente informar o nome do município ou o número do processo.';
 
-    private const string WelcomeMessage = "Olá! Eu sou o assistente da COTEC.\n\n"
-    . "Posso te ajudar a consultar informações do *Painel de Obras da CEIRF/SSP*.\n\n"
+    private const string WelcomeMessage = "Olá! Bem-vindo ao módulo do *Painel de Obras da CEIRF/SSP*. 👋\n\n"
+    . "Aqui eu posso trazer o extrato de uma obra por município ou por número de processo, com dados como situação do pleito, da licitação e do contrato, valor estimado e status da obra.\n\n"
     . "Para iniciar a consulta, envie uma das opções abaixo:\n\n"
     . "• Nome do município\n"
     . "• Número do processo\n\n"
     . "O processo pode ser referente à solicitação do pleito, à licitação ou ao contrato.\n\n"
-    . "Para um melhor atendimento, envie apenas uma dessas informações por vez.";
+    . "Envie apenas uma dessas informações por vez.";
 
     private const string UnknownIntentMessage = 'Não consegui identificar exatamente qual consulta você deseja fazer. Envie o nome do município ou o número do processo.';
 

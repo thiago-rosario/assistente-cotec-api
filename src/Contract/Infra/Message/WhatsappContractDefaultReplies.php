@@ -7,12 +7,7 @@ namespace App\Contract\Infra\Message;
 class WhatsappContractDefaultReplies
 {
     private const string MenuMessage = "Olá! Seja bem-vindo ao módulo de *Acompanhamento de Contratos*. 👋\n\n"
-    . "Por aqui, você pode consultar informações sobre contratos, aditivos, reajustes, reequilíbrios e prazos de execução.\n\n"
-    . "Primeiro, escolha o tipo de acompanhamento que deseja realizar. Em seguida, solicitaremos uma das informações necessárias para localizar o contrato, como:\n\n"
-    . "• Nome do município\n"
-    . "• Nome da empresa\n"
-    . "• Número do contrato\n\n"
-    . "As formas de pesquisa disponíveis podem variar conforme a opção escolhida.\n\n"
+    . "Aqui você pode consultar aditivos de valor, reajustes e reequilíbrios, prazos de execução e o resumo completo dos contratos.\n\n"
     . "*Selecione uma opção:*\n\n"
     . "1️⃣ Aditivos de valor\n"
     . "2️⃣ Reajustes e reequilíbrios\n"
@@ -22,49 +17,23 @@ class WhatsappContractDefaultReplies
     . "Digite apenas o número da opção desejada.";
 
     private const string ValueAdditiveSearchMessage = "💰 *ADITIVOS DE VALOR*\n\n"
-        ."Informe uma das opções abaixo:\n\n"
-        ."• Nome do município\n"
-        ."• Nome da empresa\n"
-        ."• Número do contrato\n\n"
-        ."Exemplos:\n"
-        ."IBOTIRAMA\n"
-        ."UFC ENGENHARIA\n"
-        ."148/2024\n\n"
-        ."Para um melhor atendimento, envie apenas uma informação por vez.\n\n"
+        ."Envie o município, a empresa ou o número do contrato (uma informação por vez).\n"
+        ."Ex.: IBOTIRAMA, UFC ENGENHARIA ou 148/2024\n\n"
         .'Digite 0 para voltar.';
 
     private const string ContractAdjustmentSearchMessage = "📊 *REAJUSTES E REEQUILÍBRIOS*\n\n"
-        ."Informe uma das opções abaixo:\n\n"
-        ."• Nome do município\n"
-        ."• Nome da empresa\n"
-        ."• Número do contrato\n\n"
-        ."Exemplos:\n"
-        ."SALVADOR\n"
-        ."GRADO ENGENHARIA LTDA\n"
-        ."05/2022\n\n"
-        ."Para um melhor atendimento, envie apenas uma informação por vez.\n\n"
+        ."Envie o município, a empresa ou o número do contrato (uma informação por vez).\n"
+        ."Ex.: SALVADOR, GRADO ENGENHARIA LTDA ou 05/2022\n\n"
         .'Digite 0 para voltar.';
 
     private const string ExecutionDeadlineSearchMessage = "📅 *CONTROLE DE PRAZOS DE EXECUÇÃO*\n\n"
-        ."Informe uma das opções abaixo:\n\n"
-        ."• Nome do município\n"
-        ."• Nome da empresa\n"
-        ."• Número do contrato\n\n"
-        ."Exemplos:\n"
-        ."SALVADOR\n"
-        ."CONSÓRCIO INTEGRA\n"
-        ."15/2022\n\n"
-        ."Para um melhor atendimento, envie apenas uma informação por vez.\n\n"
+        ."Envie o município, a empresa ou o número do contrato (uma informação por vez).\n"
+        ."Ex.: SALVADOR, CONSÓRCIO INTEGRA ou 15/2022\n\n"
         .'Digite 0 para voltar.';
 
     private const string ContractSummarySearchMessage = "📋 *RESUMO DO ACOMPANHAMENTO CONTRATUAL*\n\n"
-        ."Informe uma das opções abaixo:\n\n"
-        ."• Nome do município\n"
-        ."• Número do contrato\n\n"
-        ."Exemplos:\n"
-        ."SALVADOR\n"
-        ."13/2024\n\n"
-        ."Para um melhor atendimento, envie apenas uma informação por vez.\n\n"
+        ."Envie o município ou o número do contrato.\n"
+        ."Ex.: SALVADOR ou 13/2024\n\n"
         .'Digite 0 para voltar.';
 
     private const string NoRecordsMessage = 'Não encontrei registros para essa consulta. Verifique a informação enviada e tente novamente.';
