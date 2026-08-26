@@ -1,7 +1,7 @@
 opencollection: 1.0.0
 
 info:
-  name: collection
+  name: Assistente COTEC API
 bundled: false
 extensions:
   bruno:

@@ -1,0 +1,57 @@
+name: Local
+variables:
+  - name: base_url
+    value: http://localhost:4200
+    enabled: true
+    secret: false
+    type: text
+  - name: test_phone
+    value: "5571999999999"
+    enabled: true
+    secret: false
+    type: text
+  - name: test_sender_name
+    value: Usuário de Teste
+    enabled: true
+    secret: false
+    type: text
+  - name: sheet_id
+    value: "2106669123"
+    enabled: true
+    secret: false
+    type: text
+  - name: google_sheet_query
+    value: salvador
+    enabled: true
+    secret: false
+    type: text
+  - name: technical_notebook_municipality
+    value: Salvador
+    enabled: true
+    secret: false
+    type: text
+  - name: technical_notebook_process
+    value: 001.7313.2023.0006626-49
+    enabled: true
+    secret: false
+    type: text
+  - name: report_municipality
+    value: Ibotirama
+    enabled: true
+    secret: false
+    type: text
+  - name: report_process
+    value: 012.3456.2026.0001234-00
+    enabled: true
+    secret: false
+    type: text
+  - name: report_date
+    value: 05/08/2026
+    enabled: true
+    secret: false
+    type: text
+  - name: report_responsible
+    value: Usuário de Teste
+    enabled: true
+    secret: false
+    type: text

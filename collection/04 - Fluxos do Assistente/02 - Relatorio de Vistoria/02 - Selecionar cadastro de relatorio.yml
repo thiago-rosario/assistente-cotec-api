@@ -1,0 +1,49 @@
+info:
+  name: Selecionar cadastro de relatório
+  type: http
+  seq: 2
+  tags:
+    - whatsapp
+    - flow
+    - report
+
+http:
+  method: POST
+  url: "{{base_url}}/api/whatsapp/messages"
+  headers:
+    - name: Accept
+      value: application/json
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "message": "1",
+        "phone": "{{test_phone}}",
+        "sender_name": "{{test_sender_name}}",
+        "external_id": "bruno-report-registration-{{$randomUUID}}",
+        "source": "manual_staging_test"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("should acknowledge the message", function() {
+          expect(res.status).to.equal(202);
+          expect(res.body.status).to.equal("success");
+          expect(res.body.data.accepted).to.equal(true);
+        });
+
+settings:
+  encodeUrl: false
+  timeout: 10000
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # Cadastro de relatório
+
+  Seleciona a opção de cadastro de relatório de vistoria.

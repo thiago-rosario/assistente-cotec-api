@@ -1,14 +1,21 @@
 info:
-  name: Search Google Sheet
+  name: Buscar na planilha
   type: http
   seq: 2
+  tags:
+    - google-sheets
+    - search
 
 http:
   method: GET
-  url: http://localhost:4200/api/google-sheets/2106669123/search?q=salvador
+  url: "{{base_url}}/api/google-sheets/{{sheet_id}}/search"
   headers:
     - name: Accept
       value: application/json
+  params:
+    - name: q
+      value: "{{google_sheet_query}}"
+      type: query
   auth: inherit
 
 runtime:
@@ -34,6 +41,11 @@ runtime:
 
 settings:
   encodeUrl: true
-  timeout: 0
+  timeout: 15000
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  # Buscar na planilha
+
+  Busca um termo na aba identificada por `sheet_id`.

@@ -1,0 +1,49 @@
+info:
+  name: Abrir menu com saudação
+  type: http
+  seq: 1
+  tags:
+    - whatsapp
+    - flow
+    - panel
+
+http:
+  method: POST
+  url: "{{base_url}}/api/whatsapp/messages"
+  headers:
+    - name: Accept
+      value: application/json
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "message": "Olá",
+        "phone": "{{test_phone}}",
+        "sender_name": "{{test_sender_name}}",
+        "external_id": "bruno-panel-menu-{{$randomUUID}}",
+        "source": "manual_staging_test"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("should acknowledge the message", function() {
+          expect(res.status).to.equal(202);
+          expect(res.body.status).to.equal("success");
+          expect(res.body.data.accepted).to.equal(true);
+        });
+
+settings:
+  encodeUrl: false
+  timeout: 10000
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # Abrir menu
+
+  Envia uma saudação para iniciar o fluxo do assistente.

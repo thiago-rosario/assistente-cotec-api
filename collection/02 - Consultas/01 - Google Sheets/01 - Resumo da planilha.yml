@@ -1,11 +1,14 @@
 info:
-  name: Untitled
+  name: Resumo da planilha
   type: http
   seq: 1
+  tags:
+    - smoke
+    - google-sheets
 
 http:
   method: GET
-  url: http://localhost:4200/api/google-sheet
+  url: "{{base_url}}/api/google-sheet"
   headers:
     - name: Accept
       value: application/json
@@ -33,6 +36,11 @@ runtime:
 
 settings:
   encodeUrl: true
-  timeout: 0
+  timeout: 15000
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  # Resumo da planilha
+
+  Retorna um resumo da planilha configurada na API.

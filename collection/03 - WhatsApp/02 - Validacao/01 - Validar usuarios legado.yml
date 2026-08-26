@@ -1,0 +1,48 @@
+info:
+  name: Validar usuários (legado)
+  type: http
+  seq: 1
+  tags:
+    - whatsapp
+    - legacy
+
+http:
+  method: POST
+  url: "{{base_url}}/api/whatsapp/validate"
+  headers:
+    - name: Accept
+      value: application/json
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "usuarios": []
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("should return 200", function() {
+          expect(res.status).to.equal(200);
+        });
+
+        test("should return a valid legacy response", function() {
+          expect(res.body.status).to.equal("success");
+          expect(res.body.valid).to.equal(true);
+          expect(res.body.usuarios).to.be.an("array");
+        });
+
+settings:
+  encodeUrl: false
+  timeout: 10000
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  # Validação legada
+
+  Esta rota não processa mensagens, não acessa a fila e não envia respostas ao WhatsApp. O payload aceito por ela usa `usuarios`.

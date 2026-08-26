@@ -1,17 +1,20 @@
 info:
-  name: Search Construction Demand By Municipally
+  name: Buscar por município
   type: http
-  seq: 8
+  seq: 1
+  tags:
+    - technical-notebooks
+    - search
 
 http:
   method: GET
-  url: http://localhost:4200/api/construction-demands/search?process=020.2296.2025.0001737-43
+  url: "{{base_url}}/api/technical-notebooks/search"
   headers:
     - name: Accept
       value: application/json
   params:
-    - name: process
-      value: 020.2296.2025.0001737-43
+    - name: municipality
+      value: "{{technical_notebook_municipality}}"
       type: query
   auth: inherit
 
@@ -28,7 +31,7 @@ runtime:
           expect(res.body.data).to.be.an("object");
         });
 
-        test("should return construction demand process search data", function() {
+        test("should return technical notebook search data", function() {
           expect(res.body.data.term).to.equal(null);
           expect(res.body.data.total).to.be.a("number");
           expect(res.body.data.data).to.be.an("array");
@@ -36,6 +39,11 @@ runtime:
 
 settings:
   encodeUrl: true
-  timeout: 0
+  timeout: 15000
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  # Buscar cadernos técnicos por município
+
+  Use a variável `technical_notebook_municipality` para alterar o filtro.

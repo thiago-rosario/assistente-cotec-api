@@ -1,14 +1,21 @@
 info:
-  name: Search Land Survey By Sei Process
+  name: Buscar por processo SEI
   type: http
-  seq: 6
+  seq: 2
+  tags:
+    - technical-notebooks
+    - search
 
 http:
   method: GET
-  url: http://localhost:4200/api/land-surveys/search?process=030.2709.2022.0197573-43
+  url: "{{base_url}}/api/technical-notebooks/search"
   headers:
     - name: Accept
       value: application/json
+  params:
+    - name: process
+      value: "{{technical_notebook_process}}"
+      type: query
   auth: inherit
 
 runtime:
@@ -24,7 +31,7 @@ runtime:
           expect(res.body.data).to.be.an("object");
         });
 
-        test("should return land survey process search data", function() {
+        test("should return technical notebook process search data", function() {
           expect(res.body.data.term).to.equal(null);
           expect(res.body.data.total).to.be.a("number");
           expect(res.body.data.data).to.be.an("array");
@@ -32,6 +39,11 @@ runtime:
 
 settings:
   encodeUrl: true
-  timeout: 0
+  timeout: 15000
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  # Buscar cadernos técnicos por processo SEI
+
+  Use a variável `technical_notebook_process` para alterar o processo consultado.
