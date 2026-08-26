@@ -53,9 +53,12 @@ it('renders the requested core menu and municipality messages', function () {
 
     expect($formatter->mainMenu()['reply'])->toBe(
         "Olá! Eu sou o Assistente da COTEC. 👋\n\n"
+        ."Posso ajudar você a consultar informações do *Painel de Obras da CEIRF/SSP* e acompanhar contratos.\n\n"
         ."Escolha uma das opções abaixo:\n\n"
-        ."1️⃣ Consultar o Painel de Obras\n"
-        ."2️⃣ Acompanhar contratos\n\n"
+        ."1️⃣ *Consultar o Painel de Obras*\n"
+        ."Consulte informações por município ou número do processo.\n\n"
+        ."2️⃣ *Acompanhar contratos*\n"
+        ."Consulte aditivos, reajustes, prazos de execução e o resumo dos contratos.\n\n"
         .'Digite apenas o número da opção desejada.',
     )
         ->and($formatter->municipalityDisambiguation('Ibotirama')['reply'])
@@ -106,6 +109,42 @@ it('stores a direct municipality and routes the selected contract summary withou
         ->and($state?->municipality)->toBe('Ibotirama')
         ->and($secondResult['intent'])->toBe('contract_summary')
         ->and($stateStore->get('5571999999999')?->route)->toBe('contract_menu');
+});
+
+it('routes the selected municipality extract to the build panel using the stored municipality', function () {
+    $coreResponseFormatter = Mockery::mock(CoreWhatsappResponseFormatterInterface::class);
+    $coreResponseFormatter->shouldReceive('municipalityDisambiguation')
+        ->once()
+        ->with('Feira de Santana')
+        ->andReturn(whatsappCoreTestPayload('municipality_disambiguation'));
+
+    $buildPanel = Mockery::mock(BuildPanelWhatsappMessageServiceInterface::class);
+    $buildPanel->shouldReceive('process')
+        ->once()
+        ->with('Feira de Santana')
+        ->andReturn(whatsappCoreTestPayload('search_technical_notebook', 1));
+
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $coreResponseFormatter,
+        buildPanel: $buildPanel,
+        conversationState: $stateStore,
+    );
+
+    $firstResult = $process(new ReceivedMessageInputDTO(
+        message: 'Feira de Santana',
+        phone: '5571999999999',
+    ));
+
+    $result = $process(new ReceivedMessageInputDTO(
+        message: '1',
+        phone: '5571999999999',
+    ));
+
+    expect($firstResult['intent'])->toBe('municipality_disambiguation')
+        ->and($result['intent'])->toBe('search_technical_notebook')
+        ->and($result['total'])->toBe(1)
+        ->and($stateStore->get('5571999999999'))->toBeNull();
 });
 
 it('returns the main menu for a standalone sei process until the panel is selected', function () {

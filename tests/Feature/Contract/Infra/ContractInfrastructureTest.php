@@ -17,6 +17,7 @@ use App\Contract\Application\Interfaces\Parser\ContractRequiredStringParserInter
 use App\Contract\Application\Interfaces\Parser\ContractSearchValueParserInterface;
 use App\Contract\Application\Interfaces\Resolver\MunicipalityContractResolverInterface;
 use App\Contract\Application\Interfaces\Service\ContractRemainingDaysCalculatorServiceInterface;
+use App\Contract\Application\Interfaces\Service\ContractWhatsappMessageServiceInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractAdjustmentsUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractExecutionDeadlineUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractSummaryUsecaseInterface;
@@ -232,7 +233,6 @@ it('finds contracts by number, company and municipality using their requested so
         valueAdditiveInfrastructureRow(additiveNumber: '1'),
         valueAdditiveInfrastructureRow(contractNumber: '47/2025', municipality: 'FEIRA DE SANTANA', additiveNumber: '2'),
     ]);
-
     $repository = app(ContractRepositoryInterface::class);
 
     expect($repository->findByContractNumber(new ContractNumberValueObject('08 / 2023'))?->company)
@@ -263,16 +263,6 @@ it('builds summaries by municipality for every related contract', function () {
             valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
         ],
         [
-            contractInfrastructureHeader(),
-            contractInfrastructureRow(contractNumber: '08/2023', company: 'Empresa X'),
-            contractInfrastructureRow(contractNumber: '47/2025', company: 'Empresa Y'),
-        ],
-        [
-            contractInfrastructureHeader(),
-            contractInfrastructureRow(contractNumber: '08/2023', company: 'Empresa X'),
-            contractInfrastructureRow(contractNumber: '47/2025', company: 'Empresa Y'),
-        ],
-        [
             valueAdditiveInfrastructureHeader(),
             valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
             valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
@@ -280,19 +270,19 @@ it('builds summaries by municipality for every related contract', function () {
         [
             readjustmentInfrastructureHeader(),
             readjustmentInfrastructureRow(),
+        ],
+        [
+            readjustmentInfrastructureHeader(),
+            readjustmentInfrastructureRow(),
+        ],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
         ],
         [
             executionDeadlineInfrastructureHeader(),
             executionDeadlineInfrastructureRow(),
-        ],
-        [
-            valueAdditiveInfrastructureHeader(),
-            valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
-            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
-        ],
-        [
-            readjustmentInfrastructureHeader(),
-            readjustmentInfrastructureRow(),
         ],
         [
             executionDeadlineInfrastructureHeader(),
@@ -300,24 +290,20 @@ it('builds summaries by municipality for every related contract', function () {
         ],
     ]);
 
-    $result = app(FindContractSummaryUsecaseInterface::class)(new SearchContractInputDTO(
-        searchTerm: 'FEIRA DE SANTANA',
-        searchType: ContractSearchTypeEnum::Municipality,
-    ));
+    $result = app(ContractWhatsappMessageServiceInterface::class)->search(4, 'FEIRA DE SANTANA');
 
-    expect($result->total)->toBe(2)
-        ->and($result->data)->toHaveCount(2)
-        ->and($result->data[0]->valueAdditives)->toHaveCount(1)
-        ->and($result->data[0]->readjustments)->toHaveCount(1)
-        ->and($result->data[0]->executionDeadlines)->toHaveCount(1)
-        ->and($result->data[1]->contractNumber)->toBe('47/2025');
+    expect($result['intent'])->toBe('contract_summary')
+        ->and($result['total'])->toBe(2)
+        ->and($result['data'])->toHaveCount(2)
+        ->and($result['data'][0]->valueAdditives)->toHaveCount(1)
+        ->and($result['data'][0]->readjustments)->toHaveCount(1)
+        ->and($result['data'][0]->executionDeadlines)->toHaveCount(1)
+        ->and($result['data'][1]->contractNumber)->toBe('47/2025')
+        ->and($result['reply'])->toContain('📋 RESUMO DO CONTRATO 08/2023')
+        ->and($result['reply'])->toContain('📋 RESUMO DO CONTRATO 47/2025');
 });
 
 it('builds a summary directly by contract number and preserves every detail list', function () {
-    mockContractInfrastructureSheet('contracts', [
-        contractInfrastructureHeader(),
-        contractInfrastructureRow(),
-    ]);
     mockContractInfrastructureSheet('value-additives', [
         valueAdditiveInfrastructureHeader(),
         valueAdditiveInfrastructureRow(additiveNumber: '1'),

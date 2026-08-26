@@ -139,8 +139,6 @@ function summaryUsecase(
     );
 
     return new FindContractSummaryUsecase(
-        repository: $contractRepository,
-        resolver: $resolver,
         valueAdditivesUsecase: new FindContractValueAdditivesUsecase(
             summaryValueAdditiveRepository($valueAdditives),
         ),
@@ -214,7 +212,17 @@ function summaryValueAdditiveRepository(array $results): ValueAdditiveRepository
         /** @return list<ValueAdditiveEntity> */
         public function findByMunicipality(MunicipalityValueObject $municipality): array
         {
-            return [];
+            $records = [];
+
+            foreach ($this->results as $valueAdditives) {
+                foreach ($valueAdditives as $valueAdditive) {
+                    if (mb_strtoupper($valueAdditive->municipality) === $municipality->normalized) {
+                        $records[] = $valueAdditive;
+                    }
+                }
+            }
+
+            return $records;
         }
 
         /** @return list<ValueAdditiveEntity> */
