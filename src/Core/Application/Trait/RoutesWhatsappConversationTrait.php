@@ -143,7 +143,7 @@ trait RoutesWhatsappConversationTrait
         WhatsappConversationStateDTO $state,
     ): array {
         if ($this->isOption($input->message, '0')) {
-            return $this->mainMenu($input->phone);
+            return $this->closeConversation($input->phone);
         }
 
         if ($this->isOption($input->message, '1')) {

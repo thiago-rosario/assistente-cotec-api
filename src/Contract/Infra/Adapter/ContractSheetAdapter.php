@@ -8,6 +8,8 @@ use App\Contract\Application\Interfaces\Adapter\ContractSheetAdapterInterface;
 use App\Contract\Infra\Exception\ContractSheetRowMappingException;
 use App\Core\Application\Interfaces\Mapper\GoogleSheetRowMapperInterface;
 use App\Core\Exception\GoogleSheetReadException;
+use Google\Service\Exception as GoogleServiceException;
+use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Revolution\Google\Sheets\Facades\Sheets;
@@ -44,10 +46,14 @@ class ContractSheetAdapter implements ContractSheetAdapterInterface
         ]);
 
         try {
-            $rows = Sheets::spreadsheet($spreadsheetId)
-                ->sheet("'{$sheetName}'")
-                ->range($range)
-                ->get();
+            $rows = retry(
+                [250, 500],
+                fn (): mixed => Sheets::spreadsheet($spreadsheetId)
+                    ->sheet("'{$sheetName}'")
+                    ->range($range)
+                    ->get(),
+                when: fn (Throwable $exception): bool => $this->isTransientGoogleFailure($exception),
+            );
         } catch (Throwable $throwable) {
             Log::error('contract_sheet_read_failed', [
                 'sheet' => $sheetName,
@@ -146,5 +152,15 @@ class ContractSheetAdapter implements ContractSheetAdapterInterface
         }
 
         return $mappedRows;
+    }
+
+    private function isTransientGoogleFailure(Throwable $exception): bool
+    {
+        if ($exception instanceof ConnectException) {
+            return true;
+        }
+
+        return $exception instanceof GoogleServiceException
+            && in_array($exception->getCode(), [429, 500, 502, 503, 504], true);
     }
 }

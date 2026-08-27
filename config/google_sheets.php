@@ -49,12 +49,6 @@ return [
         ),
 
         'sheets' => [
-            'contracts' => [
-                'gid' => 539442641,
-                'name' => ' GERENCIADORA',
-                'range' => 'A:Z',
-                'header_row' => 1,
-            ],
             'value-additives' => [
                 'gid' => 866864035,
                 'name' => 'ADITIVO DE VALOR  -OBRAS',

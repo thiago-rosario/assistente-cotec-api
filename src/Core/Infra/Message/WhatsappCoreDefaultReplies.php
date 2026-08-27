@@ -32,7 +32,7 @@ class WhatsappCoreDefaultReplies
     private const string PostQueryActionMessage = "✅ Consulta concluída.\n\n"
         ."Deseja realizar outra consulta?\n\n"
         ."1️⃣ Realizar nova consulta\n"
-        ."0️⃣ Voltar ao menu principal\n\n"
+        ."0️⃣ Encerrar atendimento\n\n"
         .'Digite apenas o número da opção desejada.';
 
     private const string ConversationClosedMessage = "✅ Consulta encerrada.\n\n"

@@ -36,6 +36,7 @@ class ContractSheetMapper implements ContractSheetMapperInterface
             seiProcess: $this->nullableStringParser->parse(
                 $row['PROCESSO SEI Nº']
                     ?? $row['N° PROCESSO SEI']
+                    ?? $row['N° DO PROCESSO SEI']
                     ?? $row['PROCESSO SEI']
                     ?? null,
             ),

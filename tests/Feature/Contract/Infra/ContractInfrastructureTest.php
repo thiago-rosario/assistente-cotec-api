@@ -62,6 +62,10 @@ use App\Core\Exception\GoogleSheetReadException;
 use Illuminate\Support\Collection;
 use Revolution\Google\Sheets\Facades\Sheets;
 
+it('does not configure a separate contract register sheet', function () {
+    expect(config('google_sheets.contract_spreadsheet.sheets.contracts'))->toBeNull();
+});
+
 it('registers the contract application and repository bindings', function () {
     expect(app(ContractSummaryAssemblerInterface::class))->toBeInstanceOf(
         ContractSummaryAssembler::class,
@@ -222,12 +226,33 @@ it('finds all value additives by contract number and by the combined filters', f
         ))->toHaveCount(2);
 });
 
-it('finds contracts by number, company and municipality from the official contract register', function () {
-    mockContractInfrastructureSheet('contracts', [
-        contractInfrastructureHeader(),
-        contractInfrastructureRow(contractNumber: '08/2023', company: 'Empresa X'),
-        contractInfrastructureRow(contractNumber: '47/2025', company: 'Empresa X'),
-    ], times: 4);
+it('finds contracts by number, company and municipality from authorized movement sheets', function () {
+    mockContractInfrastructureSequence([
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [executionDeadlineInfrastructureHeader()],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [executionDeadlineInfrastructureHeader()],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [executionDeadlineInfrastructureHeader()],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [executionDeadlineInfrastructureHeader()],
+    ]);
     $repository = app(ContractRepositoryInterface::class);
 
     expect($repository->findByContractNumber(new ContractNumberValueObject('08 / 2023'))?->company)
@@ -238,9 +263,12 @@ it('finds contracts by number, company and municipality from the official contra
 });
 
 it('finds a contract by its SEI process', function () {
-    mockContractInfrastructureSheet('contracts', [
-        contractInfrastructureHeader(),
-        contractInfrastructureRow(),
+    mockContractInfrastructureSequence([
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(),
+        ],
+        [executionDeadlineInfrastructureHeader()],
     ]);
 
     $contract = app(ContractRepositoryInterface::class)->findBySeiProcess(
@@ -251,17 +279,44 @@ it('finds a contract by its SEI process', function () {
         ->and($contract->contractNumber)->toBe('08/2023');
 });
 
+it('resolves municipality contracts from the authorized execution deadline sheet', function () {
+    $deadlineRow = executionDeadlineInfrastructureRow();
+    $deadlineRow[4] = 'FEIRA DE SANTANA';
+
+    mockContractInfrastructureSequence([
+        [valueAdditiveInfrastructureHeader()],
+        [
+            executionDeadlineInfrastructureHeader(),
+            $deadlineRow,
+        ],
+    ]);
+
+    $contracts = app(ContractRepositoryInterface::class)->findByMunicipality(
+        new MunicipalityValueObject('feira de santana'),
+    );
+
+    expect($contracts)->toHaveCount(1)
+        ->and($contracts[0]->contractNumber)->toBe('08/2023')
+        ->and($contracts[0]->company)->toBe('Empresa X');
+});
+
 it('builds summaries by municipality for every related contract', function () {
     mockContractInfrastructureSequence([
         [
-            contractInfrastructureHeader(),
-            contractInfrastructureRow(contractNumber: '08/2023'),
-            contractInfrastructureRow(contractNumber: '47/2025'),
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
         ],
         [
-            contractInfrastructureHeader(),
-            contractInfrastructureRow(contractNumber: '08/2023'),
-            contractInfrastructureRow(contractNumber: '47/2025'),
+            executionDeadlineInfrastructureHeader(),
+        ],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [
+            executionDeadlineInfrastructureHeader(),
         ],
         [
             valueAdditiveInfrastructureHeader(),
@@ -276,9 +331,11 @@ it('builds summaries by municipality for every related contract', function () {
             executionDeadlineInfrastructureRow(),
         ],
         [
-            contractInfrastructureHeader(),
-            contractInfrastructureRow(contractNumber: '08/2023'),
-            contractInfrastructureRow(contractNumber: '47/2025'),
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
+        ],
+        [
+            executionDeadlineInfrastructureHeader(),
         ],
         [
             valueAdditiveInfrastructureHeader(),
@@ -310,24 +367,28 @@ it('builds summaries by municipality for every related contract', function () {
 });
 
 it('builds a compact summary directly by contract number without detail lists', function () {
-    mockContractInfrastructureSheet('contracts', [
-        contractInfrastructureHeader(),
-        contractInfrastructureRow(),
-    ]);
-    mockContractInfrastructureSheet('value-additives', [
-        valueAdditiveInfrastructureHeader(),
-        valueAdditiveInfrastructureRow(additiveNumber: '1'),
-        valueAdditiveInfrastructureRow(additiveNumber: '2'),
-    ]);
-    mockContractInfrastructureSheet('readjustments', [
-        readjustmentInfrastructureHeader(),
-        readjustmentInfrastructureRow(apostilleNumber: '1'),
-        readjustmentInfrastructureRow(apostilleNumber: '2'),
-    ]);
-    mockContractInfrastructureSheet('execution-deadlines', [
-        executionDeadlineInfrastructureHeader(),
-        executionDeadlineInfrastructureRow(observation: '1'),
-        executionDeadlineInfrastructureRow(observation: '2'),
+    mockContractInfrastructureSequence([
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(additiveNumber: '1'),
+            valueAdditiveInfrastructureRow(additiveNumber: '2'),
+        ],
+        [executionDeadlineInfrastructureHeader()],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(additiveNumber: '1'),
+            valueAdditiveInfrastructureRow(additiveNumber: '2'),
+        ],
+        [
+            readjustmentInfrastructureHeader(),
+            readjustmentInfrastructureRow(apostilleNumber: '1'),
+            readjustmentInfrastructureRow(apostilleNumber: '2'),
+        ],
+        [
+            executionDeadlineInfrastructureHeader(),
+            executionDeadlineInfrastructureRow(observation: '1'),
+            executionDeadlineInfrastructureRow(observation: '2'),
+        ],
     ]);
 
     $result = app(FindContractSummaryUsecaseInterface::class)(new SearchContractInputDTO(
@@ -396,11 +457,11 @@ it('translates a google sheet access failure and preserves the original cause', 
         ->andThrow($cause);
 
     try {
-        app(ContractSheetAdapterInterface::class)->read('contracts');
+        app(ContractSheetAdapterInterface::class)->read('value-additives');
     } catch (GoogleSheetReadException $exception) {
         expect($exception->getPrevious())->toBe($cause)
             ->and($exception->spreadsheetId)->toBe(config('google_sheets.contract_spreadsheet.spreadsheet_id'))
-            ->and($exception->sheet['name'])->toBe(' GERENCIADORA');
+            ->and($exception->sheet['name'])->toBe('ADITIVO DE VALOR  -OBRAS');
 
         return;
     }

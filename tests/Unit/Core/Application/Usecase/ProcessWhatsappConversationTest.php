@@ -70,14 +70,14 @@ it('renders the requested core menu and municipality messages', function () {
         "✅ Consulta concluída.\n\n"
         ."Deseja realizar outra consulta?\n\n"
         ."1️⃣ Realizar nova consulta\n"
-        ."0️⃣ Voltar ao menu principal\n\n"
+        ."0️⃣ Encerrar atendimento\n\n"
         .'Digite apenas o número da opção desejada.',
     );
 
     expect($formatter->invalidPostQueryAction()['reply'])
         ->toStartWith('Opção inválida.')
         ->toContain('1️⃣ Realizar nova consulta')
-        ->toContain('0️⃣ Voltar ao menu principal')
+        ->toContain('0️⃣ Encerrar atendimento')
         ->not->toContain('2️⃣');
 
     expect($formatter->conversationClosed()['reply'])
@@ -321,14 +321,14 @@ it('starts a clean build panel query after choosing a new post-query action', fu
         ->and($stateStore->get('5571999999999')?->contractOption)->toBeNull();
 });
 
-it('returns to the main menu and clears the state for post-query option zero', function () {
+it('closes the conversation and clears the state for post-query option zero', function () {
     $coreResponseFormatter = Mockery::mock(CoreWhatsappResponseFormatterInterface::class);
     $coreResponseFormatter->shouldReceive('postQueryAction')
         ->once()
         ->andReturn(whatsappPostQueryTestPayload());
-    $coreResponseFormatter->shouldReceive('mainMenu')
+    $coreResponseFormatter->shouldReceive('conversationClosed')
         ->once()
-        ->andReturn(whatsappCoreTestPayload('main_menu'));
+        ->andReturn(whatsappCoreTestPayload('conversation_closed'));
 
     $buildPanel = Mockery::mock(BuildPanelWhatsappMessageServiceInterface::class);
     $buildPanel->shouldReceive('process')
@@ -347,7 +347,7 @@ it('returns to the main menu and clears the state for post-query option zero', f
     $process(new ReceivedMessageInputDTO(message: 'Ibotirama', phone: '5571999999999'));
     $result = $process(new ReceivedMessageInputDTO(message: '0', phone: '5571999999999'));
 
-    expect($result['intent'])->toBe('main_menu')
+    expect($result['intent'])->toBe('conversation_closed')
         ->and($stateStore->get('5571999999999'))->toBeNull();
 });
 
@@ -438,7 +438,7 @@ it('rejects post-query content without searching and keeps only options one and 
     $coreResponseFormatter->shouldReceive('invalidPostQueryAction')
         ->once()
         ->andReturn([
-            'reply' => 'Opção inválida.\n\n1️⃣ Realizar nova consulta\n0️⃣ Voltar ao menu principal',
+            'reply' => 'Opção inválida.\n\n1️⃣ Realizar nova consulta\n0️⃣ Encerrar atendimento',
             'intent' => 'invalid_post_query_action',
             'total' => 0,
             'data' => [],
@@ -464,7 +464,7 @@ it('rejects post-query content without searching and keeps only options one and 
 
     expect($result['intent'])->toBe('invalid_post_query_action')
         ->and($result['reply'])->toContain('1️⃣ Realizar nova consulta')
-        ->and($result['reply'])->toContain('0️⃣ Voltar ao menu principal')
+        ->and($result['reply'])->toContain('0️⃣ Encerrar atendimento')
         ->and($stateStore->get('5571999999999')?->route)->toBe('post_query_action');
 });
 

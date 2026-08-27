@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Contract\Infra\Repository\SheetRepository;
 
-use App\Contract\Application\Interfaces\Adapter\ContractSheetAdapterInterface;
-use App\Contract\Application\Interfaces\Mapper\ContractSheetMapperInterface;
 use App\Contract\Application\Interfaces\Parser\ContractSearchValueParserInterface;
 use App\Contract\Domain\Entity\ContractEntity;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
@@ -13,8 +11,7 @@ use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 final readonly class FindContractsByMunicipalityGoogleSheetRepository
 {
     public function __construct(
-        private ContractSheetAdapterInterface $adapter,
-        private ContractSheetMapperInterface $mapper,
+        private FindContractRecordsGoogleSheetRepository $recordsRepository,
         private ContractSearchValueParserInterface $searchValueParser,
     ) {}
 
@@ -24,7 +21,7 @@ final readonly class FindContractsByMunicipalityGoogleSheetRepository
     public function findByMunicipality(MunicipalityValueObject $municipality): array
     {
         $normalizedMunicipality = $this->searchValueParser->parse($municipality->value);
-        $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
+        $contracts = $this->recordsRepository->findAll();
 
         return array_values(array_filter(
             $contracts,

@@ -1,5 +1,7 @@
 <?php
 
+use Google\Service\Exception as GoogleServiceException;
+use Illuminate\Support\Collection;
 use Revolution\Google\Sheets\Facades\Sheets;
 
 it('searches technical notebooks by municipality and returns complete row information', function () {
@@ -175,6 +177,36 @@ it('returns jsend validation errors for invalid technical notebook filters', fun
                 'q' => ['The term field must be a string.'],
             ],
         ]);
+});
+
+it('retries a transient Google Sheets failure before returning technical notebook data', function () {
+    Sheets::shouldReceive('spreadsheet')->twice()->andReturnSelf();
+    Sheets::shouldReceive('sheet')->twice()->with('CADERNO TÉCNICO')->andReturnSelf();
+    Sheets::shouldReceive('range')->twice()->with('A:ZZ')->andReturnSelf();
+
+    $attempt = 0;
+
+    Sheets::shouldReceive('get')
+        ->twice()
+        ->andReturnUsing(function () use (&$attempt): Collection {
+            $attempt++;
+
+            if ($attempt === 1) {
+                throw new GoogleServiceException('The service is currently unavailable.', 503);
+            }
+
+            return collect([
+                ['MUNICIPIO', 'PLEITO'],
+                ['Feira de Santana', 'Delegacia'],
+            ]);
+        });
+
+    $response = $this->getJson('/api/technical-notebooks/search?municipality=Feira%20de%20Santana');
+
+    $response
+        ->assertSuccessful()
+        ->assertJsonPath('data.total', 1)
+        ->assertJsonPath('data.data.0.municipality', 'Feira de Santana');
 });
 
 it('returns a standardized error when technical notebook reading fails', function () {

@@ -11,7 +11,7 @@ use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 use App\Contract\Domain\ValueObject\MunicipalityValueObject;
 
 /**
- * Resolves municipality contracts from the official contract register.
+ * Resolves municipality contracts from the contract tracking movement sheets.
  *
  * The contract repository is the canonical source for municipality-to-contract
  * discovery. Detail repositories remain responsible for their own records.

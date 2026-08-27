@@ -9,7 +9,7 @@ use App\Contract\Domain\Entity\ContractEntity;
 use App\Contract\Domain\ValueObject\ContractNumberValueObject;
 
 /**
- * Resolves the official contract records used to build a general extract.
+ * Resolves the contract records used to build a general extract.
  *
  * The composing use case provides the contract repository and municipality
  * resolver. This trait contains only lookup and contract-number equivalence
