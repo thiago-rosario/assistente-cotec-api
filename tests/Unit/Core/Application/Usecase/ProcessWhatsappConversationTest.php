@@ -347,6 +347,28 @@ it('returns to the main menu and clears the state for post-query option zero', f
         ->and($stateStore->get('5571999999999'))->toBeNull();
 });
 
+it('closes the conversation and clears the state for an explicit close command', function () {
+    $coreResponseFormatter = Mockery::mock(CoreWhatsappResponseFormatterInterface::class);
+    $coreResponseFormatter->shouldReceive('conversationClosed')
+        ->once()
+        ->andReturn(whatsappCoreTestPayload('conversation_closed'));
+
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $stateStore->put('5571999999999', new WhatsappConversationStateDTO(route: 'contract_menu'));
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $coreResponseFormatter,
+        conversationState: $stateStore,
+    );
+
+    $result = $process(new ReceivedMessageInputDTO(
+        message: 'encerrar conversa',
+        phone: '5571999999999',
+    ));
+
+    expect($result['intent'])->toBe('conversation_closed')
+        ->and($stateStore->get('5571999999999'))->toBeNull();
+});
+
 it('asks for a post-query action after multiple panel records', function () {
     $coreResponseFormatter = Mockery::mock(CoreWhatsappResponseFormatterInterface::class);
     $coreResponseFormatter->shouldReceive('postQueryAction')

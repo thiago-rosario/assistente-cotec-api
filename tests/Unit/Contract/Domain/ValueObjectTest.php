@@ -8,6 +8,8 @@ it('normalizes a contract number and compares equivalent values consistently', f
 
     expect($contractNumber->value)->toBe('08/2023')
         ->and($contractNumber->equals(new ContractNumberValueObject('08/2023')))->toBeTrue()
+        ->and($contractNumber->equals(new ContractNumberValueObject('008/2023')))->toBeTrue()
+        ->and($contractNumber->equivalenceKey())->toBe('8/2023')
         ->and((string) $contractNumber)->toBe('08/2023');
 });
 

@@ -113,6 +113,40 @@ it('returns an empty summary when the official register has no municipality cont
         ->and($result->data)->toBe([]);
 });
 
+it('keeps an official contract in the extract when detail modules have no records', function () {
+    $contract = new ContractEntity(
+        contractNumber: '21/2026',
+        company: 'Empresa C',
+        seiProcess: '001.654321/2026-10',
+        municipalities: ['Ibotirama'],
+        updatedValue: 900000.0,
+        currentSituation: 'PUBLICADO',
+    );
+    $contractRepository = summaryContractRepository([$contract]);
+    $usecase = summaryUsecase(
+        contractRepository: $contractRepository,
+        resolver: new MunicipalityContractResolver($contractRepository),
+        valueAdditives: [],
+        adjustments: [],
+        deadlines: [],
+    );
+
+    $result = $usecase(new SearchContractInputDTO(
+        searchTerm: 'Ibotirama',
+        searchType: ContractSearchTypeEnum::Municipality,
+    ));
+
+    expect($result->total)->toBe(1)
+        ->and($result->data[0]->contractNumber)->toBe('21/2026')
+        ->and($result->data[0]->company)->toBe('Empresa C')
+        ->and($result->data[0]->seiProcess)->toBe('001.654321/2026-10')
+        ->and($result->data[0]->updatedValue)->toBe(900000.0)
+        ->and($result->data[0]->currentSituation)->toBe('Publicado')
+        ->and($result->data[0]->additivesCount)->toBe(0)
+        ->and($result->data[0]->readjustmentsCount)->toBe(0)
+        ->and($result->data[0]->executionDeadlinesStatus)->toBe('Sem registros');
+});
+
 it('normalizes contract numbers, removes duplicates, prioritizes pending records and selects the latest movement', function () {
     $contractRepository = summaryContractRepository([
         summaryContractEntity('12/2026', 'Empresa A'),
@@ -137,14 +171,14 @@ it('normalizes contract numbers, removes duplicates, prioritizes pending records
                 summaryReadjustment(
                     '012/2026',
                     'Empresa A',
-                    status: 'EM TRAMITAÇÃO',
+                    status: 'TRAMITAÇÃO',
                     lastMovementDate: new DateTimeImmutable('2026-05-15'),
                     location: 'SSP/GAB/DG',
                 ),
                 summaryReadjustment(
                     '012/2026',
                     'Empresa A',
-                    status: 'EM TRAMITAÇÃO',
+                    status: 'TRAMITAÇÃO',
                     lastMovementDate: new DateTimeImmutable('2026-05-15'),
                     location: 'SSP/GAB/DG',
                 ),
@@ -204,6 +238,8 @@ function summaryUsecase(
     );
 
     return new FindContractSummaryUsecase(
+        repository: $contractRepository,
+        resolver: $resolver,
         valueAdditivesUsecase: new FindContractValueAdditivesUsecase(
             summaryValueAdditiveRepository($valueAdditives),
         ),
@@ -364,6 +400,7 @@ function summaryValueAdditive(
     string $contractNumber,
     ?string $company,
     string $status = 'PUBLICADO',
+    string $additiveNumber = '1',
 ): ValueAdditiveEntity {
     return new ValueAdditiveEntity(
         contractNumber: $contractNumber,
@@ -379,7 +416,7 @@ function summaryValueAdditive(
         situation: null,
         publicationDate: null,
         publishedValue: 12500.0,
-        additiveNumber: '1',
+        additiveNumber: $additiveNumber,
         observation: 'Aditivo de valor',
     );
 }
@@ -390,6 +427,7 @@ function summaryReadjustment(
     string $status = 'PUBLICADO',
     ?DateTimeImmutable $lastMovementDate = null,
     ?string $location = null,
+    string $apostilleNumber = 'AP-1',
 ): ContractReadjustmentEntity {
     return new ContractReadjustmentEntity(
         entryDate: new DateTimeImmutable('2026-02-01'),
@@ -398,7 +436,7 @@ function summaryReadjustment(
         ceirfLastMovementDate: $lastMovementDate,
         contractNumber: $contractNumber,
         seiProcess: '001.123456/2026-10',
-        apostilleNumber: 'AP-1',
+        apostilleNumber: $apostilleNumber,
         contemplatedValue: 5000.0,
         contemplatedIncidencePeriod: '2026',
         status: $status,

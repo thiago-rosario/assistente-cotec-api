@@ -26,7 +26,8 @@ final class ContractReadjustmentGoogleSheetRepository implements ContractReadjus
 
         return array_values(array_filter(
             $readjustments,
-            fn (ContractReadjustmentEntity $readjustment): bool => $readjustment->contractNumber === $contractNumber->value,
+            fn (ContractReadjustmentEntity $readjustment): bool => (new ContractNumberValueObject($readjustment->contractNumber))
+                ->equals($contractNumber),
         ));
     }
 }

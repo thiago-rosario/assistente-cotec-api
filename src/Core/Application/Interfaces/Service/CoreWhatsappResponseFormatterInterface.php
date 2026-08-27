@@ -34,5 +34,10 @@ interface CoreWhatsappResponseFormatterInterface
     /**
      * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
      */
+    public function conversationClosed(): array;
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
+     */
     public function unsupportedMessageContent(): array;
 }

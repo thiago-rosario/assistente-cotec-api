@@ -9,6 +9,7 @@ use App\Core\Application\Interfaces\Usecase\ProcessIncomingWhatsappWebhookUsecas
 use App\Core\Application\Support\WhatsappLogContext;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -52,6 +53,8 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
     {
         $input = $this->input();
 
+        $this->releaseIdempotencyReservation($input->externalId);
+
         Log::critical('whatsapp_reply_permanently_failed', [
             ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
             'attempt' => $this->attempts(),
@@ -59,6 +62,29 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
             'exception_class' => $exception === null ? null : $exception::class,
             'exception_context' => $this->exceptionContext($exception),
         ]);
+    }
+
+    private function releaseIdempotencyReservation(?string $externalId): void
+    {
+        if ($externalId === null || trim($externalId) === '') {
+            return;
+        }
+
+        $cacheKey = 'whatsapp:incoming:'.trim($externalId);
+
+        try {
+            Cache::forget($cacheKey);
+
+            Log::info('whatsapp_idempotency_reservation_released', [
+                'external_id' => $externalId,
+            ]);
+        } catch (Throwable $throwable) {
+            Log::error('whatsapp_idempotency_reservation_release_failed', [
+                'external_id' => $externalId,
+                'exception' => $throwable::class,
+                'exception_message' => $throwable->getMessage(),
+            ]);
+        }
     }
 
     private function input(): ReceivedMessageInputDTO

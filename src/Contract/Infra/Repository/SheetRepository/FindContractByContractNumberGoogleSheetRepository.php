@@ -21,7 +21,7 @@ final class FindContractByContractNumberGoogleSheetRepository
         $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
 
         foreach ($contracts as $contract) {
-            if ($contract->contractNumber === $contractNumber->value) {
+            if ((new ContractNumberValueObject($contract->contractNumber))->equals($contractNumber)) {
                 return $contract;
             }
         }

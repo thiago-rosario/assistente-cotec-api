@@ -25,7 +25,8 @@ final class FindValueAdditivesByContractNumberGoogleSheetRepository
 
         return array_values(array_filter(
             $valueAdditives,
-            fn (ValueAdditiveEntity $valueAdditive): bool => $valueAdditive->contractNumber === $contractNumber->value,
+            fn (ValueAdditiveEntity $valueAdditive): bool => (new ContractNumberValueObject($valueAdditive->contractNumber))
+                ->equals($contractNumber),
         ));
     }
 }

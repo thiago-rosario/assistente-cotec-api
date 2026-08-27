@@ -26,7 +26,20 @@ readonly class ContractNumberValueObject
 
     public function equals(self $contractNumber): bool
     {
-        return $this->value === $contractNumber->value;
+        return $this->equivalenceKey() === $contractNumber->equivalenceKey();
+    }
+
+    public function equivalenceKey(): string
+    {
+        $parts = explode('/', $this->value, 2);
+
+        if (count($parts) !== 2 || ! ctype_digit($parts[0])) {
+            return $this->value;
+        }
+
+        $parts[0] = ltrim($parts[0], '0') ?: '0';
+
+        return implode('/', $parts);
     }
 
     public function __toString(): string

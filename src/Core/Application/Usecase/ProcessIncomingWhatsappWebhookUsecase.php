@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Application\Usecase;
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
+use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageSenderInterface;
 use App\Core\Application\Interfaces\Usecase\ProcessIncomingWhatsappWebhookUsecaseInterface;
 use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
@@ -18,6 +19,7 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
     public function __construct(
         private readonly ProcessWhatsappMessageUsecaseInterface $processWhatsappMessage,
         private readonly WhatsappMessageSenderInterface $sender,
+        private readonly ?WhatsappMessageResponseFormatterInterface $fallbackResponseFormatter = null,
     ) {}
 
     /**
@@ -45,7 +47,28 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
         ]);
 
         if (trim($reply) === '') {
-            return $result;
+            Log::error('whatsapp_message_empty_reply', [
+                ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
+                'intent' => $result['intent'] ?? null,
+                'duration_ms' => $durationMs,
+                'attempt' => $attempt,
+            ]);
+
+            $fallback = $this->fallbackResponseFormatter?->error();
+
+            if ($fallback === null || trim((string) ($fallback['reply'] ?? '')) === '') {
+                return $result;
+            }
+
+            $result = $fallback;
+            $reply = (string) $result['reply'];
+
+            Log::warning('whatsapp_message_fallback_reply_used', [
+                ...WhatsappLogContext::message($input->externalId, $input->phone, $input->source),
+                'intent' => $result['intent'] ?? null,
+                'reply_length' => mb_strlen($reply),
+                'attempt' => $attempt,
+            ]);
         }
 
         if ($input->phone === null || trim($input->phone) === '') {
@@ -100,6 +123,7 @@ class ProcessIncomingWhatsappWebhookUsecase implements ProcessIncomingWhatsappWe
             'reply_length' => mb_strlen($reply),
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             'attempt' => $attempt,
+            'delivery_mode' => (string) config('whatsapp.message_sender', 'editacodigo'),
         ]);
 
         return $result;

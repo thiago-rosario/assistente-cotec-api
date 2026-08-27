@@ -65,6 +65,17 @@ class WhatsappCoreResponseFormatter implements CoreWhatsappResponseFormatterInte
     /**
      * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
      */
+    public function conversationClosed(): array
+    {
+        return $this->payloadFactory->empty(
+            'conversation_closed',
+            $this->defaultReplies->conversationClosed(),
+        );
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
+     */
     public function unsupportedMessageContent(): array
     {
         return $this->payloadFactory->empty(

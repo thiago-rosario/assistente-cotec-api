@@ -26,7 +26,8 @@ final class ContractExecutionDeadlineGoogleSheetRepository implements ContractEx
 
         return array_values(array_filter(
             $deadlines,
-            fn (ContractExecutionDeadlineEntity $deadline): bool => $deadline->contractNumber === $contractNumber->value,
+            fn (ContractExecutionDeadlineEntity $deadline): bool => (new ContractNumberValueObject($deadline->contractNumber))
+                ->equals($contractNumber),
         ));
     }
 }

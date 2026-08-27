@@ -35,6 +35,9 @@ class WhatsappCoreDefaultReplies
         ."0️⃣ Voltar ao menu principal\n\n"
         .'Digite apenas o número da opção desejada.';
 
+    private const string ConversationClosedMessage = "✅ Consulta encerrada.\n\n"
+        .'Quando precisar, envie uma nova mensagem para acessar o Assistente da COTEC.';
+
     private const string UnsupportedMessageContentMessage = 'Recebi sua mensagem, mas não consegui ler o conteúdo em texto. Envie uma saudação, um município ou uma opção do menu.';
 
     public function mainMenu(): string
@@ -60,6 +63,11 @@ class WhatsappCoreDefaultReplies
     public function invalidPostQueryAction(): string
     {
         return "Opção inválida.\n\n".self::PostQueryActionMessage;
+    }
+
+    public function conversationClosed(): string
+    {
+        return self::ConversationClosedMessage;
     }
 
     public function unsupportedMessageContent(): string

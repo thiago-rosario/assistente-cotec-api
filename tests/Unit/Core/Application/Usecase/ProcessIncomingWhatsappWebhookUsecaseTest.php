@@ -1,10 +1,12 @@
 <?php
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
+use App\Core\Application\Interfaces\Service\WhatsappMessageResponseFormatterInterface;
 use App\Core\Application\Interfaces\Service\WhatsappMessageSenderInterface;
 use App\Core\Application\Interfaces\Usecase\ProcessWhatsappMessageUsecaseInterface;
 use App\Core\Application\Usecase\ProcessIncomingWhatsappWebhookUsecase;
 use App\Jobs\ProcessIncomingWhatsappMessageJob;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
@@ -68,6 +70,51 @@ it('does not call the sender when the reply is empty', function () {
     $sender->shouldReceive('send')->never();
 
     (new ProcessIncomingWhatsappWebhookUsecase($process, $sender))($input, 1);
+});
+
+it('sends a recoverable fallback when processing returns an empty reply', function () {
+    $input = new ReceivedMessageInputDTO(
+        message: 'Consulta inválida',
+        phone: '5571999999999',
+        source: 'editacodigo',
+        externalId: 'message-fallback',
+    );
+    $process = Mockery::mock(ProcessWhatsappMessageUsecaseInterface::class);
+    $sender = Mockery::mock(WhatsappMessageSenderInterface::class);
+    $fallbackFormatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+
+    $process->shouldReceive('__invoke')
+        ->once()
+        ->with($input)
+        ->andReturn([
+            'reply' => '',
+            'intent' => 'unknown',
+            'total' => 0,
+            'data' => [],
+            'filters' => [],
+        ]);
+
+    $fallbackFormatter->shouldReceive('error')
+        ->once()
+        ->andReturn([
+            'reply' => 'Não consegui processar sua solicitação agora.',
+            'intent' => 'error',
+            'total' => 0,
+            'data' => [],
+            'filters' => [],
+        ]);
+
+    $sender->shouldReceive('send')
+        ->once()
+        ->with(
+            '5571999999999',
+            'Não consegui processar sua solicitação agora.',
+            'message-fallback',
+        );
+
+    $result = (new ProcessIncomingWhatsappWebhookUsecase($process, $sender, $fallbackFormatter))($input, 1);
+
+    expect($result['intent'])->toBe('error');
 });
 
 it('does not call the sender when the destination phone is missing', function () {
@@ -135,4 +182,24 @@ it('lets the job execute the whatsapp processing flow with serializable payload 
     $sender->shouldReceive('send')->never();
 
     $job->handle(new ProcessIncomingWhatsappWebhookUsecase($process, $sender));
+});
+
+it('releases the idempotency reservation after a job permanently fails', function () {
+    config(['cache.default' => 'array']);
+    Cache::put('whatsapp:incoming:job-failed-001', 'queued', 3600);
+
+    $job = new ProcessIncomingWhatsappMessageJob([
+        'message' => 'Olá',
+        'phone' => '5571999999999',
+        'source' => 'editacodigo',
+        'external_id' => 'job-failed-001',
+    ]);
+
+    $job->failed(new RuntimeException('Processing failed permanently.'));
+
+    expect(Cache::has('whatsapp:incoming:job-failed-001'))->toBeFalse();
+
+    Log::shouldHaveReceived('critical')
+        ->with('whatsapp_reply_permanently_failed', Mockery::type('array'))
+        ->once();
 });

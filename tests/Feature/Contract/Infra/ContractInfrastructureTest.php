@@ -263,26 +263,34 @@ it('builds summaries by municipality for every related contract', function () {
             valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
         ],
         [
-            valueAdditiveInfrastructureHeader(),
-            valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
-            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
-        ],
-        [
-            readjustmentInfrastructureHeader(),
-            readjustmentInfrastructureRow(),
-        ],
-        [
-            readjustmentInfrastructureHeader(),
-            readjustmentInfrastructureRow(),
+            contractInfrastructureHeader(),
+            contractInfrastructureRow(contractNumber: '08/2023'),
+            contractInfrastructureRow(contractNumber: '47/2025'),
         ],
         [
             valueAdditiveInfrastructureHeader(),
             valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
-            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
+        ],
+        [
+            readjustmentInfrastructureHeader(),
+            readjustmentInfrastructureRow(),
         ],
         [
             executionDeadlineInfrastructureHeader(),
             executionDeadlineInfrastructureRow(),
+        ],
+        [
+            contractInfrastructureHeader(),
+            contractInfrastructureRow(contractNumber: '08/2023'),
+            contractInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
+        ],
+        [
+            readjustmentInfrastructureHeader(),
+            readjustmentInfrastructureRow(),
         ],
         [
             executionDeadlineInfrastructureHeader(),
@@ -306,6 +314,10 @@ it('builds summaries by municipality for every related contract', function () {
 });
 
 it('builds a compact summary directly by contract number without detail lists', function () {
+    mockContractInfrastructureSheet('contracts', [
+        contractInfrastructureHeader(),
+        contractInfrastructureRow(),
+    ]);
     mockContractInfrastructureSheet('value-additives', [
         valueAdditiveInfrastructureHeader(),
         valueAdditiveInfrastructureRow(additiveNumber: '1'),

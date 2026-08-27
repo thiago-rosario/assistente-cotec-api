@@ -100,6 +100,17 @@ class WhatsappMessageResponseFormatter implements WhatsappMessageResponseFormatt
     /**
      * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
      */
+    public function conversationClosed(): array
+    {
+        return $this->emptyResponse(
+            intent: 'conversation_closed',
+            reply: $this->defaultReplies->conversationClosed(),
+        );
+    }
+
+    /**
+     * @return array{reply: string, intent: string, total: int, data: list<array<string, mixed>>, filters: array<string, mixed>}
+     */
     private function emptyResponse(string $intent, string $reply): array
     {
         return $this->payloadFactory->empty($intent, $reply);
