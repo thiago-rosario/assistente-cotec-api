@@ -222,23 +222,19 @@ it('finds all value additives by contract number and by the combined filters', f
         ))->toHaveCount(2);
 });
 
-it('finds contracts by number, company and municipality using their requested source rows', function () {
+it('finds contracts by number, company and municipality from the official contract register', function () {
     mockContractInfrastructureSheet('contracts', [
         contractInfrastructureHeader(),
         contractInfrastructureRow(contractNumber: '08/2023', company: 'Empresa X'),
         contractInfrastructureRow(contractNumber: '47/2025', company: 'Empresa X'),
-    ], times: 2);
-    mockContractInfrastructureSheet('value-additives', [
-        valueAdditiveInfrastructureHeader(),
-        valueAdditiveInfrastructureRow(additiveNumber: '1'),
-        valueAdditiveInfrastructureRow(contractNumber: '47/2025', municipality: 'FEIRA DE SANTANA', additiveNumber: '2'),
-    ]);
+    ], times: 4);
     $repository = app(ContractRepositoryInterface::class);
 
     expect($repository->findByContractNumber(new ContractNumberValueObject('08 / 2023'))?->company)
         ->toBe('Empresa X')
         ->and($repository->findByCompany('empresa x'))->toHaveCount(2)
-        ->and($repository->findByMunicipality(new MunicipalityValueObject('feira de santana')))->toHaveCount(2);
+        ->and($repository->findByMunicipality(new MunicipalityValueObject('feira de santana')))->toHaveCount(2)
+        ->and($repository->findByMunicipality(new MunicipalityValueObject('salvador')))->toBe([]);
 });
 
 it('finds a contract by its SEI process', function () {
@@ -258,9 +254,9 @@ it('finds a contract by its SEI process', function () {
 it('builds summaries by municipality for every related contract', function () {
     mockContractInfrastructureSequence([
         [
-            valueAdditiveInfrastructureHeader(),
-            valueAdditiveInfrastructureRow(contractNumber: '08/2023', additiveNumber: '1'),
-            valueAdditiveInfrastructureRow(contractNumber: '47/2025', additiveNumber: '2'),
+            contractInfrastructureHeader(),
+            contractInfrastructureRow(contractNumber: '08/2023'),
+            contractInfrastructureRow(contractNumber: '47/2025'),
         ],
         [
             contractInfrastructureHeader(),

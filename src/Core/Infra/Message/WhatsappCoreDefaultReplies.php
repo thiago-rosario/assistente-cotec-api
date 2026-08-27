@@ -36,7 +36,8 @@ class WhatsappCoreDefaultReplies
         .'Digite apenas o número da opção desejada.';
 
     private const string ConversationClosedMessage = "✅ Consulta encerrada.\n\n"
-        .'Quando precisar, envie uma nova mensagem para acessar o Assistente da COTEC.';
+        ."🙏 Agradecemos por utilizar o Assistente da COTEC!\n"
+        .'Quando precisar, envie uma nova mensagem para iniciar uma nova consulta.';
 
     private const string UnsupportedMessageContentMessage = 'Recebi sua mensagem, mas não consegui ler o conteúdo em texto. Envie uma saudação, um município ou uma opção do menu.';
 

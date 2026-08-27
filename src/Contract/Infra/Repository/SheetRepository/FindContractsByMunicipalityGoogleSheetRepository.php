@@ -24,7 +24,7 @@ final readonly class FindContractsByMunicipalityGoogleSheetRepository
     public function findByMunicipality(MunicipalityValueObject $municipality): array
     {
         $normalizedMunicipality = $this->searchValueParser->parse($municipality->value);
-        $contracts = $this->adapter->map('value-additives', $this->mapper->map(...));
+        $contracts = $this->adapter->map('contracts', $this->mapper->map(...));
 
         return array_values(array_filter(
             $contracts,

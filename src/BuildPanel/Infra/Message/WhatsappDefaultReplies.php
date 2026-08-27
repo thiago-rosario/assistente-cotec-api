@@ -27,7 +27,8 @@ class WhatsappDefaultReplies
     private const string ErrorMessage = 'Não consegui processar sua solicitação agora. Tente novamente informando o nome do município ou o número do processo.';
 
     private const string ConversationClosedMessage = "✅ Consulta encerrada.\n\n"
-        .'Quando precisar, envie uma nova mensagem para acessar o Assistente da COTEC.';
+        ."🙏 Agradecemos por utilizar o Assistente da COTEC!\n"
+        .'Quando precisar, envie uma nova mensagem para iniciar uma nova consulta.';
 
     public function noRecords(): string
     {

@@ -79,6 +79,10 @@ it('renders the requested core menu and municipality messages', function () {
         ->toContain('1️⃣ Realizar nova consulta')
         ->toContain('0️⃣ Voltar ao menu principal')
         ->not->toContain('2️⃣');
+
+    expect($formatter->conversationClosed()['reply'])
+        ->toContain('Consulta encerrada.')
+        ->toContain('Agradecemos por utilizar o Assistente da COTEC!');
 });
 
 it('resolves the integrated whatsapp usecase from the application container', function () {
@@ -366,6 +370,32 @@ it('closes the conversation and clears the state for an explicit close command',
     ));
 
     expect($result['intent'])->toBe('conversation_closed')
+        ->and($stateStore->get('5571999999999'))->toBeNull();
+});
+
+it('closes the conversation with a thank-you message for main menu option zero', function () {
+    $coreResponseFormatter = Mockery::mock(CoreWhatsappResponseFormatterInterface::class);
+    $coreResponseFormatter->shouldReceive('conversationClosed')
+        ->once()
+        ->andReturn([
+            'reply' => 'Consulta encerrada. Agradecemos por utilizar o Assistente da COTEC!',
+            'intent' => 'conversation_closed',
+            'total' => 0,
+            'data' => [],
+            'filters' => [],
+        ]);
+    $coreResponseFormatter->shouldReceive('mainMenu')->never();
+
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $coreResponseFormatter,
+        conversationState: $stateStore,
+    );
+
+    $result = $process(new ReceivedMessageInputDTO(message: '0', phone: '5571999999999'));
+
+    expect($result['intent'])->toBe('conversation_closed')
+        ->and($result['reply'])->toContain('Agradecemos por utilizar o Assistente da COTEC!')
         ->and($stateStore->get('5571999999999'))->toBeNull();
 });
 
