@@ -46,20 +46,9 @@ class WhatsappCoreResponseFormatter implements CoreWhatsappResponseFormatterInte
     /**
      * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
      */
-    public function postQueryAction(): array
+    public function queryCompleted(): array
     {
-        return $this->payloadFactory->empty('post_query_action', $this->defaultReplies->postQueryAction());
-    }
-
-    /**
-     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
-     */
-    public function invalidPostQueryAction(): array
-    {
-        return $this->payloadFactory->empty(
-            'invalid_post_query_action',
-            $this->defaultReplies->invalidPostQueryAction(),
-        );
+        return $this->payloadFactory->empty('query_completed', $this->defaultReplies->queryCompleted());
     }
 
     /**

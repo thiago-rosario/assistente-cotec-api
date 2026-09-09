@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Core\Application\Trait;
 
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
-use App\Core\Application\DTO\WhatsappConversationStateDTO;
+use App\Core\Enum\WhatsappTerminalIntentEnum;
 
 /**
- * Builds the responses and state transitions that close or complete a query.
+ * Builds the responses and state transitions that complete a query.
  *
  * The composing use case supplies the response formatters and state store.
  */
@@ -18,36 +18,29 @@ trait BuildsWhatsappConversationResponseTrait
      * @param  array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}  $result
      * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
      */
-    private function finishQuery(
+    private function finalizeQuery(
         ReceivedMessageInputDTO $input,
         array $result,
-        ?int $contractOption = null,
     ): array {
-        if (! $this->isCompletedQuery($result)) {
-            $this->conversationState->forget($input->phone);
-
+        if (WhatsappTerminalIntentEnum::fromResponse($result) === null) {
             return $result;
         }
 
-        $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
-            route: self::PostQueryActionRoute,
-            contractOption: $contractOption,
-        ));
+        $this->conversationState?->forget($input->phone);
 
-        $result['reply'] .= "\n\n".$this->coreResponseFormatter->postQueryAction()['reply'];
+        if ($this->coreResponseFormatter !== null) {
+            $result['reply'] .= "\n\n".$this->coreResponseFormatter->queryCompleted()['reply'];
+        }
 
         return $result;
     }
 
-    private function isCompletedQuery(array $result): bool
+    /**
+     * @param  array<string, mixed>  $response
+     */
+    private function isTerminalResponse(array $response): bool
     {
-        return in_array($result['intent'] ?? null, [
-            'search_technical_notebook',
-            'contract_value_additives',
-            'contract_adjustments',
-            'contract_execution_deadlines',
-            'contract_summary',
-        ], true);
+        return WhatsappTerminalIntentEnum::fromResponse($response) !== null;
     }
 
     /**

@@ -37,8 +37,6 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
 
     private const string ContractSearchRoute = 'contract_search';
 
-    private const string PostQueryActionRoute = 'post_query_action';
-
     public function __construct(
         private readonly GreetingMessageMatcherServiceInterface $greetingMatcher,
         private readonly BuildPanelWhatsappMessageServiceInterface $buildPanel,
@@ -63,10 +61,6 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
 
             if ($this->isCloseCommand($input->message)) {
                 return $this->closeConversation($input->phone);
-            }
-
-            if ($state?->route === self::PostQueryActionRoute) {
-                return $this->processState($input, $state);
             }
 
             if (trim($input->message) === '') {

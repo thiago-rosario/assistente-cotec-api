@@ -56,16 +56,6 @@ class WhatsappContractDefaultReplies
         ."4️⃣ Extrato consolidado do contrato\n"
         .'0️⃣ Voltar ao menu principal';
 
-    private const string ContinueSearchMessage = "🔄 Deseja realizar outra consulta?\n\n"
-        ."1️⃣ Sim\n"
-        ."2️⃣ Não\n"
-        ."0️⃣ Voltar ao menu de contratos\n\n"
-        .'Digite apenas o número da opção desejada.';
-
-    private const string FinishedMessage = "✅ Consulta encerrada.\n\n"
-        ."🙏 Agradecemos por utilizar o Assistente da COTEC!\n"
-        .'Quando precisar, envie uma nova mensagem para iniciar uma nova consulta.';
-
     public function menu(): string
     {
         return self::MenuMessage;
@@ -124,15 +114,5 @@ class WhatsappContractDefaultReplies
     public function invalidMenuOption(): string
     {
         return self::InvalidMenuOptionMessage;
-    }
-
-    public function continueSearch(): string
-    {
-        return self::ContinueSearchMessage;
-    }
-
-    public function finished(): string
-    {
-        return self::FinishedMessage;
     }
 }

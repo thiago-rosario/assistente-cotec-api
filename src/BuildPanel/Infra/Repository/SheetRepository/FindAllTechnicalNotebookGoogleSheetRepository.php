@@ -7,7 +7,10 @@ namespace App\BuildPanel\Infra\Repository\SheetRepository;
 use App\BuildPanel\Application\Interfaces\Mapper\TechnicalNotebookSheetMapperInterface;
 use App\BuildPanel\Domain\Entity\TechnicalNotebookEntity;
 use App\BuildPanel\Infra\Trait\HandlesGoogleSheetRows;
+use Google\Service\Exception as GoogleServiceException;
+use GuzzleHttp\Exception\ConnectException;
 use Revolution\Google\Sheets\Facades\Sheets;
+use Throwable;
 
 class FindAllTechnicalNotebookGoogleSheetRepository
 {
@@ -24,10 +27,14 @@ class FindAllTechnicalNotebookGoogleSheetRepository
      */
     public function findAllSheet(): array
     {
-        $rows = Sheets::spreadsheet($this->spreadsheetId())
-            ->sheet($this->sheetName())
-            ->range(self::ReadRange)
-            ->get();
+        $rows = retry(
+            [250, 500],
+            fn (): mixed => Sheets::spreadsheet($this->spreadsheetId())
+                ->sheet($this->sheetName())
+                ->range(self::ReadRange)
+                ->get(),
+            when: fn (Throwable $exception): bool => $this->isTransientGoogleFailure($exception),
+        );
 
         if ($rows->isEmpty()) {
             return [];
@@ -52,6 +59,16 @@ class FindAllTechnicalNotebookGoogleSheetRepository
             ->map(fn (array $row): TechnicalNotebookEntity => $this->mapper->fromRow($row))
             ->values()
             ->all();
+    }
+
+    private function isTransientGoogleFailure(Throwable $exception): bool
+    {
+        if ($exception instanceof ConnectException) {
+            return true;
+        }
+
+        return $exception instanceof GoogleServiceException
+            && in_array($exception->getCode(), [429, 500, 502, 503, 504], true);
     }
 
     /**

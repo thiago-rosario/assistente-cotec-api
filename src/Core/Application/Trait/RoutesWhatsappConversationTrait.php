@@ -27,7 +27,6 @@ trait RoutesWhatsappConversationTrait
             self::BuildPanelRoute => $this->processBuildPanel($input),
             self::ContractMenuRoute => $this->processContractMenu($input),
             self::ContractSearchRoute => $this->processContractSearch($input, $state),
-            self::PostQueryActionRoute => $this->processPostQueryAction($input, $state),
             default => $this->mainMenu($input->phone),
         };
     }
@@ -46,13 +45,13 @@ trait RoutesWhatsappConversationTrait
         if ($this->isOption($input->message, '1') && $state->municipality !== null) {
             $result = $this->buildPanel->process($state->municipality);
 
-            return $this->finishQuery($input, $result);
+            return $this->finalizeQuery($input, $result);
         }
 
         if ($this->isOption($input->message, '2') && $state->municipality !== null) {
             $result = $this->contract->search(4, $state->municipality);
 
-            if (! $this->isCompletedQuery($result)) {
+            if (! $this->isTerminalResponse($result)) {
                 $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
                     route: self::ContractMenuRoute,
                 ));
@@ -60,7 +59,7 @@ trait RoutesWhatsappConversationTrait
                 return $result;
             }
 
-            return $this->finishQuery($input, $result, 4);
+            return $this->finalizeQuery($input, $result);
         }
 
         return $this->coreResponseFormatter->municipalityDisambiguation((string) $state->municipality);
@@ -77,7 +76,7 @@ trait RoutesWhatsappConversationTrait
 
         $result = $this->buildPanel->process($input->message);
 
-        return $this->finishQuery($input, $result);
+        return $this->finalizeQuery($input, $result);
     }
 
     /**
@@ -124,8 +123,8 @@ trait RoutesWhatsappConversationTrait
 
         $result = $this->contract->search($state->contractOption, $input->message);
 
-        if ($this->isCompletedQuery($result)) {
-            return $this->finishQuery($input, $result, $state->contractOption);
+        if ($this->isTerminalResponse($result)) {
+            return $this->finalizeQuery($input, $result);
         }
 
         $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
@@ -133,37 +132,6 @@ trait RoutesWhatsappConversationTrait
         ));
 
         return $result;
-    }
-
-    /**
-     * @return array{reply: string, intent: string, total: int, data: list<mixed>, filters: array<string, mixed>}
-     */
-    private function processPostQueryAction(
-        ReceivedMessageInputDTO $input,
-        WhatsappConversationStateDTO $state,
-    ): array {
-        if ($this->isOption($input->message, '0')) {
-            return $this->closeConversation($input->phone);
-        }
-
-        if ($this->isOption($input->message, '1')) {
-            if ($state->contractOption !== null) {
-                $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
-                    route: self::ContractSearchRoute,
-                    contractOption: $state->contractOption,
-                ));
-
-                return $this->contract->searchPrompt($state->contractOption);
-            }
-
-            $this->conversationState->put($input->phone, new WhatsappConversationStateDTO(
-                route: self::BuildPanelRoute,
-            ));
-
-            return $this->responseFormatter->greeting();
-        }
-
-        return $this->coreResponseFormatter->invalidPostQueryAction();
     }
 
     private function isOption(string $message, string $option): bool

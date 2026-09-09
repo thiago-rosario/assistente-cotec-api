@@ -29,17 +29,13 @@ class WhatsappCoreDefaultReplies
         ."0️⃣ Voltar ao menu principal\n\n"
         .'Digite apenas o número da opção desejada.';
 
-    private const string PostQueryActionMessage = "✅ Consulta concluída.\n\n"
-        ."Deseja realizar outra consulta?\n\n"
-        ."1️⃣ Realizar nova consulta\n"
-        ."0️⃣ Encerrar atendimento\n\n"
-        .'Digite apenas o número da opção desejada.';
-
     private const string ConversationClosedMessage = "✅ Consulta encerrada.\n\n"
         ."🙏 Agradecemos por utilizar o Assistente da COTEC!\n"
         .'Quando precisar, envie uma nova mensagem para iniciar uma nova consulta.';
 
     private const string UnsupportedMessageContentMessage = 'Recebi sua mensagem, mas não consegui ler o conteúdo em texto. Envie uma saudação, um município ou uma opção do menu.';
+
+    private const string QueryCompletedMessage = '✅ Consulta concluída.';
 
     public function mainMenu(): string
     {
@@ -56,14 +52,9 @@ class WhatsappCoreDefaultReplies
         return self::InvalidMainMenuOptionMessage;
     }
 
-    public function postQueryAction(): string
+    public function queryCompleted(): string
     {
-        return self::PostQueryActionMessage;
-    }
-
-    public function invalidPostQueryAction(): string
-    {
-        return "Opção inválida.\n\n".self::PostQueryActionMessage;
+        return self::QueryCompletedMessage;
     }
 
     public function conversationClosed(): string
