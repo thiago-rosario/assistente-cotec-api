@@ -22,35 +22,6 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
         '/^\s*(?:tudo\s+bem|tudo\s+bom|td\s+bem|td\s+bom)\b[,\s.!?;:-]*/iu',
     ];
 
-    private const array RejectedStandaloneTerms = [
-        'bom',
-        'boa',
-        'como',
-        'consulta',
-        'consultar',
-        'caderno',
-        'favor',
-        'forca',
-        'levantamento',
-        'oi',
-        'ola',
-        'onde',
-        'obra',
-        'obras',
-        'por',
-        'porque',
-        'processo',
-        'qual',
-        'quando',
-        'quero',
-        'regiao',
-        'sei',
-        'sobre',
-        'situacao',
-        'status',
-        'tecnico',
-        'terreno',
-    ];
 
     public function extract(string $message): ?string
     {
@@ -124,6 +95,6 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
             return false;
         }
 
-        return ! in_array($words->first(), self::RejectedStandaloneTerms, true);
+        return $words->count() <= 4;
     }
 }
