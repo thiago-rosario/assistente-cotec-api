@@ -68,6 +68,15 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
                     ?? $this->responseFormatter->unsupportedMessageContent();
             }
 
+            if ($state?->route === 'main_menu') {
+                $this->conversationState->forget($input->phone);
+                $state = null;
+            }
+
+            if ($state !== null) {
+                return $this->processState($input, $state);
+            }
+
             if ($this->greetingMatcher->matches($input->message)) {
                 if (! $hasConversationIntegration) {
                     return $this->responseFormatter->greeting();
@@ -80,15 +89,6 @@ class ProcessWhatsappMessageUsecase implements ProcessWhatsappMessageUsecaseInte
 
             if (! $hasConversationIntegration) {
                 return $this->buildPanel->process($input->message);
-            }
-
-            if ($state !== null) {
-                if ($state->route !== self::BuildPanelRoute
-                    && $this->seiProcessRule->__invoke($input->message) !== null) {
-                    return $this->mainMenu($input->phone);
-                }
-
-                return $this->processState($input, $state);
             }
 
             if ($this->isOption($input->message, '0')) {

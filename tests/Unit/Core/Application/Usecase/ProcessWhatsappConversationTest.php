@@ -27,12 +27,12 @@ beforeEach(function () {
     Cache::flush();
 });
 
-it('opens the main menu for greetings and clears the previous conversation state', function () {
+it('opens the main menu for greetings and clears the neutral menu state', function () {
     $coreResponseFormatter = conversationCoreResponseFormatter();
     $coreResponseFormatter->shouldReceive('mainMenu')->once()->andReturn(whatsappCoreTestPayload('main_menu'));
 
     $stateStore = new WhatsappConversationStateStore(Cache::store());
-    $stateStore->put('5571999999999', new WhatsappConversationStateDTO(route: 'contract_menu'));
+    $stateStore->put('5571999999999', new WhatsappConversationStateDTO(route: 'main_menu'));
 
     $process = processWhatsappConversationUsecase(
         coreResponseFormatter: $coreResponseFormatter,
@@ -678,4 +678,64 @@ it('shows the existing main menu options for an invalid initial numeric message'
 
     expect($result['reply'])->toBe((new WhatsappCoreDefaultReplies)->invalidMainMenuOption())
         ->and($stateStore->get('5571999999999'))->toBeNull();
+});
+
+it('allows a municipality after displaying the main menu', function (bool $storedMenu) {
+    $store = new WhatsappConversationStateStore(Cache::store());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: new WhatsappCoreResponseFormatter(new WhatsappCoreDefaultReplies, new WhatsappCoreResponsePayloadFactory),
+        conversationState: $store,
+    );
+
+    expect($process(new ReceivedMessageInputDTO(message: 'qualquer coisa', phone: '5571999999999'))['intent'])->toBe('main_menu');
+    if ($storedMenu) {
+        $store->put('5571999999999', new WhatsappConversationStateDTO(route: 'main_menu'));
+    }
+
+    expect($process(new ReceivedMessageInputDTO(message: 'Salvador', phone: '5571999999999'))['intent'])
+        ->toBe('municipality_disambiguation')
+        ->and($store->get('5571999999999')?->municipality)->toBe('Salvador');
+})->with([false, true]);
+
+it('keeps all non-option messages inside the quick selector', function (string $message) {
+    $store = new WhatsappConversationStateStore(Cache::store());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: new WhatsappCoreResponseFormatter(new WhatsappCoreDefaultReplies, new WhatsappCoreResponsePayloadFactory),
+        conversationState: $store,
+    );
+    $selector = $process(new ReceivedMessageInputDTO(message: 'Salvador', phone: '5571999999999'));
+
+    $this->travel(6)->minutes(function () use ($process, $message, $selector, $store) {
+        expect($process(new ReceivedMessageInputDTO(message: $message, phone: '5571999999999')))->toBe($selector)
+            ->and($store->get('5571999999999')?->municipality)->toBe('Salvador');
+    });
+})->with(['banana', 'Feira de Santana', 'Olá', '020.4487.2021.0009714-69']);
+
+it('gives the active contract menu priority over global interpretation', function (string $message) {
+    $store = new WhatsappConversationStateStore(Cache::store());
+    $store->put('5571999999999', new WhatsappConversationStateDTO(route: 'contract_menu'));
+    $contract = Mockery::mock(ContractWhatsappMessageServiceInterface::class);
+    $contract->shouldReceive('searchPrompt')->once()->with(0)->andReturn(whatsappCoreTestPayload('contract_unknown'));
+    $process = processWhatsappConversationUsecase(conversationState: $store, contract: $contract);
+
+    expect($process(new ReceivedMessageInputDTO(message: $message, phone: '5571999999999'))['intent'])
+        ->toBe('contract_unknown')
+        ->and($store->get('5571999999999')?->route)->toBe('contract_menu');
+})->with(['Salvador', 'banana', 'Olá', '020.4487.2021.0009714-69']);
+
+it('opens another quick search immediately after completing the first one', function () {
+    $store = new WhatsappConversationStateStore(Cache::store());
+    $panel = Mockery::mock(BuildPanelWhatsappMessageServiceInterface::class);
+    $panel->shouldReceive('process')->once()->with('Salvador')->andReturn(whatsappCoreTestPayload('search_technical_notebook', 1));
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: new WhatsappCoreResponseFormatter(new WhatsappCoreDefaultReplies, new WhatsappCoreResponsePayloadFactory),
+        conversationState: $store,
+        buildPanel: $panel,
+    );
+    $process(new ReceivedMessageInputDTO(message: 'Salvador', phone: '5571999999999'));
+    expect($process(new ReceivedMessageInputDTO(message: '1', phone: '5571999999999'))['intent'])->toBe('search_technical_notebook')
+        ->and($store->get('5571999999999'))->toBeNull();
+    expect($process(new ReceivedMessageInputDTO(message: 'Feira de Santana', phone: '5571999999999'))['intent'])
+        ->toBe('municipality_disambiguation')
+        ->and($store->get('5571999999999')?->municipality)->toBe('Feira de Santana');
 });
