@@ -1,5 +1,12 @@
 <?php
 
+use App\BuildPanel\Application\Service\MunicipalityExtractorService;
+use App\BuildPanel\Domain\Repository\TechnicalNotebookRepositoryInterface;
+use App\BuildPanel\Infra\Mapper\TechnicalNotebookSheetMapper;
+use App\Contract\Application\Interfaces\Adapter\ContractSheetAdapterInterface;
+use App\Contract\Application\Interfaces\Mapper\ContractSheetMapperInterface;
+use App\Contract\Domain\Entity\ContractEntity;
+use App\Contract\Infra\Repository\SheetRepository\FindContractRecordsGoogleSheetRepository;
 use Tests\TestCase;
 
 /*
@@ -46,4 +53,32 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * @param  list<string>  $municipalities
+ * @param  list<string>  $contractMunicipalities
+ */
+function municipalityExtractorForTests(
+    array $municipalities = ['Salvador', 'Andaraí', 'Antas', 'São Francisco do Conde', 'Ibotirama', 'Feira de Santana', 'Várzea Grande'],
+    array $contractMunicipalities = [],
+): MunicipalityExtractorService {
+    $notebooks = Mockery::mock(TechnicalNotebookRepositoryInterface::class);
+    $mapper = new TechnicalNotebookSheetMapper;
+    $notebooks->shouldReceive('all')->andReturn(array_map(
+        fn (string $municipality) => $mapper->fromRow(['MUNICIPIO' => $municipality]),
+        $municipalities,
+    ));
+    $adapter = Mockery::mock(ContractSheetAdapterInterface::class);
+    $adapter->shouldReceive('map')->andReturn($contractMunicipalities === [] ? [] : [
+        new ContractEntity('01/2026', null, null, $contractMunicipalities),
+    ]);
+
+    return new MunicipalityExtractorService(
+        $notebooks,
+        new FindContractRecordsGoogleSheetRepository(
+            $adapter,
+            Mockery::mock(ContractSheetMapperInterface::class),
+        ),
+    );
 }

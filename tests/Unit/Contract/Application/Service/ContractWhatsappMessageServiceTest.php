@@ -1,7 +1,9 @@
 <?php
 
+use App\BuildPanel\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use App\Contract\Application\DTO\ContractExtractDTO;
 use App\Contract\Application\DTO\FindContractSummaryOutputDTO;
+use App\Contract\Application\DTO\SearchContractOutputDTO;
 use App\Contract\Application\Interfaces\Usecase\FindContractAdjustmentsUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractExecutionDeadlineUsecaseInterface;
 use App\Contract\Application\Interfaces\Usecase\FindContractSummaryUsecaseInterface;
@@ -28,7 +30,7 @@ it('returns the contract menu and summary prompt through the existing replies', 
         ->toContain('EXTRATO DO ACOMPANHAMENTO CONTRATUAL');
 });
 
-it('executes the municipality contract summary and formats its existing result', function () {
+it('executes the municipality contract summary and formats its existing result', function (string $message) {
     $summaryUsecase = Mockery::mock(FindContractSummaryUsecaseInterface::class);
     $summaryUsecase->shouldReceive('__invoke')
         ->once()
@@ -48,7 +50,7 @@ it('executes the municipality contract summary and formats its existing result',
         ));
 
     $service = contractWhatsappMessageService(summaryUsecase: $summaryUsecase);
-    $result = $service->search(4, 'Ibotirama');
+    $result = $service->search(4, $message);
 
     expect($result['intent'])->toBe('contract_summary')
         ->and($result['total'])->toBe(1)
@@ -60,7 +62,7 @@ it('executes the municipality contract summary and formats its existing result',
         ->and($result['reply'])->toContain('➕ Aditivos: Sem registros')
         ->and($result['reply'])->toContain('📅 Prazos de execução: Sem registros')
         ->and($result['reply'])->not->toContain('Não informado');
-});
+})->with(['Ibotirama', 'Ibotiramo']);
 
 it('formats the general contract result as a compact extract', function () {
     $builder = new ContractSummaryReplyBuilder(new WhatsappContractRecordValueFormatter);
@@ -111,8 +113,19 @@ it('classifies the supported contract search values', function () {
         ->and($resolver->resolve('020.4487.2021.0009714-69'))->toBeNull();
 });
 
+it('rejects unavailable municipalities before executing any contract query', function (string $message, int $option) {
+    $result = contractWhatsappMessageService()->search($option, $message);
+
+    expect($result['intent'])->toBe('contract_unknown')
+        ->and($result['filters'])->toBe([])
+        ->and($result['data'])->toBe([])
+        ->and($result['reply'])->toBe((new WhatsappContractDefaultReplies)->unknownIntent());
+})->with(['Qualquer coisa', 'Entrada 1', 'Teste', 'abcdef', '123'])->with([1, 2, 3, 4]);
+
 function contractWhatsappMessageService(
     ?FindContractSummaryUsecaseInterface $summaryUsecase = null,
+    ?MunicipalityExtractorServiceInterface $municipalityExtractor = null,
+    ?SearchContractUsecaseInterface $searchContracts = null,
 ): ContractWhatsappMessageService {
     $valueFormatter = new WhatsappContractRecordValueFormatter;
 
@@ -121,8 +134,9 @@ function contractWhatsappMessageService(
         adjustments: Mockery::mock(FindContractAdjustmentsUsecaseInterface::class),
         executionDeadlines: Mockery::mock(FindContractExecutionDeadlineUsecaseInterface::class),
         summary: $summaryUsecase ?? Mockery::mock(FindContractSummaryUsecaseInterface::class),
-        searchContracts: Mockery::mock(SearchContractUsecaseInterface::class),
+        searchContracts: $searchContracts ?? Mockery::mock(SearchContractUsecaseInterface::class),
         searchTypeResolver: new ContractSearchTypeResolver,
+        municipalityExtractor: $municipalityExtractor ?? municipalityExtractorForTests(),
         defaultReplies: new WhatsappContractDefaultReplies,
         payloadFactory: new WhatsappContractResponsePayloadFactory,
         foundRecordsReplyBuilder: new FoundContractRecordsReplyBuilder(
@@ -133,3 +147,39 @@ function contractWhatsappMessageService(
         ),
     );
 }
+
+it('does not extract municipalities for contract numbers', function () {
+    $extractor = Mockery::mock(MunicipalityExtractorServiceInterface::class);
+    $extractor->shouldReceive('extract')->never();
+    $summary = Mockery::mock(FindContractSummaryUsecaseInterface::class);
+    $summary->shouldReceive('__invoke')->once()->with(Mockery::on(
+        fn ($input): bool => $input->searchTerm === '52/2022' && $input->searchType === ContractSearchTypeEnum::ContractNumber,
+    ))->andReturn(new FindContractSummaryOutputDTO('52/2022', ContractSearchTypeEnum::ContractNumber, 0, []));
+
+    $result = contractWhatsappMessageService(summaryUsecase: $summary, municipalityExtractor: $extractor)->search(4, '52/2022');
+
+    expect($result['intent'])->toBe('contract_summary');
+});
+
+it('does not extract municipalities for companies in any contract option', function (int $option) {
+    $extractor = Mockery::mock(MunicipalityExtractorServiceInterface::class);
+    $extractor->shouldReceive('extract')->never();
+    $search = Mockery::mock(SearchContractUsecaseInterface::class);
+
+    if ($option === 4) {
+        $search->shouldReceive('__invoke')->never();
+    } else {
+        $search->shouldReceive('__invoke')->once()->with(Mockery::on(
+            fn ($input): bool => $input->searchTerm === 'Construtora XYZ' && $input->searchType === ContractSearchTypeEnum::Company,
+        ))->andReturn(new SearchContractOutputDTO('Construtora XYZ', ContractSearchTypeEnum::Company, 0, []));
+    }
+
+    $result = contractWhatsappMessageService(municipalityExtractor: $extractor, searchContracts: $search)->search($option, 'Construtora XYZ');
+
+    expect($result['intent'])->toBe(match ($option) {
+        1 => 'contract_value_additives',
+        2 => 'contract_adjustments',
+        3 => 'contract_execution_deadlines',
+        4 => 'contract_unknown',
+    });
+})->with([1, 2, 3, 4]);

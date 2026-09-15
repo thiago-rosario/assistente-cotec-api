@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Contract\Application\Service;
 
+use App\BuildPanel\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use App\Contract\Application\DTO\ContractAdjustmentsOutputDTO;
 use App\Contract\Application\DTO\ContractExecutionDeadlinesOutputDTO;
 use App\Contract\Application\DTO\ContractValueAdditivesOutputDTO;
@@ -40,6 +41,7 @@ class ContractWhatsappMessageService implements ContractWhatsappMessageServiceIn
         private readonly WhatsappContractDefaultReplies $defaultReplies,
         private readonly WhatsappContractResponsePayloadFactory $payloadFactory,
         private readonly FoundContractRecordsReplyBuilder $foundRecordsReplyBuilder,
+        private readonly MunicipalityExtractorServiceInterface $municipalityExtractor,
     ) {}
 
     /**
@@ -79,6 +81,14 @@ class ContractWhatsappMessageService implements ContractWhatsappMessageServiceIn
 
         if ($searchType === null || ! $this->supports($option, $searchType)) {
             return $this->payloadFactory->empty('contract_unknown', $this->defaultReplies->unknownIntent());
+        }
+
+        if ($searchType === ContractSearchTypeEnum::Municipality) {
+            $searchTerm = $this->municipalityExtractor->extract($searchTerm);
+
+            if ($searchTerm === null) {
+                return $this->payloadFactory->empty('contract_unknown', $this->defaultReplies->unknownIntent());
+            }
         }
 
         $filters = new SearchContractInputDTO(

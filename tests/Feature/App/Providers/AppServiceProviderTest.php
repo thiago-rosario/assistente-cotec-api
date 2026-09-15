@@ -116,11 +116,13 @@ it('resolves direct whatsapp interpreter with bound interpretation rules', funct
             'process' => '020.4487.2021.0009714-69',
         ]);
 
+    app()->instance(MunicipalityExtractorServiceInterface::class, municipalityExtractorForTests());
+
     $municipalityInterpretation = app(DirectWhatsappMessageInterpreterServiceInterface::class)->interpret('Bom dia, ANDARAÍ');
 
     expect($municipalityInterpretation)
         ->not->toBeNull()
         ->and($municipalityInterpretation->filters)->toBe([
-            'municipality' => 'ANDARAÍ',
+            'municipality' => 'Andaraí',
         ]);
 });

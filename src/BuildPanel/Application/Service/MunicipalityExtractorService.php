@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\BuildPanel\Application\Service;
 
 use App\BuildPanel\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
+use App\BuildPanel\Domain\Repository\TechnicalNotebookRepositoryInterface;
+use App\Contract\Infra\Repository\SheetRepository\FindContractRecordsGoogleSheetRepository;
 use Illuminate\Support\Str;
 
 class MunicipalityExtractorService implements MunicipalityExtractorServiceInterface
@@ -22,6 +24,10 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
         '/^\s*(?:tudo\s+bem|tudo\s+bom|td\s+bem|td\s+bom)\b[,\s.!?;:-]*/iu',
     ];
 
+    public function __construct(
+        private readonly TechnicalNotebookRepositoryInterface $notebooks,
+        private readonly FindContractRecordsGoogleSheetRepository $contracts,
+    ) {}
 
     public function extract(string $message): ?string
     {
@@ -36,15 +42,69 @@ class MunicipalityExtractorService implements MunicipalityExtractorServiceInterf
                 ->toString();
 
             if ($municipality !== '' && $this->isValidStandaloneCandidate($municipality)) {
-                return $municipality;
+                return $this->matchAvailableMunicipality($municipality);
             }
         }
 
         $municipality = $this->cleanStandaloneMessage($message);
 
         return $municipality !== '' && $this->isValidStandaloneCandidate($municipality)
-            ? $municipality
+            ? $this->matchAvailableMunicipality($municipality)
             : null;
+    }
+
+    private function matchAvailableMunicipality(string $municipality): ?string
+    {
+        $municipalities = [];
+
+        foreach ($this->notebooks->all() as $notebook) {
+            $municipalities[] = $notebook->municipality;
+        }
+
+        foreach ($this->contracts->findAll() as $contract) {
+            $municipalities = [...$municipalities, ...$contract->municipalities];
+        }
+
+        $availableMunicipalities = [];
+
+        foreach ($municipalities as $availableMunicipality) {
+            $normalized = $this->normalizeMunicipality($availableMunicipality);
+
+            if ($normalized !== '') {
+                $availableMunicipalities[$normalized] ??= trim($availableMunicipality);
+            }
+        }
+
+        $normalizedMunicipality = $this->normalizeMunicipality($municipality);
+
+        if (isset($availableMunicipalities[$normalizedMunicipality])) {
+            return $availableMunicipalities[$normalizedMunicipality];
+        }
+
+        if (strlen($normalizedMunicipality) < 5) {
+            return null;
+        }
+
+        $match = null;
+
+        foreach ($availableMunicipalities as $normalized => $availableMunicipality) {
+            if (strlen($normalized) < 5 || levenshtein($normalizedMunicipality, $normalized) !== 1) {
+                continue;
+            }
+
+            if ($match !== null) {
+                return null;
+            }
+
+            $match = $availableMunicipality;
+        }
+
+        return $match;
+    }
+
+    private function normalizeMunicipality(string $municipality): string
+    {
+        return Str::of($municipality)->ascii()->lower()->replaceMatches('/\s+/', ' ')->trim()->toString();
     }
 
     private function cleanStandaloneMessage(string $message): string

@@ -123,6 +123,10 @@ trait RoutesWhatsappConversationTrait
 
         $result = $this->contract->search($state->contractOption, $input->message);
 
+        if ($result['intent'] === 'contract_unknown') {
+            return $result;
+        }
+
         if ($this->isTerminalResponse($result)) {
             return $this->finalizeQuery($input, $result);
         }
