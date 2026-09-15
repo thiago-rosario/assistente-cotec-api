@@ -1,8 +1,10 @@
 <?php
 
+use App\BuildPanel\Application\Interfaces\Adapter\WhatsappMessageSearchAdapterInterface;
+use App\BuildPanel\Application\Interfaces\Service\MunicipalityExtractorServiceInterface;
 use App\BuildPanel\Application\Rules\SeiProcessWhatsappMessageInterpretationRule;
-use App\BuildPanel\Application\Service\MunicipalityExtractorService;
 use App\Contract\Application\Interfaces\Service\ContractWhatsappMessageServiceInterface;
+use App\Contract\Infra\Message\WhatsappContractDefaultReplies;
 use App\Core\Application\DTO\ReceivedMessageInputDTO;
 use App\Core\Application\DTO\WhatsappConversationStateDTO;
 use App\Core\Application\Interfaces\Service\BuildPanelWhatsappMessageServiceInterface;
@@ -514,6 +516,72 @@ it('resets conversation state without deleting the idempotency reservation', fun
         ->and(Cache::get('whatsapp:incoming:terminal-001'))->toBe('queued');
 });
 
+it('rejects unknown municipality text without querying or storing disambiguation', function (string $message) {
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $formatter = conversationCoreResponseFormatter();
+    $formatter->shouldReceive('mainMenu')->once()->andReturn(whatsappCoreTestPayload('main_menu'));
+    $formatter->shouldReceive('municipalityDisambiguation')->never();
+    $buildPanel = Mockery::mock(BuildPanelWhatsappMessageServiceInterface::class);
+    $buildPanel->shouldReceive('process')->never();
+    $contract = Mockery::mock(ContractWhatsappMessageServiceInterface::class);
+    $contract->shouldReceive('search')->never();
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $formatter,
+        conversationState: $stateStore,
+        buildPanel: $buildPanel,
+        contract: $contract,
+    );
+
+    expect($process(new ReceivedMessageInputDTO(message: $message, phone: '5571999999999'))['intent'])
+        ->toBe('main_menu')
+        ->and($stateStore->get('5571999999999'))->toBeNull();
+})->with(['Qualquer coisa', 'Entrada 1', 'teste', 'banana', 'quero consultar contrato', 'empresa qualquer', '52/2022', '020.4487.2023.0000620-96']);
+
+it('keeps invalid municipality input in the panel without executing a search', function (string $message) {
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $stateStore->put('5571999999999', new WhatsappConversationStateDTO(route: 'build_panel'));
+    app()->instance(
+        MunicipalityExtractorServiceInterface::class,
+        municipalityExtractorForTests(),
+    );
+    $searchAdapter = Mockery::mock(WhatsappMessageSearchAdapterInterface::class);
+    $searchAdapter->shouldReceive('search')->never();
+    app()->instance(WhatsappMessageSearchAdapterInterface::class, $searchAdapter);
+    $formatter = Mockery::mock(WhatsappMessageResponseFormatterInterface::class);
+    $formatter->shouldReceive('unknownIntent')->once()->andReturn(whatsappCoreTestPayload('unknown'));
+    app()->instance(WhatsappMessageResponseFormatterInterface::class, $formatter);
+    $process = processWhatsappConversationUsecase(
+        conversationState: $stateStore,
+        buildPanel: app(BuildPanelWhatsappMessageServiceInterface::class),
+    );
+
+    expect($process(new ReceivedMessageInputDTO(message: $message, phone: '5571999999999'))['intent'])
+        ->toBe('unknown')
+        ->and($stateStore->get('5571999999999')?->route)->toBe('build_panel')
+        ->and($stateStore->get('5571999999999')?->municipality)->toBeNull();
+})->with(['Qualquer coisa', 'Entrada 1', 'Teste', 'abcdef', '123']);
+
+it('stores and queries the canonical municipality from the first message', function (string $message, string $municipality) {
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $formatter = conversationCoreResponseFormatter();
+    $formatter->shouldReceive('municipalityDisambiguation')->once()->with($municipality)
+        ->andReturn(whatsappCoreTestPayload('municipality_disambiguation'));
+    $buildPanel = Mockery::mock(BuildPanelWhatsappMessageServiceInterface::class);
+    $buildPanel->shouldReceive('process')->once()->with($municipality)
+        ->andReturn(whatsappCoreTestPayload('search_technical_notebook', 1));
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $formatter,
+        conversationState: $stateStore,
+        buildPanel: $buildPanel,
+    );
+
+    expect($process(new ReceivedMessageInputDTO(message: $message, phone: '5571999999999'))['intent'])
+        ->toBe('municipality_disambiguation')
+        ->and($stateStore->get('5571999999999')?->municipality)->toBe($municipality);
+    expect($process(new ReceivedMessageInputDTO(message: '1', phone: '5571999999999'))['intent'])
+        ->toBe('search_technical_notebook');
+})->with([['Salvador', 'Salvador'], ['Feira de Santana', 'Feira de Santana'], ['Varzea Grande', 'Várzea Grande'], ['VÁRZEA GRANDE', 'Várzea Grande'], ['Varzia Grande', 'Várzea Grande']]);
+
 function processWhatsappConversationUsecase(
     ?CoreWhatsappResponseFormatterInterface $coreResponseFormatter = null,
     ?BuildPanelWhatsappMessageServiceInterface $buildPanel = null,
@@ -534,7 +602,7 @@ function processWhatsappConversationUsecase(
         coreResponseFormatter: $coreResponseFormatter,
         conversationState: $conversationState,
         contract: $contract,
-        municipalityExtractor: new MunicipalityExtractorService,
+        municipalityExtractor: municipalityExtractorForTests(),
         seiProcessRule: new SeiProcessWhatsappMessageInterpretationRule,
     );
 }
@@ -568,3 +636,46 @@ function conversationCoreResponseFormatter(): CoreWhatsappResponseFormatterInter
 
     return $formatter;
 }
+
+it('keeps invalid contract searches at the selected step', function (int $option, string $message) {
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $formatter = conversationCoreResponseFormatter();
+    $formatter->shouldReceive('mainMenu')->never();
+    $formatter->shouldReceive('queryCompleted')->never();
+    app()->instance(MunicipalityExtractorServiceInterface::class, municipalityExtractorForTests());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: $formatter,
+        conversationState: $stateStore,
+        contract: app(ContractWhatsappMessageServiceInterface::class),
+    );
+
+    expect($process(new ReceivedMessageInputDTO(message: '2', phone: '5571999999999'))['intent'])
+        ->toBe('contract_menu');
+    expect($process(new ReceivedMessageInputDTO(message: (string) $option, phone: '5571999999999'))['intent'])
+        ->toBe('contract_search_prompt');
+
+    foreach ([$message, $message] as $attempt) {
+        $result = $process(new ReceivedMessageInputDTO(message: $attempt, phone: '5571999999999'));
+
+        expect($result['intent'])->toBe('contract_unknown')
+            ->and($result['reply'])->toBe((new WhatsappContractDefaultReplies)->unknownIntent())
+            ->and($stateStore->get('5571999999999')?->route)->toBe('contract_search')
+            ->and($stateStore->get('5571999999999')?->contractOption)->toBe($option);
+    }
+})->with([
+    [1, 'teste'], [2, 'teste'], [3, 'teste'], [4, 'banana'],
+    [4, 'Construtora XYZ'], [1, '123456'],
+]);
+
+it('shows the existing main menu options for an invalid initial numeric message', function () {
+    $stateStore = new WhatsappConversationStateStore(Cache::store());
+    $process = processWhatsappConversationUsecase(
+        coreResponseFormatter: new WhatsappCoreResponseFormatter(new WhatsappCoreDefaultReplies, new WhatsappCoreResponsePayloadFactory),
+        conversationState: $stateStore,
+    );
+
+    $result = $process(new ReceivedMessageInputDTO(message: '123456', phone: '5571999999999'));
+
+    expect($result['reply'])->toBe((new WhatsappCoreDefaultReplies)->invalidMainMenuOption())
+        ->and($stateStore->get('5571999999999'))->toBeNull();
+});

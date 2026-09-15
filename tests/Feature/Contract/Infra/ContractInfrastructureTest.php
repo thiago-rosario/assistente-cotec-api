@@ -1,5 +1,6 @@
 <?php
 
+use App\BuildPanel\Domain\Repository\TechnicalNotebookRepositoryInterface;
 use App\Contract\Application\Assembly\ContractSummaryAssembler;
 use App\Contract\Application\DTO\SearchContractInputDTO;
 use App\Contract\Application\Interfaces\Adapter\ContractSheetAdapterInterface;
@@ -300,8 +301,20 @@ it('resolves municipality contracts from the authorized execution deadline sheet
         ->and($contracts[0]->company)->toBe('Empresa X');
 });
 
-it('builds summaries by municipality for every related contract', function () {
+it('builds summaries by municipality for every related contract', function (string $message) {
+    $notebooks = Mockery::mock(TechnicalNotebookRepositoryInterface::class);
+    $notebooks->shouldReceive('all')->once()->andReturn([]);
+    app()->instance(TechnicalNotebookRepositoryInterface::class, $notebooks);
+
     mockContractInfrastructureSequence([
+        [
+            valueAdditiveInfrastructureHeader(),
+            valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
+            valueAdditiveInfrastructureRow(contractNumber: '47/2025'),
+        ],
+        [
+            executionDeadlineInfrastructureHeader(),
+        ],
         [
             valueAdditiveInfrastructureHeader(),
             valueAdditiveInfrastructureRow(contractNumber: '08/2023'),
@@ -351,7 +364,7 @@ it('builds summaries by municipality for every related contract', function () {
         ],
     ]);
 
-    $result = app(ContractWhatsappMessageServiceInterface::class)->search(4, 'FEIRA DE SANTANA');
+    $result = app(ContractWhatsappMessageServiceInterface::class)->search(4, $message);
 
     expect($result['intent'])->toBe('contract_summary')
         ->and($result['total'])->toBe(2)
@@ -364,7 +377,7 @@ it('builds summaries by municipality for every related contract', function () {
         ->and($result['reply'])->toContain('📋 EXTRATO CONTRATUAL — 47/2025')
         ->and($result['reply'])->not->toContain('ADITIVOS DE VALOR')
         ->and($result['reply'])->not->toContain('Registro 1 de');
-});
+})->with(['FEIRA DE SANTANA', 'FEIRA DE SANTAN']);
 
 it('builds a compact summary directly by contract number without detail lists', function () {
     mockContractInfrastructureSequence([
